@@ -1,4 +1,2 @@
-# hello-world
-first thing I do on GitHub
-
-I'm a beginner.
+# Hello-World
+The initial repository and the notes of my programming learning.
