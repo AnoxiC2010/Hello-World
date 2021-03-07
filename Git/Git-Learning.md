@@ -1,12 +1,12 @@
-# 我的Git学习笔记
+# Git Notes
 
-* git init
+* git init 
   在新建的本地目录总执行，初始化本地库,初始化 .git库文件夹
 
-* git --version
+* git --version 
   查看git版本
 
-* git config --global user.name "xxxx"
+* git config --global user.name "xxxx" 
   设置全局用户名为xxxx
 
 * git config --global user.email "xxxx@xxx.com"
@@ -97,12 +97,12 @@
   当于fetch和merge的合并
 
 > 免密操作
-  * ssh-keygen  -t rsa -C xxxx@xxx.com
-    在用户目录下执行该命令
-    邮箱为github注册邮箱，执行后再三次回车确认默认值（想输入点东西也行）
-    user\.ssh\目录下生成了id_rsa和id_rsa.pub文件
-    id_rsa.pub里面的ssh值可复制后到github网站添加到自己的账户的SSH keys中
-  * git remote add origin_ssh git@github.com:…….git
-    给ssh远程地址起别名
-  * git push origin_ssh master
-    用ssh方式提交，不用每次都进行身份验证，但是只针对一个账号
+* ssh-keygen  -t rsa -C xxxx@xxx.com
+  在用户目录下执行该命令
+  邮箱为github注册邮箱，执行后再三次回车确认默认值（想输入点东西也行）
+  user\.ssh\目录下生成了id_rsa和id_rsa.pub文件
+  id_rsa.pub里面的ssh值可复制后到github网站添加到自己的账户的SSH keys中
+* git remote add origin_ssh git@github.com:…….git
+  给ssh远程地址起别名
+* git push origin_ssh master
+  用ssh方式提交，不用每次都进行身份验证，但是只针对一个账号
