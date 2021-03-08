@@ -155,7 +155,69 @@ int[] copiedNumbers = Arrays.copyOf(numbers, 2 * numbers.length());
 //如命令行执行Hello.class：java Hello xxx xxx xxx 后面几个为args数组的元素
 
 //数组排序
+int a = new int[1000];
+...
+Arrays.sort(a);//升序，优化的快速排序算法
+//生成随机数
+//Math.random()方法返回[0,1)的随机浮点数。
+int r = (int)(Math.random() * n);//返回[0,n-1)之间的随机数
 
-
+//快速打印二维数组的数据元素列表[[...],[...],...]
+System.out.println(Arrays.deepToString(arrs));
 ```
 
+> java.util.Arrays 1.2
+>
+> * static String toString(type[] a) 5.0
+>
+>   返回包含a中数据元素的字符串，这些数据元素被放在括号内，并用逗号分隔。
+>
+>   参数：a 类型为int、long、short、char、byte、boolean、float或double的数组。
+>
+> * static type copyOf(type[] a, int length) 6
+>
+> * static type copyOfRange(type[] a, int start, int end) 6
+>
+>   返回与a类型相同的一个数组，其长度为length或者end-start，数组元素为a的值。
+>
+>   参数：a 类型为int、long、short、char、byte、boolean、float或double的数组。
+>
+>   start 起始下标（包含这个值）
+>
+>   end 终止下标（不包含这个值）。这个值可能大于a.length。在这种情况下，结果为0或false。
+>
+>   length 拷贝的数据元素长度。如果length值大于a.length，结果为0或false；否则，数组中只有前面length个数据元素的拷贝值
+>
+> * static void sort(type[] a)
+>
+>   采用优化的快速排序算法对数组进行排序。
+>
+>   参数：a 类型为int、long、short、char、byte、boolean、float或double的数组。
+>
+> * static int binarySearch(type[] a, type v)
+>
+> * static int binarySearch(type[] a, int start, int end, type v) 6
+>
+>   采用二分搜索算法查找值v。如果查找成功，则返回相应的下标值；否则，返回一个负数值r。-r-1是为了保持a有序v应插入的位置。
+>
+>   参数：a 类型为int、long、short、char、byte、boolean、float或double的***有序***数组。
+>
+>   start 起始下标（包含这个值）。
+>
+>   end 终止下标（不包含这个值）。
+>
+>   v 同a的数据元素类型相同的值。
+>
+> * static void fill(type[] a, type v)
+>
+>   将数组的所有数据元素值设置为v。
+>
+>   参数：a 类型为int、long、short、char、byte、boolean、float或double的数组。
+>
+>   v 与a数据元素类型相同的一个值。
+>
+> * static boolean equals(type[] a, type[] b)
+>
+>   如果两个数组大小相同，并且下标相同的元素都对应相等，返回true。
+>
+>   参数：a、b 类型为int、long、short、char、byte、boolean、float或double的两个数组。
