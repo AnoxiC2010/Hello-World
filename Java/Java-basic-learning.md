@@ -222,6 +222,33 @@ System.out.println(Arrays.deepToString(arrs));
 >
 >   参数：a、b 类型为int、long、short、char、byte、boolean、float或double的两个数组。
 
+# 对象与类
+
+## 时间对象
+
+```java
+//Date类对象描述的是一个时间点，使用距离一个固定的时间点的毫秒数（可正可负）表示的，这个点就是纪元（epoch），是UTC时间1970年1月1日00:00:00。Date类提供的日期处理是Gregorian阳历表示法。
+Date now = new Date();//构造对象时的日期
+//LocalDate类用来表示大家熟悉的日历表示法，不能new，要用静态工厂方法调用构造器
+LocalDate now = LocalDate.now();//构造对象时的日期
+//LocalDate构造特定日期的对象
+LocalDate oneday = LocalDate.of(1991, 1, 1);
+//LocalDate对象分别获取年月日的方法
+int year = oneday.getYear();//1991
+int monthValue = oneday.getMonthValue();//1
+int dayOfMonth = oneday.getDayOfMonth();//1
+//获取指定天数之后的新日期
+LocalDate aThousandDaysLater = oneday.plusDays(1000);
+year = aThousandDaysLater.getYear();//1993
+monthValue = aThousandDaysLater.getMonthValue();//09
+dayOfMonth = aThousandDaysLater.getDayOfMonth();//27
+//Date的getDate、getMonth、getYear已被标记为不推荐使用，Date类已被标记为废弃不用
+
+
+```
+
+
+
 # 继承
 
 ## 子类对象的初始化（initialization）
