@@ -273,6 +273,37 @@ dayOfMonth = aThousandDaysLater.getDayOfMonth();//27
 >
 >   生成当前日期之后或之前n天的日期
 
+请不要在构造器中定义与实例域同名的变量
+
+隐式参数与显示参数：
+
+每个方法中，关键字this表示隐式参数，在方法中直接声明的叫做显式参数。某些程序员会偏好this.xxx的风格将实例域与局部变量明显的区分开
+
+封装
+
+需要获得或设置实例域的值，需要提供三项内容：
+
+* 一个私有的数据域
+* 一个公有的域访问器方法
+* 一个公有的域更改器方法
+
+这样做的好处是可以更改内部实现，除了该类的内部方法之外，不会影响其他代码。
+
+注意不要编写返回引用可变对象的访问器方法。例如Date类是有一个更改器方法setTime，结果是返回的Date对象是可变的，就破坏了封装性。如果需要返回一个可变对象的引用，应该首先对它进行克隆（clone），这样我们将返回一个可变数据的拷贝。
+
+> 一个方法可以访问所属类的所有对象的私有域
+
+```java
+class Employee {
+   ...
+    public boolean isSameAge(Employee anotherEmployee) {
+        return this.age == anotherEmployee.age;
+    }
+}
+```
+
+
+
 # 继承
 
 ## 子类对象的初始化（initialization）
