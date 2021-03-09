@@ -243,11 +243,35 @@ year = aThousandDaysLater.getYear();//1993
 monthValue = aThousandDaysLater.getMonthValue();//09
 dayOfMonth = aThousandDaysLater.getDayOfMonth();//27
 //Date的getDate、getMonth、getYear已被标记为不推荐使用，Date类已被标记为废弃不用
-
-
 ```
 
-
+> java.time.LocalDate 8
+>
+> * static LocalTime now()
+>
+>   构造一个表示当前日期的对象。
+>
+> * static LocalTime of(int year, int month, int day)
+>
+>   构造一个表示给定日期的对象
+>
+> * int getYear()
+>
+> * int getMonthValue()
+>
+> * int getDayOfMonth()
+>
+>   得到当前日期的年、月、日
+>
+> * DayOfWeek getDayOfWeek
+>
+>   得到当前日期是星期几，作为DayOfWeek类的一个实例返回。电泳getValue来得到1~7之间的一个数，表示这是星期几，1表示星期一，7表示星期日
+>
+> * LocalDate plusDays(int n)
+>
+> * LocalDate minusDays(int n)
+>
+>   生成当前日期之后或之前n天的日期
 
 # 继承
 
