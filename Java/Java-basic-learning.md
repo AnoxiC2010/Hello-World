@@ -158,13 +158,23 @@ int[] copiedNumbers = Arrays.copyOf(numbers, 2 * numbers.length());
 int a = new int[1000];
 ...
 Arrays.sort(a);//升序，优化的快速排序算法
-//生成随机数
-//Math.random()方法返回[0,1)的随机浮点数。
-int r = (int)(Math.random() * n);//返回[0,n-1)之间的随机数
-
 //快速打印二维数组的数据元素列表[[...],[...],...]
 System.out.println(Arrays.deepToString(arrs));
 ```
+
+# 生成随机数
+
+```java
+//生成随机数
+//Math.random()方法返回[0,1)的随机浮点数。
+int r = (int)(Math.random() * n);//返回[0,n-1)之间的随机数
+//Random类生成随机数
+Random randomGenerator = new Random();
+int r = randomGenerator.nextInt(1000);//[0,1000)随机
+```
+
+//Math.random()方法返回[0,1)的随机浮点数。
+int r = (int)(Math.random() * n);//返回[0,n-1)之间的随机数
 
 > java.util.Arrays 1.2
 >
