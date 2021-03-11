@@ -2783,7 +2783,7 @@ s
 
 例如需要比较Student类的两个对象是否相等，需要重写equals方法，比较id或者name是否相等才具有实际意义。
 
-用超类属性进行相等校验可以使用instance of先检查类型
+用超类属性进行相等校验可以使用instanceof先检查类型
 
 用子类特有属性相等校验可以使用getClass()来检查类型
 
@@ -2791,9 +2791,36 @@ s
 
 完美编写equals方法的建议：
 
-```
+```java
 1 显示参数命名为otherObject，稍后需要将它转换成另一个叫做other的变量。
+2 检测this与otherObject是否引用同一个对象：
+if(this == otherObject) return true;
+这条语句只是一个优化。实际上，这是一种经常采用的形式。因为计算这个等式要比一个一个地比较类中的域所付出的代价小得多。
+3 检测otherObject是否为null，如果为null，返回false。这项检测是很有必要的。
+if(otherObject == null) return false;
+4 比较this与otherObject是否属于同一个类。如果equals的语义在每个子类中有所改变，就是用getClass检测：
+if(getClass() != otherObject.getClass()) return false;
+如果所有的子类都拥有统一的语义，就是用instanceof检测：
+if(!(otherObject instanceof ClassName)) return false;
+5 将otherObject转换为相应的类类型变量：
+ClassName other = (ClassName) otherObject
+6 现在开始对所有需要比较的域进行比较了。使用==比较基本类型域，使用equals比较对象域。如果所有的域都匹配，就返回true；否则返回false。
+return field1 == other.field1 && Objects.equals(field2, other.field2) && ...
+如果在子类中重新定义equals，就要在其中包含调用super.equals(other)。
+//提示：对于数组类型的域，可以使用静态的Arrays.equals方法检测相应的数组元素是否相等。
 ```
 
-
+> java.util.Objects 7
+>
+> * static boolean equals(Object a, Object b)
+>
+>   如果a和b都为null，返回true；如果只有其中之一为null，则返回false；否则返回a.equals(b)。
+>
+> java.util.Arrays 1.2
+>
+> * static Boolean equals(type[] a, type[] b) 5.0
+>
+> 如果两个数组长度相同，并且在对应位置上的数据元素也均相同，将返回true。数组的元素类型可以是Object、int、short、char、byte、boolean、float或double。
+>
+> 
 
