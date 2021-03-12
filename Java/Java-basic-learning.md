@@ -2821,6 +2821,75 @@ return field1 == other.field1 && Objects.equals(field2, other.field2) && ...
 > * static Boolean equals(type[] a, type[] b) 5.0
 >
 > 如果两个数组长度相同，并且在对应位置上的数据元素也均相同，将返回true。数组的元素类型可以是Object、int、short、char、byte、boolean、float或double。
+
+## hashCode方法
+
+> 散列码（hash code）是由对象导出的一个整型值。散列码是没有规律的。如果x和y是两个不同的对象，x.hashCode()与y.hashCode()基本不会相同。
 >
-> 
+> 如果重新定义equals方法，就必须重新定义hashCode方法，一边用户可以将对象插入到散列中。
+>
+> hashCode方法应该返回一个整形数值（可以为负），并合理地组合实例域的散列码，以便能够让不同对象产生的散列码更均匀。
+>
+> 最好使用null安全的方法Objects.hashCode。如果其参数为null，该方法返回0，否则返回参数调用的hashCode的结果。另，使用静态方法Double.hashCode来避免创建Double对象：
+>
+> 写法：
+>
+> ```java
+> public int hashCode() {
+>     return 7 * Objects.hashCode(name)
+>         + 11 * Double.hashCode(salary)
+>         + 13 * Objects.hashCode(hireDay);
+> }
+> ```
+>
+> 比
+>
+> ```jade
+> public int hashCode() {
+> 	return 7 * name.hashCode()
+> 	+ 11 * new Double(salary).hashCode()
+> 	+ 13 * hireDay.hashCode();
+> }
+> ```
+>
+> 好
+>
+> 更好的，需要组合多个散列值时，可以调用Objects.hash并提供多个参数。这个方法会对各个参数调用Objects.hashCode，并组合这些散列值。这样就能简单地写为：
+>
+> ```java
+> public int hashCode() {
+>     return Objects.hash(name, salary, hireDay);
+> }
+> ```
+>
+> equals与hashCode的定义必须一致：如果x.equals(y)返回true，那么x.hashCode()就必须与y.hashCode()具有相同的值。
+>
+> 如果存在数组类型的域，那么可以使用静态的Arrays.hashCode方法计算一个散列码，这个散列码由数组元素的散列码组成。
+>
+> java.util.Object 1.0
+>
+> * int hashCode()
+>
+>   返回对象的散列码。散列码可以是任意的整数，包括正数或负数。两个相等的对象要求返回相等的散列码。
+>
+> java.util.Objects 7
+>
+> * static int hash(Object... objects)
+>
+>   返回一个散列码，由提供的所有对象的散列码组合而得到。
+>
+> * static int hashCode(object a)
+>
+>   如果a为null返回-，否则返回a.hashCode()。
+>
+> java.lang.(Integer|Long|Short|Byte|Double|Float|Character|Boolean) 1.0
+>
+> * static int hashCode((int|long|short|byet|double|float|char|boolean)) 8
+>
+>   返回给定的散列码。
+>
+> java.util.Arrays 1.2
+>
+> * static int hashCode(type[] a) 5.0
+> * 计算数组a的散列码。组成这个数组的元素类型可以是object, int,long,short,char,byte,boolean,float或double。
 
