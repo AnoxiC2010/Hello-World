@@ -3052,8 +3052,6 @@ Object数组可以装所有引用类型
 
 
 
-
-
 > 注意事项
 
 - 直接打印数组名或者对象名，默认调用toString()方法，然后打印该方法返回的字符串
@@ -3061,6 +3059,18 @@ Object数组可以装所有引用类型
 - debug时下一步会打印toString()返回的字符串
   - 不要在toString()方法里对对象进行操作，避免造成奇怪的bug
 - 如果类中有别的引用类型，可以在返回语句中调用该引用类型的toString()方法
+
+> 数组的toString直接继承了Object的，修正的方式是调用静态方法Arrays.toString,多为数组调用Arrays.deepToString
+
+> java.lang.Class 1.0
+>
+> * String getName()
+>
+>   返回这个类的名字。
+>
+> * Class getSuperclass()
+>
+>   以Class对象的形式返回这个类的超类信息。
 
 # equals()
 
@@ -3454,6 +3464,7 @@ ClassName other = (ClassName) otherObject
 return field1 == other.field1 && Objects.equals(field2, other.field2) && ...
 如果在子类中重新定义equals，就要在其中包含调用super.equals(other)。
 //提示：对于数组类型的域，可以使用静态的Arrays.equals方法检测相应的数组元素是否相等。
+//Double.compare(a,b)比较两个浮点数
 ```
 
 > java.util.Objects 7
