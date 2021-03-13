@@ -3563,3 +3563,378 @@ ArrayList<Student> students = new ArrayList<>();
 >  注：Java SE 5.0以前版本没提供泛型类，在5.0版本以后没有<...>然然可以使用ArrayList，它将被认为是一个删去了类型参数的“原始”类型。
 
 > 注：Java的老版本中，程序员使用Vector类实现动态数组。不过，ArrayList类更加有效，没有任何理由一定要使用Vector类。
+
+> 如果已经清楚或者能够估计出数组可能存储的元素数量，可在填充数组之前调用ensureCapacity方法或者直接在new的时候把初始容量传给ArrayList构造器
+>
+> 或者当一旦能够确认数组列表的大小不再发生变化，就可以调用trimToSize方法。此方法将存储区域的大小调整为当前元素数量所需要的存储空间数目。垃圾回收器将回收多余的存储空间。
+>
+> 一旦整理了数组列表的大小，添加新元素就要花时间再次移动存储块，所以应该再确认不会添加任何元素时，在调用trimToSize。
+
+> java.util.ArrayList<E> 1.2
+>
+> * ArrayList<E>()
+>
+>   构造一个空数组列表
+>
+> * ArrayList<E>(int initialCapacity)
+>
+>   用指定容量构造一个空数组列表。
+>
+>   参数：initialCapacity 数组列表的最初容量
+>
+> * boolean add(E obj)
+>
+> * 在数组列表的尾端添加一个元素。永远返回true。
+>
+>   参数：obj 添加的元素
+>
+> * int size()
+>
+>   返回存储在数组列表中的当前元素数量。（这个值将小于或等于数组列表的容量。）
+>
+> * void ensureCapacity(int capacity)
+>
+>   确保数组列表在不重新分配存储空间的情况下就能够保存给定数量的元素。
+>
+>   参数：capacity 需要的存储容量
+>
+> * void trimToSize()
+>
+>   将数组列表的存储容量消减到当前尺寸。
+
+> 原始的ArrayList存在一定危险性。其get方法别无选择只能返回Object，因此，get方法的调用者必须对返回值进行类型转换；它的add和set方法允许接受任意类型的对象，编译不会给出任何警告，只有在检索对象并试图对他进行类型转换时，才会发现有问题。如果使用ArrayList<Student>，编译器就会检测到这个错误。
+
+> 对数组列表实施插入和删除元素的操作效率比较低。对于小型数组，不必担心。但如果存储的元素比较多，又经常需要在中间位置插入、删除元素，就应该考虑使用***链表***。
+
+> java.util.ArrayList<T> 1.2
+>
+> * void set(int index, E obj)
+>
+>   设置数组里表指定位置的元素值，这个操作将覆盖这个位置的原有内容。
+>
+>   参数：index 位置（必须介于0~size()-1之间）obj 新的值
+>
+> * E get(int index)
+>
+>   获得指定位置的元素值。
+>
+>   参数：index 获得的元素位置（必须介于0~size()-1之间）
+>
+> * void add(int index, Eobj)
+>
+>   向后移动元素，以便插入元素。
+>
+>   参数：index 插入位置（必须介于0~size()-1之间） obj 新元素
+>
+> * E remove(int index)
+>
+>   删除一个元素，并将后面的元素向前移动。被删除的元素由返回值返回。
+>
+>   参数：index 被删除的元素位置（必须介于0~size()-1之间）
+
+# String
+
+> String概述
+
+- 在Java语言中，所有类似“ABC”这样用双引号引起来的字符串，都是String类的对象
+- String类位于java.lang包下，是Java语言的核心类
+- String类提供了字符串表示、比较、查找、截取、大小写转换等各种针对字符串的操作
+
+
+
+> 构造方法（constructor）
+
+- 使用String尤其要注意导包问题，导错包会直接导致不能运行main方法
+
+```Java
+//创建空字符串对象，需要注意的是null != ""
+public String()
+//把字节数组中的元素转换成字符串，字节数组中可以是字符，也可以是ASCII码值
+public String(byte[] bytes)
+//同上，只不过指定了区间
+public String(byte[] bytes,int offset,int length)
+//同字节数组
+public String(char[] value)
+//同上
+public String(char[] value,int offset,int count)
+//套娃
+public String(String original)
+```
+
+
+
+> String对象的最大特征
+>
+> 引例
+>
+> 键盘输入接收一个字符串s，并用一个temp字符串引用指向它
+>
+> 现在修改原先字符串s（拼接一个字符串），比较s和temp
+
+- 字符串是常量，它的值在创建之后不能更改，也就是说String对象不可变
+  - String对象不可变指的是对象的状态不可变，而不是引用中的地址不可变
+  - 原因是String中的字符串都是由字符数组装着的，而该数组是final修饰的 
+
+> 字符串常量池
+>
+> Java当中所有双引号引起来的字符串都是字符串对象
+
+- 每一个字符串字面值都作为一个对象存储在堆上的字符串常量池中
+  - 字面值常量编译时期，就能确定其取值，编译时期加入常量池
+  - 当后续再使用字面值创建相同内容的字符串对象时，直接将该对象返回给引用 
+  - 如果使用new关键字创建相同内容字符串对象，对象不共享，但是字符数组仍然共享 
+
+> 字符串是JVM堆内存中最多的对象，字符串不可变后，就可以共享，节省了大量的堆内存空间
+>
+> 不可变后还变得更安全（多线程可以体现）
+>
+> 不可变后效率提升（简单举例：新建数组很快，但是移动拷贝数组很难）
+
+
+
+> 小试牛刀
+
+- 看程序说结果
+
+  - ```Java
+    String s = "hello";
+    s += "world";
+    System.out.println(s);
+    ```
+
+- 下面两种赋值方式有什么区别？
+
+  - ```Java
+    String s1 = "我是猪";
+    String s = new String("我是猪");
+    ```
+
+  - 三个获取数组的方法
+
+    - ```Java
+      //使用指定字符集，将字符编码成字节序列，并将结果存储到一个新的 byte 数组中
+      getBytes(String charsetName) 
+      ```
+
+    - ```Java
+      //将字符从此字符串复制到目标字符数组
+      getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
+      ```
+
+    - ```java 
+      //将此字符串转换为一个新的字符数组。
+      toCharArray()
+      ```
+
+- 看程序说结果
+
+  - ```Java
+    String s1 = new String("hello");
+    String s2 = new String("hello");
+    System.out.println(s1 == s2);
+    System.out.println(s1.equals(s2));
+    
+    String s3 = new String("hello");
+    String s4 = "hello";
+    System.out.println(s3 == s4);
+    System.out.println(s3.equals(s4));
+    
+    String s5 = "hello";
+    String s6 = "hello";
+    System.out.println(s5 == s6);
+    System.out.println(s5.equals(s6));
+    ```
+
+  - String类中重写了equals()方法，比较的是字符串的内容而不是地址
+
+
+
+- 看程序说结果
+
+  - ```Java
+    String s1 = "hello";
+    String s2 = "world";
+    String s3 = "helloworld";
+    System.out.println(s3==(s1+s2));
+    System.out.println(s3.equals(s1+s2));
+    
+    System.out.println(s3==("hello"+"world"));
+    System.out.println(s3.equals("hello"+"world"));
+    ```
+
+
+
+>  使用加号对字符串进行拼接操作，会有下述两种结果
+>
+>  - 直接在常量池中创建新的拼接对象=
+>  - 在堆上创建新的拼接对象
+>
+>  经过测试我们发现
+>
+>  - 当参与字符串拼接的两个字符串中，至少有一个是以引用变量的形式出现时
+>   - 必然会在堆上创建新的字符串对象
+>     - 原因是变量参与了运算，无法在编译时期确定其值，就不能在编译时期加入常量池
+>  - 只有参与字符串拼接运算的两个字符串，都是字符串字面值常量的时候
+>   - 此时不会在堆上创建新的字符串对象，而是在常量池中直接拼接创建对象
+>   - 如果已存在，则不创建新的对象
+
+# String API
+
+> String类的判断功能
+
+```java 
+//用来比较字符串的内容，注意区分大小写
+boolean equals(Object obj)
+    
+//忽略字符串大小写比较字符串内容，常见用于比较网址URL
+boolean equalsIgnoreCase(String str)
+    
+//判断当前字符串对象是否包含，目标字符串的字符序列，常见用于确定是否有盗链行为
+boolean contains(String str)
+    
+//判断当前字符串对象，是否已目标字符串的字符序列开头
+boolean startsWith(String str)
+    
+//判断当前字符串，是否以目标字符串对象的字符序列结尾，常用于确定文件后缀名格式
+boolean endsWith(String str)
+    
+//判断一个字符串，是不是空字符串
+boolean isEmpty()
+```
+
+
+
+> String类的获取功能
+
+```Java
+// 获取当前字符串对象中，包含的字符个数
+int  length()  
+    
+//获取字符串对象代表字符序列中，指定位置的字符
+char charAt(int index) 
+    
+//在当前字符串对象中查找指定的字符，如果找到就返回字符，首次出现的位置，如果没找到返回-1
+//也可以填字符
+int indexOf(int ch) 
+    
+//指定从当前字符串对象的指定位置开始，查找首次出现的指定字符的位置，(如果没找到返回-1)
+//可以填入字符
+int indexOf(int ch,int fromIndex) 
+    
+//查找当前字符串中，目标字符串首次出现的位置(如果包含)，找不到，返回-1
+//这里的位置是指目标字符串的第一个字符,在当前字符串对象中的位置
+int indexOf(String str)
+
+//指定，从当前字符串对象的指定位置开始,查找首次出现的指定字符串的位置(如果没找到返回-1)
+//这里的位置是指目标字符串的第一个字符,在当前字符串对象中的位置
+int indexOf(String str,int fromIndex) ，
+
+//返回字符串，该字符串只包含当前字符串中，从指定位置开始(包含指定位置字符)到结束的那部分字符串
+String substring(int start) 
+    
+//返回字符串，只包含当前字符串中，从start位置开始(包含)，到end(不包含)指定的位置的字符串
+String substring(int start,int end) 
+```
+
+
+
+> String类的转换功能
+
+```Java
+//获取一个用来表示字符串对象字符序列的，字节数组
+byte[] getBytes()
+    
+//获取的是用来表示字符串对象字符序列的，字符数组
+char[] toCharArray() 
+
+//把字符数组转换成字符串
+static String valueOf(char[] chs)
+
+//把各种基本数据类型转换成字符串
+static String valueOf(int i/double...)
+
+//把字符串全部转化为小写
+String toLowerCase() 
+    
+//把字符串全部转换为大写
+String toUpperCase()
+
+//字符串拼接，作用等价于 + 实现的字符串拼接
+String concat(String str) 
+```
+
+
+
+> String类的其他功能
+
+
+
+- 替换功能
+
+  - ```Java
+    // 在新的字符串中，用新(new)字符，替换旧(old)字符
+    String replace(char old,char new)
+        
+    //在新的字符串中，用新的字符串(new), 替换旧(old)字符串
+    String replace(String old,String new)
+    ```
+
+  - 需要注意的是，替换不是在原对象上替换，而是创建了新的对象
+
+- 去除空格字符
+
+  - ```Java
+    //在新的字符串中，去掉开头和结尾的空格字符
+    String trim() 
+    ```
+
+
+
+- 比较功能
+
+  - ```Java
+    String类的比较功能
+    int compareTo(String str)
+    int compareToIgnoreCase(String str)
+    ```
+
+>  字符串的大小如何比较？
+>        按照字典序，比较字符串的大小。字典序原本的含义实质，英文单词在字典中出现的先后顺序
+>       (在字典中，先出现的字符串小，后出现的字符串大)
+>
+>  具体到编程语言，是根据两个字符串字符串从左往右数
+>
+>  ​	第一个对应位置的不同字符，来决定两字符串的大小
+>  ​        hello
+>  ​        head
+>
+>  ​      compareTo几乎就是按照字典序，来比较两个字符串大小的
+>
+>  ​       字符串对象.compareTo(字符串对象)
+>
+>  compareTo方法返回值，如果是=0则表示对象相等，>0则表示左边对象大于右边对象
+>
+>  <0则表示右边对象大于左边对象
+
+
+
+<img src="C:\Users\AnoxiC2010\Desktop\wdJava30th\SE\课程资料\markdown_picture\image-20210114141237546-1610764707515.png" alt="image-20210114141237546" style="zoom:80%;" />
+
+
+
+结合克隆方法和String 两部分知识
+
+思考:
+
+Object类中的clone方法是浅克隆,那么如果一个类中有String的引用数据类型 成员变量,需不需要做深度克隆?
+
+1需要
+
+2不需要
+
+不需要,深度克隆本质上因为引用的拷贝和原先的引用共用了同一个对象
+
+String虽然是对象 但是它不可变 任何时候 你只要修改 就直接创建新对象
+
+
+
