@@ -3550,3 +3550,16 @@ return field1 == other.field1 && Objects.equals(field2, other.field2) && ...
 > * static int hashCode(type[] a) 5.0
 > * 计算数组a的散列码。组成这个数组的元素类型可以是object, int,long,short,char,byte,boolean,float或double。
 
+# 泛型数组列表
+
+语法
+
+```java
+ArrayList<Student> students = new ArrayList<Student>();
+在Java SE7中，可以省去右边的类型参数；
+ArrayList<Student> students = new ArrayList<>();
+```
+
+>  注：Java SE 5.0以前版本没提供泛型类，在5.0版本以后没有<...>然然可以使用ArrayList，它将被认为是一个删去了类型参数的“原始”类型。
+
+> 注：Java的老版本中，程序员使用Vector类实现动态数组。不过，ArrayList类更加有效，没有任何理由一定要使用Vector类。
