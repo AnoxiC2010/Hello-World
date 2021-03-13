@@ -3632,6 +3632,56 @@ ArrayList<Student> students = new ArrayList<>();
 >
 >   参数：index 被删除的元素位置（必须介于0~size()-1之间）
 
+# 对象包装器与自动装箱
+
+所有基本类型都有一个与之对应的包装器类。对象包装器类是不可变的，一旦构造了包装器，就不用交内需更改包装在其中的值。对象包装器类还是final，也不能定会一他们的子类。
+
+数组列表的类型不能时基本类型但可以时包装器类型。但包装器数组列表效率远远低于基本类型的数组。但应该用它构造小型集合，给程序员操作的方便性比执行效率更重要。
+
+包装对象的==运算检测的是对象是否指向同一个储存区域，因此比较两个包装器对象时应调用equals方法。因为自动装箱规范要求boolean、byte、char<=127，介于-128~127之间的short和int被包装到固定的对象中，所以在这之间的包装对象用==比较的结果才成立。
+
+包装类型和基本数据类型的自动装箱和自动拆箱时编译器认可的，而不是虚拟机。编译器在生成类的字节码时插入必要的方法调用，虚拟机只是执行这些字节码。
+
+包装类可以为null，要注意自动拆箱时的空指针异常。
+
+注：包装类并不能改变Java的值传递，包装对象是不可变的。如果想要编写一个修改数值参数值的方法，可使用在org.omg.CORBA包中定义的持有者（holder）类型，包括IntHolder、BooleanHolder等。每个持有这类型都包含一个公由（！）域值，通过它可以访问存储在其中的值。（这和自己写个对象拷贝引用修改属性的原理一样）
+
+> java.lang.Integer 1.0
+>
+> * int intValue()
+>
+>   以int的形式返回Integer对象的值（在Number类中覆盖了intValue方法）。
+>
+> * static String toString(int i)
+>
+>   以一个新String对象的形式返回给定数值i的十进制表示。
+>
+> * static String toString(int i, int radix)
+>
+>   返回数值i的基于给定radix参数进制的表示
+>
+> * static int parseInt(String s)
+>
+> * static int parseInt(String s, int radix)
+>
+>   返回字符串s表示的整形数值，给定字符串表示的是十进制的整数（第一种方法），或者是radix参数进制的整数（第二种方法）。
+>
+> * static Integer valueOf(String s)
+>
+> * static Integer valueOf(String s, int radix)
+>
+>   返回用s表示的整型数值进行进行初始化后的一个新Integer对象，给定字符串表示的是十进制的整数（第一种方法），或者是radix参数进制的整数（第二种方法）。
+>
+> java.text.NumberFormat 1.1
+>
+> * Number parse(String s)
+>
+>   返回数字值，假设给定的String表示了一个数值。
+
+
+
+
+
 # String
 
 > String概述
