@@ -3680,6 +3680,10 @@ ArrayList<Student> students = new ArrayList<>();
 
 # 枚举
 
+枚举的声明定义类型是一个类，{}里的每一个枚举常量实际上都是这个类的一个***实例***。比较两个枚举类型的值时，永远不需要调用equals，而是直接使用==就可以了。
+
+需要的话可以在枚举类型中添加一些构造器、方法和域。当然，构造器只是在构造枚举常量的时候被调用。
+
 > java.lang.Enum<E> 5.0
 >
 > * static Enum valueOf(Class enumClass, String name)
