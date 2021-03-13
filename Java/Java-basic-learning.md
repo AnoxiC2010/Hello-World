@@ -3678,7 +3678,25 @@ ArrayList<Student> students = new ArrayList<>();
 >
 >   返回数字值，假设给定的String表示了一个数值。
 
+# 枚举
 
+> java.lang.Enum<E> 5.0
+>
+> * static Enum valueOf(Class enumClass, String name)
+>
+>   返回指定名字、给定类的枚举常量
+>
+> * String toString()
+>
+>   返回枚举常量名
+>
+> * int ordinal()
+>
+>   返回枚举常量在enum声明中的位置，位置从0开始计算。
+>
+> * int compareTo(E other)
+>
+>   如果枚举常量出现在other之前，则返回一个负值；如果this==other，则返回0；否则，返回正值。枚举常量的出现次序在enum声明中给出。
 
 
 
