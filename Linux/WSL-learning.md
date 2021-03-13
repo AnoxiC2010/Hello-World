@@ -95,6 +95,44 @@ VSCode启动后便已连接且能看到Linux的目录，可以开始在WIN下的
 
 Linux终端能同步看到VSCode创建和处理的文件
 
+
+
+***windows terminal*** 挺好用的
+
+# File access to each other
+
+**Linux to browse Windows files**
+
+  ```bash
+$cd /mnt/c
+$sudo ls
+//use Linux commands to retrive windows file system
+$find . | grep <filename>
+  ```
+
+**Windows to browse Linux files**
+
+***explorer.exe***
+
+explorer.exe allows me to explore files on the Linux system using Window application
+
+```bash
+$cd ~
+$explorer.exe .
+```
+
+Now it is free to use Windows editor to edit a Linux file.
+Charset Problem
+I inputted Chinese character to a Linux hello.c file by Windows editor, after being compiled in Linux the ./a.out will not output the Chinese character correctly.  Again in Windows, after changing the charset by Notepad, I could see the correct output from the compiled hello.c in Linux within WSL2.
+
+***VS Code***
+
+```bash
+$code <filename>
+```
+
+Starting VS Code in Windows and building remote connect to Linux with the Linux file be directly opened and ready to be edited on Windows. 
+
 # WSL2 with Docker
 
 [Offical Instruction](https://docs.docker.com/docker-for-windows/wsl/)
@@ -134,26 +172,6 @@ Linux终端能同步看到VSCode创建和处理的文件
   it's working now
 
 > In Setting > General,  it says that WSL2 provides better performance than legacy Hyper-V backend
-
-# File access to each other
-
-  ```bash
-//Linux to browse Windows files
-$cd /mnt/c
-$sudo ls
-//use Linux commands to retrive windows file system
-$find . | grep <filename>
----------------------------------------------
-//Windows to browse Linux files using File Explorer
-$cd ~
-$explorer.exe .
-//now it is free to use Windows editor to edit a Linux file.
-//Charset Problem
-//I inputed Chinese character to a Linux hello.c file by Windows editor, after being compiled in Linux the ./a.out will not output the Chinese character correctly.  Again in Windows, after changing the charset by Notepad, I could see the correct output from the compiled hello.c in Linux within WSL2.
-
-  ```
-
-
 
 
 
