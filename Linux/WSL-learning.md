@@ -215,7 +215,7 @@ The web browser is now ready.
 `Settings Manager > Appearance > Settings > Window Scaling > select 2 as the scaling factor`
 `Settings Manager > Window Manager > Style > select Default-xhdpi theme`
 
-RDP session | enable high dpi to fit my 3840x2160 display resolution.
+RDP session | enable high dpi to fit my 3840x2160 display resolution.  It looks stupid nevertheless.
 
 # 子系统和主系统交互
 
