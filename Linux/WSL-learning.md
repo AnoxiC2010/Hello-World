@@ -1,6 +1,6 @@
 # WSL2 Notes
 
-# Installation
+# WSL2 Installation
 
 [Official Instruction](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10#simplified-installation-for-windows-insiders)
 
@@ -97,8 +97,6 @@ Linux终端能同步看到VSCode创建和处理的文件
 
 
 
-***windows terminal*** 挺好用的
-
 # File access to each other
 
 **Linux to browse Windows files**
@@ -133,7 +131,11 @@ $code <filename>
 
 Starting VS Code in Windows and building remote connect to Linux with the Linux file be directly opened and ready to be edited on Windows. 
 
+
+
 # WSL2 with Docker
+
+## Docker for WSL2 Installation
 
 [Offical Instruction](https://docs.docker.com/docker-for-windows/wsl/)
 
@@ -173,5 +175,124 @@ Starting VS Code in Windows and building remote connect to Linux with the Linux 
 
 > In Setting > General,  it says that WSL2 provides better performance than legacy Hyper-V backend
 
+## Docker Websites on WIN10
 
+```bash
+$docker ps
+```
+
+Linux | to show docker containers currently running
+
+```
+localhost:8080
+```
+
+WIN web browser|to show web server currently running on that port.  (the default port number is 80, just input localhost if the server is mapped to default localhost).  It'll time out if there's nothing running on that port.
+
+```bash
+$docker run -dp 8080:80 docker/getting-started:pwd
+```
+
+Linux | to start a docker container and to map port 8080 on the outside to port 80 on the docker container.
+
+so when I connect to port 8080 on my localhost, it's going to map to port 80 on the docker container, the docker container has a web server running .
+
+this will start the "getting-started" container.
+
+```bash
+$docker ps
+```
+
+Linux | now it shows this container with this name is currently created and running , and the local port 8080 is mapped to port 80 on the docker container
+
+```
+localhost:8080
+```
+
+WIN web browser | the website now displays.
+
+```bash
+$ docker run -dp 8081:80 --name mywebsite nginx
+```
+
+Linux | and try to run another container at the same time on local port 8081
+
+```bash
+$docker ps
+```
+
+Linux | to show the docker containers running
+
+```
+localhost:8081
+```
+
+WIN web browser | it shows the website is available
+
+```bash
+$docker run -dp 8082:80 uzyexe/tetris
+```
+
+Linux | to start another one
+
+```
+localhost:8082
+```
+
+WIN web browser | now tetris game is available
+
+```bash
+$docker
+```
+
+Linux | to see the options
+
+```
+$docker stop <CONTAINER ID>
+```
+
+Linux | to stop a container, `$docker ps` shows the container ID.
+
+> get more docker containers from [Docker Website](www.hub.docker.com)
+
+```bash
+$docker pull ubuntu
+```
+
+Linux | to pull ubuntu docker official images
+
+```bash
+$docker run -it ubuntu bash	
+```
+
+Linux | to run ubuntu container and open up a bash shell
+
+```bash
+$lsb_release -a
+```
+
+Ubuntu container | it doesn't work  because lsb-release is not installed
+
+```bash
+$cat /etc/os-release
+```
+
+Ubuntu container | to see OS release information
+
+> **explore more containers from Docker Hub**
+
+
+
+# Windows Terminal
+
+Customize more in settings
+
+| Hotkeys          |                          |
+| ---------------- | ------------------------ |
+| alt+shift+"+"    | to split vertical pane   |
+| alt+shift+"-"    | to split horizontal pane |
+| ctrl+shift+w     | to close a tab           |
+| alt+arrows       | to switch pane           |
+| alt+shift+arrows | to adjust pane           |
+|                  |                          |
 
