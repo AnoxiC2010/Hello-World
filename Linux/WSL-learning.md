@@ -2,15 +2,31 @@
 
 # WSL2 Installation
 
-[Official Instruction](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10#simplified-installation-for-windows-insiders)
+## [Official Instruction](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10#simplified-installation-for-windows-insiders)
 
 * Windows version 2004 or higher
 
-* 2 windows features to be turned on
+* 2 windows features to be turned on via Control Panel or PowerShell
 
-  Virtual Machine Platform
+  Control Panel: √ Virtual Machine Platform
 
-  Windows Subsystem for Linux
+  `PowerShell`
+
+  `dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart`
+
+  Control Panel: √ Windows Subsystem for Linux
+
+  `PowerShell`
+
+  `dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart`
+
+* Download the Linux kernel update package
+
+* restart and set WSL 2 as the default version when installing a new Linux distribution
+
+  `PowerShell`
+
+  `wsl --set-default-version 2`
 
 * Install WSL2 Linux kernel update package
 
@@ -44,6 +60,21 @@
   
     To change your default WSL to certain distro
 
+## Get Windows Terminal (it's nice)
+
+Customize more in settings
+
+| Hotkeys          |                          |
+| ---------------- | ------------------------ |
+| alt+shift+"+"    | to split vertical pane   |
+| alt+shift+"-"    | to split horizontal pane |
+| ctrl+shift+w     | to close a tab           |
+| alt+arrows       | to switch pane           |
+| alt+shift+arrows | to adjust pane           |
+|                  |                          |
+
+
+
 **安装好后开始菜单找到该安装版运行即可进入子系统窗口**
 
 > 子系统可在linux命令窗口运行外也可以在PowerShell中运行
@@ -63,13 +94,125 @@ $ exit
 //关闭所有子系统
 ```
 
-# 和vmware等虚拟机同时用的问题
+* 
+
+## 和vmware等虚拟机同时用的问题
 
 可以同时使用，但是在VMware的处理器中启用嵌套虚拟技术会启动不了
 
 > VMware Player does not support nested virtualization on this host
 
 VMware和wsl2同时使用会变慢
+
+## GUI for WSL2
+
+**A walking around ubuntu GUI before Microsoft release the built-in GUI for WSL2**
+
+`$sudo apt update && sudo apt -y upgrade`
+
+Ubuntu | update and upgrade
+
+`$sudo apt install xrdp`
+
+Ubuntu | to install rdp
+
+`$sudo apt install -y xfce4`
+
+Ubuntu | to install a light weight graphical user interface xfce4
+
+After installed, Package Configuration will ask to choose a display manager between `gdm3` and `lightdm`, here I'm going to use `gdm3`  as David Bombal recommended.
+
+`$sudo apt install -y xfce4-goodies`
+
+Ubuntu | to install additional soft wares `xfce4-goodies`. 
+
+`sudo cp /etc/xrdp/xrdp.ini /etc/xrdp/xrdp.ini.bak`
+
+Ubuntu | in order to do some configuration of xrdp, to back up the xrdp configuration file first.
+
+(for restoring the backup if made mistakes.)
+
+`$sudo sed -i 's/3389/3390/g' /etc/xrdp/xrdp.ini`
+
+Ubuntu | to change the default port of 3389 to 3390, to use a different port number to the default, maker sure there's no conflicts
+
+(no need to do this, just to follow Dalao's step)
+
+`$sudo sed -i 's/max_bpp=32/#max_bpp=32\nmax_bpp=128/g' /etc/xrdp/xrdp.ini`
+
+`$sudo sed -i 's/xserverbpp=24/#xserverbpp=24\nxserverbpp=128/g' /etc/xrdp/xrdp.ini`
+
+Ubuntu | to increase the resolution by increasing the bits per pixel, the 2 commands just allow the quality of rdp session to be better
+
+(I'm basically rdping to myself locally, make sense to have good quality )
+
+`$echo xfce4-session > ~/.xsession`
+
+Ubuntu | to save that to xsession.
+
+`$sudo nano /etc/xrdp/startwm.sh`
+
+```
+//go right to the end to find these last two lines
+test -x /etc/X11/Xsession && exec /etc/X11/Xsession
+exec /bin/sh /etc/X11/Xsession
+//to comment out the two lines
+# test -x /etc/X11/Xsession && exec /etc/X11/Xsession
+# exec /bin/sh /etc/X11/Xsession
+//to add additional two lines.  ctrl+x to exit and save this file.
+# xfce
+startxfce4
+```
+
+Ubuntu | to edit this xrdp startup script by nano.
+
+`$sudo /etc/init.d/xrdp start`
+
+Ubuntu | to start up xrdp.
+
+***That's been down, the RDP server is now started.***
+
+**To test the connection:**
+
+`Start Menue > Remote Desktop Connection`
+
+WIN10 | to open remote desktop connection
+
+`Computer: localhost:3390 or <server ip>:3390`
+
+`Username: None Specified`
+
+Remote Desktop Connection | to use the local host port 3390 I changed for RDP server to connect.
+
+Click the connect and ignore the warning.
+
+`Session: Xorg`
+
+`username: *****`
+
+`password: *****`
+
+RDP session | I got an RDP session to my Ubuntu server now. To login in with the Ubuntu username and password.
+
+Click Ok to login to the Ubuntu server.
+
+Then I've RDPed or opened a remote desktop to my Ubuntu computer.
+
+`$lsb_release -a`
+
+`$ip addr`
+
+Ubuntu CLI && RDP session terminal|  to check release info and IP address, the info shows they are the same server.
+
+For it's a light weight GUI interface rather than the default, error shows when trying to open the browser.
+
+`$sudo apt install firefox`
+
+RDP session terminal | to install firefox as the default browser.
+
+The web browser is now ready.
+
+
 
 # 子系统和主系统交互
 
@@ -283,16 +426,5 @@ Ubuntu container | to see OS release information
 
 
 
-# Windows Terminal
 
-Customize more in settings
-
-| Hotkeys          |                          |
-| ---------------- | ------------------------ |
-| alt+shift+"+"    | to split vertical pane   |
-| alt+shift+"-"    | to split horizontal pane |
-| ctrl+shift+w     | to close a tab           |
-| alt+arrows       | to switch pane           |
-| alt+shift+arrows | to adjust pane           |
-|                  |                          |
 
