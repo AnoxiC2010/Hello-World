@@ -136,7 +136,7 @@ Ubuntu | in order to do some configuration of xrdp, to back up the xrdp configur
 
 Ubuntu | to change the default port of 3389 to 3390, to use a different port number to the default, maker sure there's no conflicts
 
-(no need to do this, just to follow Dalao's step)
+(not necessary, just to follow Dalao's step)
 
 `$sudo sed -i 's/max_bpp=32/#max_bpp=32\nmax_bpp=128/g' /etc/xrdp/xrdp.ini`
 
@@ -144,7 +144,7 @@ Ubuntu | to change the default port of 3389 to 3390, to use a different port num
 
 Ubuntu | to increase the resolution by increasing the bits per pixel, the 2 commands just allow the quality of rdp session to be better
 
-(I'm basically rdping to myself locally, make sense to have good quality )
+(not necessary, for basically rdping to myself locally, make sense to have good quality as Dalao demonstrated. )
 
 `$echo xfce4-session > ~/.xsession`
 
@@ -212,7 +212,10 @@ RDP session terminal | to install firefox as the default browser.
 
 The web browser is now ready.
 
+`Settings Manager > Appearance > Settings > Window Scaling > select 2 as the scaling factor`
+`Settings Manager > Window Manager > Style > select Default-xhdpi theme`
 
+RDP session | enable high dpi to fit my 3840x2160 display resolution.
 
 # 子系统和主系统交互
 
