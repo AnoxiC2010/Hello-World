@@ -3764,75 +3764,26 @@ public String(String original)
 
 
 
-> 小试牛刀
-
-- 看程序说结果
-
-  - ```Java
-    String s = "hello";
-    s += "world";
-    System.out.println(s);
-    ```
-
-- 下面两种赋值方式有什么区别？
-
-  - ```Java
-    String s1 = "我是猪";
-    String s = new String("我是猪");
-    ```
-
-  - 三个获取数组的方法
-
-    - ```Java
-      //使用指定字符集，将字符编码成字节序列，并将结果存储到一个新的 byte 数组中
-      getBytes(String charsetName) 
-      ```
-
-    - ```Java
-      //将字符从此字符串复制到目标字符数组
-      getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
-      ```
-
-    - ```java 
-      //将此字符串转换为一个新的字符数组。
-      toCharArray()
-      ```
-
-- 看程序说结果
-
-  - ```Java
-    String s1 = new String("hello");
-    String s2 = new String("hello");
-    System.out.println(s1 == s2);
-    System.out.println(s1.equals(s2));
-    
-    String s3 = new String("hello");
-    String s4 = "hello";
-    System.out.println(s3 == s4);
-    System.out.println(s3.equals(s4));
-    
-    String s5 = "hello";
-    String s6 = "hello";
-    System.out.println(s5 == s6);
-    System.out.println(s5.equals(s6));
-    ```
-
-  - String类中重写了equals()方法，比较的是字符串的内容而不是地址
+> 三个获取数组的方法
 
 
 
-- 看程序说结果
+- ```Java
+//使用指定字符集，将字符编码成字节序列，并将结果存储到一个新的 byte 数组中
+  getBytes(String charsetName) 
+  ```
+  
+- ```Java
+  //将字符从此字符串复制到目标字符数组
+  getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
+  ```
 
-  - ```Java
-    String s1 = "hello";
-    String s2 = "world";
-    String s3 = "helloworld";
-    System.out.println(s3==(s1+s2));
-    System.out.println(s3.equals(s1+s2));
-    
-    System.out.println(s3==("hello"+"world"));
-    System.out.println(s3.equals("hello"+"world"));
-    ```
+- ```java 
+  //将此字符串转换为一个新的字符数组。
+  toCharArray()
+  ```
+
+> String类中重写了equals()方法，比较的是字符串的内容而不是地址
 
 
 
@@ -3953,6 +3904,15 @@ String concat(String str)
 
   - 需要注意的是，替换不是在原对象上替换，而是创建了新的对象
 
+  - ```java
+    //使用给定的 replacement 替换此字符串匹配给定的正则表达式的第一个子字符串。
+    String replaceAll(String regex, String replacement)
+    //使用给定的 replacement 替换此字符串匹配给定的正则表达式的第一个子字符串。
+    String replaceFirst(String regex, String replacement)
+    ```
+
+    
+
 - 去除空格字符
 
   - ```Java
@@ -3969,6 +3929,18 @@ String concat(String str)
     int compareTo(String str)
     int compareToIgnoreCase(String str)
     ```
+
+**Comparable接口和Comparator接口**
+
+> Comparable 是一个功能接口，里面有个compareTo方法，实现了这个功能接口的类可以用Arrays.sort(Object o)或者Collections.sort(Object o)进行自然排序
+>
+> 但是别人已经写好的类要我们自然排序的话需要改别人的源代码实现接口，实现Comparable接口还要同时重写保证equals方法的一致性，因为某些集合的操作用compartTo判断不相等但用equals判断相等的话也不能插入。
+>
+> 所以还可里利用Comparator接口不用修改原有代码的情况下实现自然排序：
+>
+> `Arrays.sort(T[] a, Comparable<? super T> c)`直接用Lambda表达式或者匿名内部类写法
+>
+> 比较功能代码量多的话可用Lambda表达式指向某个已经实现的方法写法简便
 
 >  字符串的大小如何比较？
 >        按照字典序，比较字符串的大小。字典序原本的含义实质，英文单词在字典中出现的先后顺序
@@ -3990,23 +3962,41 @@ String concat(String str)
 
 
 
-<img src="C:\Users\AnoxiC2010\Desktop\wdJava30th\SE\课程资料\markdown_picture\image-20210114141237546-1610764707515.png" alt="image-20210114141237546" style="zoom:80%;" />
-
-
-
 结合克隆方法和String 两部分知识
 
 思考:
 
 Object类中的clone方法是浅克隆,那么如果一个类中有String的引用数据类型 成员变量,需不需要做深度克隆?
 
-1需要
-
-2不需要
-
 不需要,深度克隆本质上因为引用的拷贝和原先的引用共用了同一个对象
 
 String虽然是对象 但是它不可变 任何时候 你只要修改 就直接创建新对象
 
 
+
+# 反射 没看懂
+
+> java.lang.Class 1.0
+>
+> * static Class forName(String className)
+>
+>   返回描述类名为clasName的Class对象。
+>
+> * Object newInstance()
+>
+>   返回这个类的一个新实例。
+>
+> java.lang.reflect.Constructor 1.1
+>
+> * Object newInstance(Object[] args)
+>
+>   狗仔一个这个构造器所属类的新实例。
+>
+>   参数：args 这是提供给构造器的参数。
+>
+> java.lang.Throwable 1.0
+>
+> * void printStackTrace()
+>
+>   将Throwable对象和栈轨迹输出到标准错误流。
 
