@@ -1805,6 +1805,8 @@ class Son extends Father {
 
 # 接口
 
+
+
 - 一方面，我们有时需要从多个类中派生出一个类，继承它们所有的成员，Java语法不适用
   - Java不支持多继承
 - 另一方面，我们有时候需要从几个类中抽取出共同的行为特征
@@ -2066,6 +2068,51 @@ s.show();
 new StudentDemo().getStudent().show();
 //结果是一样的
 ```
+
+> 在Java API中，会看到很多接口都有相应的伴随类，这个伴随类中实现了相应接口的部分或所有方法，如Collection/AbstractCollection或MouseListener/MouseAdapter。在Java SE 8中，这个技术已经过时。现在可以直接在接口中实现方法。
+>
+> Java SE 8中，允许在接口中定义静态方法和默认方法。
+
+> 默认方法冲突
+>
+> 如果先在一个接口中将一个方法定义为默认方法，然后又在超类或另一个接口中定义了同样的方法，规则如下：
+>
+> 1. 超类优先。如果超类提供了一个具体方法，同名而且有相同参数类型的默认方法会被忽略。确保了Java SE 7的兼容性。
+> 2. 接口冲突。如果一个接口提供了一个默认方法，另一个接口提供了一个同名而且参数类型（不论是否是默认参数）相同的方法，必须覆盖这个方法来解决冲突。
+
+> 警告：不要让一个默认方法重新定义Object类中的某个方法，如为toString或equals定义默认方法。由于“类优先”规则，这样的方法绝对无法超越Object.toString或Objects.equals。
+
+## 接口与回调
+
+> javax.swing.JOptionPane 1.2
+>
+> * static void showMessageDialog(Componenet parent, Object message)
+>
+>   显示一个包含一条消息和OK按钮的对话框。这个对话框将位于parent组件的中央。如果parent为null，对话框江西那是在屏幕的中央。
+>
+> javax.swing.Timer 1.2
+>
+> * Timer(int interval, ActionListener listener)
+>
+>   构造一个定时器，每个interval毫秒通告listener一次。
+>
+> * void start()
+>
+>   启动定时器。一旦启动成功，定时器将调用监听器的actionPerformed。
+>
+> * void stop()
+>
+>   停止定时器。一旦停止成功，定时器将不再调用监听器的actionPerformed。
+>
+> java.awt.Toolkit 1.0
+>
+> * static Toolkit getDefaultToolkit()
+>
+>   获得默认的工具箱。工具箱包含有关GUI环境的信息。
+>
+> * void beep()
+>
+>   发出一声铃声。
 
 # 内部类
 
