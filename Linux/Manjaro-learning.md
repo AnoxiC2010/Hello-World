@@ -32,7 +32,7 @@ Sudo pacman -S vim
 
 不能铺满屏幕的问题：
 
-安装后有bug只能在很小800X左右分辨率窗口显示（不拉伸的话），更新后能适应屏幕，但是重启又变很小，[参考方法](https://github.com/Feliz-SZK/Linux-Decoded/blob/master/Fix%20Resolution%20Issue%20on%20Manjaro(Vmware%20Guest).Md)：
+安装后有bug只能在很小800X600左右分辨率窗口显示（不拉伸的话），更新后能适应屏幕，但是重启又变很小，[参考方法](https://github.com/Feliz-SZK/Linux-Decoded/blob/master/Fix%20Resolution%20Issue%20on%20Manjaro(Vmware%20Guest).Md)：
 
 ```bash
 $sudo pacman -S open-vm-tools
