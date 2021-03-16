@@ -4596,6 +4596,8 @@ private static void method() {
 
 **3.执行完return语句后，返回值无论怎么修改，都不会改变打印结果。**
 
+**4.如果没catch到，但是finally中有return,会直接执行finally中的return，异常的抛出就无法执行到了**
+
 try...catch变形
 
 ```
@@ -4606,7 +4608,7 @@ try...catch变形
 		try...finally
 ```
 
-
+try...finally在IO操作中比较常见，异常抛给上层，但必须释放资源。
 
 #### final，finally和finalize的区别
 
