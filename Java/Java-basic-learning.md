@@ -2114,6 +2114,46 @@ new StudentDemo().getStudent().show();
 >
 >   发出一声铃声。
 
+## Comparable<T>和Comparator<T>接口
+
+> Comparable<T> 是一个功能接口，里面有个compareTo方法，实现了这个功能接口的类可以用Arrays.sort(Object o)或者Collections.sort(Object o)进行自然排序
+>
+> 但是别人已经写好的类要我们自然排序的话需要改别人的源代码实现接口，实现Comparable<T>接口还要同时重写保证equals方法的一致性，因为某些集合的操作用compartTo判断不相等但用equals判断相等的话也不能插入。
+>
+> 所以还可里利用Comparator<T>接口不用修改原有代码的情况下实现自然排序：
+>
+> `Arrays.sort(T[] a, Comparable<? super T> c)`直接用Lambda表达式或者匿名内部类写法
+>
+> 比较功能代码量多的话可用Lambda表达式指向某个已经实现的方法写法简便
+>
+> java.lang.Comparable<T> 1.0
+>
+> * int compareTo(T other)
+>
+>   用着个对象与other进行比较。如果这个对象小于other则返回负值；如果相等则返回0；否则返回正值。
+>
+> java.util.Arrays 1.2
+>
+> * static void sort(Object[] a)
+>
+>   使用mergesort算法对数组a中的元素惊醒排序。要求数组中的元素必须属于实现了Comparable接口的类，并且元素之间必须是可比较的。
+>
+> java.lang.Integer 1.0
+>
+> * static int compare(int x, int y) 7
+>
+>   如果x<y返回一个负整数；如果x和y相等，则返回0；否则返回一个负整数。
+>
+> java.lang.Double 1.0
+>
+> * static int compare(double x, double y) 1.4
+>
+>   如果x<y返回一个负数；如果x和y相等则返回0；否则返回一个负数。
+
+比如String类实现了Comparable<String>，而且String.compareTo方法可以按字典顺序比较字符串。当我们希望按长度递增的顺序对字符串进行排序，而不是按字典顺序，肯定不能让String类用两种不同的方式实现compareTo方法。何况String 类不应该有我们来修改。
+
+于是用Arrays.sort(T[] a, Comparable<? super T> c)，该版本需要一个数组和一个比较器为参数，比较器就是实现了Comparator接口的类的实例。
+
 # 内部类
 
 
@@ -3977,41 +4017,7 @@ String concat(String str)
     int compareToIgnoreCase(String str)
     ```
 
-**Comparable<T>接口和Comparator<T>接口**
 
-> Comparable<T> 是一个功能接口，里面有个compareTo方法，实现了这个功能接口的类可以用Arrays.sort(Object o)或者Collections.sort(Object o)进行自然排序
->
-> 但是别人已经写好的类要我们自然排序的话需要改别人的源代码实现接口，实现Comparable<T>接口还要同时重写保证equals方法的一致性，因为某些集合的操作用compartTo判断不相等但用equals判断相等的话也不能插入。
->
-> 所以还可里利用Comparator<T>接口不用修改原有代码的情况下实现自然排序：
->
-> `Arrays.sort(T[] a, Comparable<? super T> c)`直接用Lambda表达式或者匿名内部类写法
->
-> 比较功能代码量多的话可用Lambda表达式指向某个已经实现的方法写法简便
->
-> java.lang.Comparable<T> 1.0
->
-> * int compareTo(T other)
->
->   用着个对象与other进行比较。如果这个对象小于other则返回负值；如果相等则返回0；否则返回正值。
->
-> java.util.Arrays 1.2
->
-> * static void sort(Object[] a)
->
->   使用mergesort算法对数组a中的元素惊醒排序。要求数组中的元素必须属于实现了Comparable接口的类，并且元素之间必须是可比较的。
->
-> java.lang.Integer 1.0
->
-> * static int compare(int x, int y) 7
->
->   如果x<y返回一个负整数；如果x和y相等，则返回0；否则返回一个负整数。
->
-> java.lang.Double 1.0
->
-> * static int compare(double x, double y) 1.4
->
->   如果x<y返回一个负数；如果x和y相等则返回0；否则返回一个负数。
 
 >  字符串的大小如何比较？
 >        按照字典序，比较字符串的大小。字典序原本的含义实质，英文单词在字典中出现的先后顺序
