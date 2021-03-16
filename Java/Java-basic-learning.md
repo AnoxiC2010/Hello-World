@@ -2974,6 +2974,30 @@ interface IHasReturnTwoParam {
 - 缺点：
   - 过于简单的lambda表达式，显然可读性很低
 
+> 注意不能把Lambda表达式赋值给Object的变量，Object不是一个函数式接口。
+
+> Java API在java.util.function包中定义了很多非常通用的函数式接口。不过对于Java程序员而言，想要用lambda表达式做某些处理，还是要谨记表达式的用途，为它建立一个特定的函数式接口。
+>
+> java.util.function包中有一个尤其有用的接口Predicate。
+>
+> public interface Predicate<T>{
+>
+> ​	boolean test(T t);
+>
+> //Additional default and static methods
+>
+> }
+>
+> 这个接口专门用来传递lambda表达式。例如ArrayList类有一个removeIf方法的参数就是一个Predicate。
+>
+> list.removeIf(e -> e == null);//从一个数组列表删除所有null值。
+
+lambda表达式内作用域在方法中，可以使用所在方法中已经定义的变量，但是和内部类同样受到限制，即方法中的局部变量已经lambda表达式使用，该变量便隐式成为一个effectively final（最终变量），就常量，无论在lambda表达式内，还是lambda表达式后的方法体内该变量的值都不允许改变，否则不允许捕获该变量。
+
+同上原因，lambda表达式中this关键字是指创建这个lambda表达式的方法的this参数，而不是函数式接口的实例。
+
+最好参考基本类型的函数式规范来减少自动装箱。
+
 # Object引入
 
 Application Programming Interface(API)：应用程序编程接口，在Java当中指的是一些预先定义好的类和方法
