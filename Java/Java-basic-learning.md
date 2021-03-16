@@ -3406,16 +3406,6 @@ protected void finalize()  throws Throwable {  }
 
 # clone()
 
-> 引入
->
-> 生物学上的clone，是由物种A的体细胞经过无性繁殖，生成基因型完全一致的后代的过程
->
-> Java问世时，生物学上clone技术已经风靡全球，所以Java中的clone方法和生物学中的克隆有类似性
->
-> 所以Java中的克隆就是复制一个和之前对象一模一样但又完全独立的一个新对象
-
-
-
 > 概述
 
 - protected Object clone() 
@@ -3489,34 +3479,7 @@ Cloneable接口：
 
 ​	
 
-> 深度克隆练习
-
-- 现在有三个类 FirstLevel 、SecondLevel 、ThirdLevel 
-
-- FirstLevel 类有三个属性
-
-  - ```Java
-    int firstIntValue;
-    double firstDoubleValue;
-    SecondLevel second;
-    ```
-
-- SecondLevel 类有三个属性
-
-  - ```Java
-    int secondIntValue;
-    double secondDoubleValue;
-    ThirdLevel third;
-    ```
-
-- ThirdLevel 类有两个属性
-
-  - ```Java
-    int thirdIntValue;
-    double thirdDouleValue;
-    ```
-
-    
+> 所有数组类型都有一个public的clone方法，而不是protected。可以用这个方法建立一个新数组，包括原数组所有元素的副本。
 
 # Object类：所有类的超类
 
