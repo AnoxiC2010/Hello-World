@@ -1,0 +1,4 @@
+# Vim Manual
+
+:syntax on
+
