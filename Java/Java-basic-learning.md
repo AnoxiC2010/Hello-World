@@ -4982,3 +4982,219 @@ public class FileTest2 {
   - 如果这个file对象是文件，直接删除
 - 最后不要忘记删除已经是空目录的当前目录
 
+
+
+# IO概述
+
+**什么是IO**
+
+- I：Input 输入
+- O：Output输出
+
+为啥有IO？
+
+-  在操作系统中，一切需要永久保存的数据都以文件的形式 存储。需要长久保存的文件数据，存储在外部设备。
+   但是需要读入内存才能显示这些数据
+   同时，内存的大小有限，因此常常需要在内存和外设之间交换数据，即I/O
+
+**java当中如何实现IO功能**
+
+- 我们通过java的IO流
+
+- java流模型
+
+  【  JVM内存  】                                   【 ↓ 】
+
+  【输入流对象】<==read方法 读=== 【硬】
+
+  【输出流对象】<==write方法 写=== 【盘】
+
+  创建流对象之后，就建立起了内存和外设的数据通道，当数据从一端移动到另一端就完成了一次数据传输。
+
+
+
+**流的分类**
+
+- 按流向分（以内存为参照为）
+  - 输入流   外设→内存
+  - 输出流  内存→外设
+- 按照数据类型分类
+  - 字节流  以字节为单位，一连串的二进制  1B=8bit  0000 0000 
+  - 字符流  以字符为单位，一连串的字符序列 ，理解成为一种文化符号  “你”  “abc”  “の” 
+
+**抽象基类**
+
+- 字节输出流 OutputStream
+- 字节输入流 InputStream
+- 字符输出流 Writer
+- 字符输入流 Reader
+
+注意：由这4个基类派生出的子类都是以其父类名字作为后缀的
+
+eg：字节文件输出流：FileOutputStream
+
+字节文件输入流：FileInputStream
+
+# 字节流
+
+## 字节输出流
+
+### 抽象基类
+
+**OutputStream**
+
+- 继承关系
+
+  ```
+  [AutoCloseable]
+  [<interface>]
+  [close()]
+       ↑
+  [Closeable]          [Flushable]
+  [<interface>]        [<interface>]
+  [close()]			 [flush()]
+       ↑                   ↑
+  [OutputStream]→→→→→→→→→→→↑
+  [abstract]
+  ```
+
+  
+
+- 成员方法
+
+  - | void           | close()        关闭此输出流并释放与此流有关的所有系统资源。  |
+    | -------------- | ------------------------------------------------------------ |
+    | void           | flush()        刷新此输出流并强制写出所有缓冲的输出字节。    |
+    | void           | write(byte[] b)        将 b.length 个字节从指定的 byte 数组写入此输出流。 |
+    | void           | write(byte[] b,  int off, int len)       将指定 byte 数组中从偏移量 off 开始的  len 个字节写入此输出流。 |
+    | abstract  void | write(int b)        将指定的字节写入此输出流。               |
+
+  - write(int b) 
+
+    - write 的常规协定是：向输出流写入一个字节。要写入的字节是参数 b 的八个低位。b 的 24 个高位将被忽略。
+
+  - write(byte[] b,  int off, int len)
+
+  - 参数：
+    b - 数据。
+    off - 数据中的初始偏移量。
+    len - 要写入的字节数。
+
+### 具体子类
+
+#### FileOutputSteam
+
+- 构造方法
+
+  - | FileOutputStream(File file)        创建一个向指定 File 对象表示的文件中写入数据的文件输出流。 |
+    | ------------------------------------------------------------ |
+    | FileOutputStream(File file,  boolean append)       创建一个向指定 File  对象表示的文件中写入数据的文件输出流。 |
+    | FileOutputStream(String name)        创建一个向具有指定名称的文件中写入数据的输出文件流。 |
+    | FileOutputStream(String name,  boolean append)       创建一个向具有指定 name 的文件中写入数据的输出文件流。 |
+
+- 成员方法
+
+| void | write(byte[] b)        将 b.length 个字节从指定 byte 数组写入此文件输出流中。 |
+| ---- | ------------------------------------------------------------ |
+| void | write(byte[] b,  int off, int len)       将指定 byte 数组中从偏移量 off 开始的  len 个字节写入此文件输出流。 |
+| void | write(int b)        将指定字节写入此文件输出流。             |
+
+Demo
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        //   1.创建字节输出流对象
+        FileOutputStream out = new FileOutputStream("a.txt");
+
+        //    2.把我们的数据交给write方法
+        // write(int b)
+        //writeSingle(out);
+
+        // 用字节数组方式
+        //writeMuti(out);
+
+        String s = "abcd";
+        out.write(s.getBytes(),0,s.getBytes().length);
+
+
+        //    3.close
+        out.close();
+    }
+
+    private static void writeMuti(FileOutputStream out) throws IOException {
+        String s = "abcd";
+        out.write(s.getBytes());
+    }
+
+    private static void writeSingle(FileOutputStream out) throws IOException {
+        out.write(97);
+        out.write(98);
+        out.write(99);
+        out.write(100);
+    }
+}
+
+```
+
+**<font color=red>注意</font>**
+
+- 创建字节输出流对象做了什么事情
+
+  - 创建之前，jvm到操作系统找文件
+    - 没找到，会帮我们创建文件
+    - 找了，会清空文件内容 从头开始写
+  - 创建输出流对象，建立起内存与外设的数据通道
+
+- 怎么实现文件追加？
+
+  - ```java
+        public static void main(String[] args) throws IOException {
+            FileOutputStream out = new FileOutputStream("a.txt", true);
+            out.write("abcd".getBytes());
+            out.close();
+        }
+    ```
+
+- 如何实现换行
+
+  - ```java
+        public static void main(String[] args) throws IOException {
+            FileOutputStream out = new FileOutputStream("a.txt",true);
+            //out.write("\r\n".getBytes());
+            //out.write(System.lineSeparator().getBytes());
+            out.write("\n".getBytes());
+    
+            out.write("abcd".getBytes());
+            out.close();
+        }
+    ```
+
+    
+
+## 字节输入流
+
+
+
+## 
+
+
+
+# 字符流
+
+
+
+
+
+# 其他流
+
+## 数据流
+
+
+
+## 打印流
+
+
+
+## 对象流
+
