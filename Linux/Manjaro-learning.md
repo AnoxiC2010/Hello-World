@@ -43,3 +43,19 @@ $sudo systemctl start vmtoolsd
 $sudo systemctl restart vmtoolsd //登录不全屏就直接执行
 ```
 
+# ssh
+
+开启ssh服务
+
+`$ systemctl start sshd.service`
+
+ssh服务开机自启
+
+`$ systemctl enable sshd.service`
+
+重启ssh服务
+
+`$ systemctl restart sshd.service`
+
+
+
