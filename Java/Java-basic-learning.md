@@ -5379,13 +5379,670 @@ public class Demo2 {
         }
     ```
 
+- 为什么要close?
+
+  - java 流底层使用操作系统的内核资源,io资源属于操作系统的.不像new出来的对象一样被垃圾回收机制给回收,所以只能释放资源,close显式的去释放资源.一般来说只有使用close方法 都是使用了jvm以外的资源,文件,端口.
+
+- 异常处理
+
+  - 方式一:
+
+    - ```java
+      /*传统的异常处理方式*/
+      public class Demo {
+          public static void main(String[] args) {
+              String s = "hello";
+              FileOutputStream out = null;
+              try {
+                  out = new FileOutputStream("a.txt");
+                  out.write(s.getBytes());
+      
+              } catch (FileNotFoundException e) {
+                  e.printStackTrace();
+              } catch (IOException e) {
+                  e.printStackTrace();
+              }finally {
+                  try {
+                      //判断是否为null
+                      if (out != null) {
+      
+                          out.close();
+                      }
+                  } catch (IOException e) {
+                      e.printStackTrace();
+                  }
+              }
+      
+          }
+      }
+      ```
+
+  - 方式二
+
+  - ```
+    //try-with-resources
+    语法:
+    try(需要释放的资源,实现了Closeable或者AutoCLoseable接口){
+    //代码
+    }catch(){
     
+    }finally{
+    
+    }
+    
+    ```
+
+    ```java
+    public class Demo2 {
+        public static void main(String[] args) {
+            // try-with-resources
+    
+            try(FileOutputStream out =
+                        new FileOutputStream("a.txt")){
+                // 写数据操作
+                out.write("world".getBytes());
+    
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    ```
+
+    Demo
+
+    ```java
+    // 实现AutoCloseable接口
+    public class Demo3 {
+        public static void main(String[] args) {
+            try(A a=new A()) {
+                // 调用test方法
+                a.test();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    class A implements AutoCloseable {
+    
+        @Override
+        public void close() throws Exception {
+            System.out.println("执行了close方法");
+        }
+    
+        public void test() {
+            System.out.println("执行了test方法");
+        }
+    }
+    ```
+
+
+#### BufferedOutputStream
+
+该类实现缓冲的输出流。通过设置这种输出流，应用程序就可以将各个字节写入底层输出流中，而不必针对每次字节写入调用底层系统。
+
+- 继承关系
+
+  * ```
+    <C> BufferedOutputStream
+    	<C> FilterOutputStream
+    		<C> OutputStream
+    			<C> Object
+    			<I> Closeable
+    			<I> Flushable
+    ```
+
+  ​	
+
+- 构造方法
+
+  - | BufferedOutputStream(OutputStream out)        创建一个新的缓冲输出流，以将数据写入指定的底层输出流。 |
+    | ------------------------------------------------------------ |
+    | BufferedOutputStream(OutputStream out,  int size)       创建一个新的缓冲输出流，以将具有指定缓冲区大小的数据写入指定的底层输出流。 |
+
+  - 这种需要传入底层基础流我们称为包装流(处理流),实际上在原有流的基础上进行了功能的扩展,参数是底层流,也叫作节点流
+
+    ```
+    【BufferedInputStream】		   【		】
+    【  [InputStream]    】<==read===【	磁	】
+    【  (缓冲区8192B)     】			 【		   】
+    								 【		  】
+    【BufferedOutputStream】			【		 】
+    【   [OutputStream]   】==write==>【	盘    】
+    【	(缓冲区8192B)     】		  【			】
+    ```
+
+
+
+简单使用:
+
+```java
+/*| BufferedOutputStream(OutputStream out)
+     创建一个新的缓冲输出流，以将数据写入指定的底层输出流。 |
+| ------------------------------------------------------------ |
+| BufferedOutputStream(OutputStream out,  int size)
+   创建一个新的缓冲输出流，以将具有指定缓冲区大小的数据写入指定的底层输出流。 |*/
+public class Demo1 {
+    public static void main(String[] args) throws IOException {
+        FileOutputStream out = new FileOutputStream("a.txt");
+        BufferedOutputStream bo = new BufferedOutputStream(out);
+
+        //BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(
+        //        new FileOutputStream(new File("a.txt")));
+
+        // 写数据
+        bo.write("hello".getBytes());
+        // 刷新数据 
+        //bo.flush();
+        //close
+        bo.close();
+        // close方法会自动执行flush方法 
+        // 关闭包装流 会去自动关闭底层流
+    }
+}
+```
+
+
+
+
 
 ## 字节输入流
 
+### 抽象基类
+
+**InputStream**
+
+- 继承关系
+
+  * ```
+    AutoCloseable<interface>
+    +close()
+    	↑
+    Closeable<interface>
+    +close
+    	↑
+    InputStream<abstract>
+    +3个read方法
+    ```
+
+    
+
+- 成员方法
+
+  - | abstract  int | read()        从输入流中读取数据的下一个字节。               |
+    | ------------- | ------------------------------------------------------------ |
+    | int           | read(byte[] b)        从输入流中读取一定数量的字节，并将其存储在缓冲区数组 b 中。 |
+    | int           | read(byte[] b,  int off, int len)       将输入流中最多 len 个数据字节读入 byte 数组。 |
+
+  - read()   
+
+    - 从输入流中读取数据的下一个字节。readData
+    - 返回 0 到 255 范围内的 int 字节值。如果因为已经到达流末尾而没有可用的字节，则返回值 -1。在输入数据可用、检测到流末尾或者抛出异常前，此方法一直阻塞。
+
+  - read(byte[] b,  int off, int len) 
+
+  - 参数：
+    b - 读入数据的缓冲区。
+    off - 数组 b 中将写入数据的初始偏移量。
+    len - 要读取的最大字节数
 
 
-## 
+
+
+### 具体子类
+
+#### FileInputStream
+
+- 构造方法
+
+- | FileInputStream(File file)        通过打开一个到实际文件的连接来创建一个 FileInputStream，该文件通过文件系统中的  File 对象 file 指定。 |
+  | ------------------------------------------------------------ |
+  | FileInputStream(String name)        通过打开一个到实际文件的连接来创建一个 FileInputStream，该文件通过文件系统中的路径名  name 指定。 |
+
+- 成员方法
+
+  - | int  | read()        从此输入流中读取一个数据字节。                 |
+    | ---- | ------------------------------------------------------------ |
+    | int  | read(byte[] b)        从此输入流中将最多 b.length 个字节的数据读入一个 byte 数组中。 |
+    | int  | read(byte[] b,  int off, int len)       从此输入流中将最多 len 个字节的数据读入一个  byte 数组中。 |
+
+**读取数据**
+
+- read()
+
+- ```java
+  public class Demo1 {
+      public static void main(String[] args) throws IOException {
+          //FileInputStream in = new FileInputStream(new File("a.txt"));
+          FileInputStream in = new FileInputStream("a.txt");
+  
+          // read()读取数据  返回的是字节值
+          //readSingle(in);
+  
+          // read(byte[] b) 返回的是个数
+          //readMuti(in);
+  
+          // read(byte[]b,int off,int len)
+          byte[] bytes = new byte[4];
+          int readCount = in.read(bytes, 0, bytes.length);
+          System.out.println(readCount);
+          System.out.println(new String(bytes,0,readCount));
+  
+  
+          // close
+          in.close();
+      }
+  
+      private static void readMuti(FileInputStream in) throws IOException {
+          byte[] bytes = new byte[4];
+          int readCount = in.read(bytes);
+          System.out.println(readCount);
+          System.out.println(new String(bytes,0,readCount));
+      }
+  
+      private static void readSingle(FileInputStream in) throws IOException {
+          int readData = in.read();
+          System.out.println(((char) readData));
+  
+          int readData2 = in.read();
+          System.out.println(((char) readData2));
+  
+          int readData3 = in.read();
+          System.out.println(((char) readData3));
+  
+          int readData4 = in.read();
+          System.out.println(((char) readData4));
+  
+          int readData5 = in.read();
+          System.out.println((readData5));
+      }
+  }
+  
+  ```
+
+  注意:（写入长度）
+
+- ```java
+  public class Demo2 {
+      public static void main(String[] args) throws IOException {
+          FileInputStream in = new FileInputStream("a.txt");
+          byte[] bytes = new byte[4];
+          int readCount = in.read(bytes);
+          System.out.println(readCount);
+          System.out.println(new String(bytes,0,readCount));
+  
+          int readCount2 = in.read(bytes);
+          System.out.println(readCount2);
+          System.out.println(new String(bytes,0,readCount2));
+  
+          in.close();
+      }
+  }
+  
+  ```
+
+  
+
+**循环读取数据**
+
+- ```java
+  public class Demo3 {
+      public static void main(String[] args) throws IOException {
+          // 第一种方式
+          FileInputStream in = new FileInputStream("a.txt");
+          //readWhile1(in);
+  
+          // 第二种方式
+          //readwhile2(in);
+  
+          // 第三种方式 :用字节数组的方式
+          // readCount用来接收读取到的字节个数
+          int readCount;
+          byte[] bytes = new byte[1024];
+          while ((readCount=in.read(bytes)) != -1) {
+              System.out.println(new String(bytes,0,readCount));
+          }
+  
+          // close
+          in.close();
+      }
+  
+      private static void readwhile2(FileInputStream in) throws IOException {
+          int readData;
+          while ((readData = in.read()) != -1) {
+              System.out.print(((char) readData));
+          }
+      }
+  
+      private static void readWhile1(FileInputStream in) throws IOException {
+          while (true) {
+              int readData = in.read();
+              System.out.println(readData);
+              if (readData == -1) {
+                  break;
+              }
+          }
+      }
+  }
+  
+  ```
+
+
+读取单个字节与读取多个字节,哪个效率更好?
+
+- 肯定是读取多个字节的效率更高
+
+#### **文件复制练习**
+
+- 文本文件
+
+  - 单字节
+
+  - 多字节
+
+  - ```java
+    public class Ex1 {
+        public static void main(String[] args) throws IOException {
+            // 创建字节输入流对象
+            FileInputStream in = new FileInputStream("D:\\workspace2\\30th\\code\\day16_io02\\src\\com\\cskaoyan\\bytestream\\in\\Demo2.java");
+    
+            // 创建字节输出流对象
+            FileOutputStream out = new FileOutputStream("D:\\copy2.txt");
+    
+            // 边读边写
+            // 单个字节的形式
+            //copy1(in, out);
+    
+            //字节数组 0ms
+            long start = System.currentTimeMillis();
+            byte[] bytes = new byte[1024];
+            int readCount;
+            while ((readCount = in.read(bytes)) != -1) {
+                out.write(bytes,0,readCount);
+            }
+            long end = System.currentTimeMillis();
+            System.out.println("耗时:" + (end - start) + "ms");
+    
+            // close
+            in.close();
+            out.close();
+        }
+        // 耗时:13ms
+        private static void copy1(FileInputStream in, FileOutputStream out) throws IOException {
+            long start = System.currentTimeMillis();
+            int readData;
+            while ((readData=in.read()) != -1) {
+                out.write(readData);
+            }
+            long end = System.currentTimeMillis();
+            System.out.println("耗时:" + (end - start) + "ms");
+        }
+    }
+    
+    ```
+
+    
+
+- 图片文件
+
+  - 单字节
+
+  - 多字节
+
+  - ```java
+    public class Ex2 {
+        public static void main(String[] args) throws IOException {
+            // 单字节
+            FileInputStream in = new FileInputStream("D:\\mm.jpg");
+            FileOutputStream out = new FileOutputStream("copy_mm2.jpg");
+            //copy1(in, out);
+    
+            // 多字节  耗时:0ms
+            long start = System.currentTimeMillis();
+    
+            byte[] bytes = new byte[1024];
+            int readCount;
+            while ((readCount = in.read(bytes)) != -1) {
+                out.write(bytes,0,readCount);
+            }
+            long end = System.currentTimeMillis();
+    
+            System.out.println("耗时:" + (end - start) + "ms");
+    
+            //close
+            in.close();
+            out.close();
+        }
+    //耗时:97ms
+        private static void copy1(FileInputStream in, FileOutputStream out) throws IOException {
+            // 边读边写
+            long start = System.currentTimeMillis();
+            int readData;
+            while ((readData = in.read()) != -1) {
+                out.write(readData);
+            }
+            long end = System.currentTimeMillis();
+    
+            System.out.println("耗时:" + (end - start) + "ms");
+        }
+    }
+    
+    ```
+
+    
+
+- 视频文件
+
+  - 单字节
+
+  - 多字节
+
+  - ```java
+    public class Ex3 {
+        public static void main(String[] args) throws IOException {
+            // 单字节
+            FileInputStream in = new FileInputStream("D:\\aa.mp4");
+            FileOutputStream out = new FileOutputStream("copy_aa2.mp4");
+            //long start = System.currentTimeMillis();
+    
+            //copy1(in, out, start);
+    
+            // 多字节 耗时:16ms
+    
+            long start = System.currentTimeMillis();
+    
+            byte[] bytes = new byte[1024];
+            int readCount;
+            while ((readCount = in.read(bytes)) != -1) {
+                out.write(bytes,0,readCount);
+            }
+            long end = System.currentTimeMillis();
+    
+            System.out.println("耗时:" + (end - start) + "ms");
+    
+    
+            in.close();
+            out.close();
+    
+        }
+        // 耗时:8700ms
+        private static void copy1(FileInputStream in, FileOutputStream out, long start) throws IOException {
+            int readData;
+            while ((readData = in.read()) != -1) {
+                out.write(readData);
+            }
+            long end = System.currentTimeMillis();
+    
+            System.out.println("耗时:" + (end - start) + "ms");
+        }
+    }
+    ```
+
+利用缓冲流复制文件
+
+```java
+public class Demo3 {
+    public static void main(String[] args) throws IOException {
+        // 创建缓冲输入流对象
+        BufferedInputStream bi = new BufferedInputStream(
+                new FileInputStream("D:\\aa.mp4"));
+        // 创建缓冲输出流对象
+        BufferedOutputStream bo = new BufferedOutputStream(
+                new FileOutputStream("copy_aa4.mp4"));
+        // 单个字节 复制  边读边写
+        //copy1(bi, bo);
+
+        // 字节数组  耗时:4ms
+        long start = System.currentTimeMillis();
+
+        int readCount;
+        byte[] bytes = new byte[1024];
+        while ((readCount = bi.read(bytes)) != -1) {
+            bo.write(bytes,0,readCount);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("耗时:" + (end - start) + "ms");
+
+        // close
+        bi.close();
+        bo.close();
+    }
+
+    private static void copy1(BufferedInputStream bi, BufferedOutputStream bo) throws IOException {
+        long start = System.currentTimeMillis();
+        int readData;
+        while ((readData=bi.read()) != -1) {
+            bo.write(readData);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("耗时:" + (end - start) + "ms");
+    }
+}
+
+```
+
+
+
+
+
+#### BufferedInputStream
+
+`BufferedInputStream` 为另一个输入流添加一些功能
+
+**构造方法**
+
+| BufferedInputStream(InputStream in)        创建一个 BufferedInputStream 并保存其参数，即输入流  in，以便将来使用。 |
+| ------------------------------------------------------------ |
+| BufferedInputStream(InputStream in,  int size)       创建具有指定缓冲区大小的 BufferedInputStream  并保存其参数，即输入流 in，以便将来使用。 |
+
+**继承关系**
+
+```
+<c> BufferedInputStream
+	<c> FilterInputStream
+		<c> InputStream
+			<c> Object
+			<I> Closeable
+```
+
+
+
+简单使用
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        // 利用缓冲输入流读取数据
+        BufferedInputStream bi = new BufferedInputStream(
+                new FileInputStream("a.txt"));
+        //int readData = bi.read();
+        //System.out.println(((char) readData));
+        byte[] bytes = new byte[1024];
+        int readCount = bi.read(bytes);
+        System.out.println(new String(bytes,0,readCount));
+        bi.close();
+    }
+}
+
+```
+
+
+
+练习:
+
+利用装饰器的设计模式,包装BufferedInputStream,扩展功能
+
+要求:读取到的数据全部是小写的.
+
+提示:重写read方法  继承FilterInputStream
+
+```java
+public class LowerCase extends FilterInputStream {
+    /**
+     * Creates a <code>FilterInputStream</code>
+     * by assigning the  argument <code>in</code>
+     * to the field <code>this.in</code> so as
+     * to remember it for later use.
+     *
+     * @param in the underlying input stream, or <code>null</code> if
+     *           this instance is to be created without an underlying stream.
+     */
+    protected LowerCase(InputStream in) {
+        super(in);
+    }
+    // 重写read()
+    @Override
+    public int read() throws IOException {
+        int readData = super.read();
+        //if (readData == -1) {
+        //    return readData;
+        //} else {
+        //    // 如果不=-1 把读到的数据转换成小写
+        //    readData = Character.toLowerCase(((char) readData));
+        //}
+        //return readData;
+
+        return (readData == -1 ? readData : Character.toLowerCase(((char) readData)));
+    }
+    // read(b, off, len)
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        int readCount = super.read(b, off, len);
+        for (int i = off; i < off+readCount; i++) {
+            b[i] = ((byte) Character.toLowerCase(((char) b[i])));
+        }
+        return readCount;
+    }
+}
+```
+
+单元测试
+
+```java
+public class LowerCaseTest {
+    // 测试单个字节
+    @Test
+    public void read() throws IOException {
+        LowerCase lowerCase = new LowerCase(
+                new BufferedInputStream(new FileInputStream("a.txt")));
+        int readData = lowerCase.read();
+        assertEquals(97,readData);
+    }
+    // 测试字节数组
+    @Test
+    public void read1() throws Exception{
+        LowerCase lowerCase = new LowerCase(
+                new BufferedInputStream(new FileInputStream("a.txt")));
+        byte[] bytes = new byte[1024];
+        int readCount = lowerCase.read(bytes, 0, bytes.length);
+        String s = new String(bytes, 0, readCount);
+        assertEquals("abc",s);
+    }
+}
+```
 
 
 
@@ -5406,4 +6063,6 @@ public class Demo2 {
 
 
 ## 对象流
+
+
 
