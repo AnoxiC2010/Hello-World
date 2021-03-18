@@ -5097,6 +5097,143 @@ System.out.println(in);
 
 
 
+# **StringBuffer**
+
+1. 概述：表示一个字符串缓冲区，它的对象是可变的。也是线程安全的可变字符序列。
+   底层为字符数组。初始容量为16，可以自动扩容。这个大小为16的初
+   始空间不存储东西，作为预留空间；比如存储一个长度为13的字符串，容量就变为了29。
+2. StringBuffer和String的区别?  
+   * StringBuffer:  对象可变的字符序列，对象是变量，在堆上
+   * String:  对象不可变的字符序列,对象是常量，在常量池
+   * String 作为参数传递类似于基本数据类型作为参数传递  (对象的不可改变 性)。
+   * StringBuffer 作为参数传递就是引用数据类型传递（对象可以改变）  
+
+**String,StringBuffer,StringBuilder的区别**  
+
+* String:  不可变的字符序列
+* StringBuffer:  可变的字符序列，线程安全的，效率低.
+* StringBuilder: 可变的字符序列，线程不安全的，效率高。
+
+**StringBuffer和数组的区别** 
+
+* StringBuffer和数组都可以看成是一个容器
+* StringBuffer可以自动扩容，数组长度是固定的
+* 数组只能存储一个数据类型，StringBuffer可以把任意数据类型转换  成字符来存储  
+
+**StringBuffer的构造方法**
+
+```java
+//A.public StringBuffer()  
+StringBuffer sb = new StringBuffer(); System.out.println(sb);  
+System.out.println(sb.length()); //0  System.out.println(sb.capacity()); //默认值16  
+
+//B.public StringBuffer(int  capacity)  
+StringBuffer sb = new StringBuffer(4);
+System.out.println(sb); System.out.println(sb.length()); // 0  System.out.println(sb.capacity()); //4  
+
+//C.public  StringBuffer(String str)  
+StringBuffer sb = new StringBuffer("Hello, wuhan!"); System.out.println(sb);  
+System.out.println(sb.length()); //长度为13  
+System.out.println(sb.capacity()); //容量为13+16 = 2
+```
+
+**StringBuffer的常见功能（成员方法）**
+
+```java
+//int capacity() 返回容量 (初始值为16，并且可以自动扩容)
+//int length()   返回长度
+
+//A:添加功能
+//public StringBuffer append(String str) 可以把任意类型追加进StringBuffer并且在append之后，StringBuffer对象本身也会变化，所以可以直接返回该对象，不需要新建对象来接收。和String不同
+StringBuffer  sb  =  new StringBuffer("Hello");
+System.out.println(sb);  //输出Hello
+StringBuffer  sb1  =  sb.append(", world!");
+System.out.println(sb);  //  Hello  World
+System.out.println(sb1);//  Hello  World
+System.out.println(sb  ==  sb1);  // true
+
+sb.append(",  world!");
+System.out.println(sb);  //Hello  World
+//可以链式编程
+sb.append("world").append("wuhan").append("shenzhen");
+System.out.println(sb);
+
+StringBuffer  sb  =  new StringBuffer();
+Date  date  =  new Date();
+System.out.println(date);
+char[]  chars  =  {'爱', '我',  '中',  '华'};
+sb.append(100).append('中').append(true).append(3.14).append(date).append(chars);
+System.out.println(sb);  //会把字符的原本形式拼接进来
+
+//public StringBuffer insert(int offset,String str)  
+//可以把任意数据类型，指定偏移位置插入字符串
+StringBuffer  sb  =  new StringBuffer("abcd");
+sb.insert(2,  '中');  //  ab中cd
+sb.insert(sb.length(),  "中");  //在最后插入，自动扩容，abcd
+sb.insert(0,  "中");  //中abcd
+
+sb.insert(0,100).insert(0,3.14).insert(0,'中').insert(0, false).
+insert(0,  new  Date());
+
+//删除功能
+//public StringBuffer deleteCharAt(int index) 删除指定索引的字符
+StringBuffer  sb  =  new StringBuffer("abcd");
+/sb.deleteCharAt(3);  //abc
+sb.deleteCharAt(3).deleteCharAt(3);  //越界
+
+//public StringBuffer delete(int start, int end)  （包左不包右）删除一段字符
+sb.delete(2,  3)  //abd
+sb.delete(2,  3).delete(0,0);  //bd
+sb.delete(0,  sb.length());  //空
+
+//替换功能
+//public StringBuffer replace(int start,int end,String str)  // 包左不包右
+StringBuffer  sb  =  new StringBuffer("abcd");
+sb.replace(0,  3,  "XYZ,  now i  see...");
+System.out.println(sb);  //d没有被替换掉
+
+//反转功能
+//public StringBuffer reverse()
+StringBuffer  sb  = new  StringBuffer("abcd");
+sb.reverse();
+System.out.println(sb);  //dcba
+
+//截取功能(注意这个返回值，原对象没有修改)
+//public String substring(int start)
+StringBuffer  sb  = new  StringBuffer("abcd");
+String  s1  =  sb.substring(2);
+System.out.println(s1);  //输出  cd
+System.out.println(sb);  //输出  abcd
+
+//public String substring(int start,int end)
+String  s1  =  sb.substring(1, 3);
+System.out.println(s1);  //输出bc
+System.out.println(sb);  //输出abcd
+```
+
+  **String和StringBuffer作为参数的区别**
+
+​	String作为参数传递  
+
+​	StringBuffer作为参数传递 
+
+* 总结：
+
+  String作为参数传递类似于基本数据类型作为参数传递  (对象的不可改变性)。
+
+  StringBuffer作为参数传递就是引用数据类型传递（对象可以改变）
+
+**API应用示范**
+
+* 判断一个字符串是否对称
+
+  ```java
+  //方法一：把字符串转为char[]数组，然后第一个和最后一个比较，第二个和倒数第二个比较
+  //方法二：直接让StringBuffer的方法翻转字符串，若翻转后和原字符串相等，则是对称字符串
+  ```
+
+  
+
 # Java日期类
 
 > 严格来说，Java的日期类设计是比较曲折的，甚至是有些失败的，可谓是改了又改，始终不尽如人意
