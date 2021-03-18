@@ -4982,6 +4982,119 @@ public class FileTest2 {
   - 如果这个file对象是文件，直接删除
 - 最后不要忘记删除已经是空目录的当前目录
 
+# 基本数据类型对象包装类概述
+
+**基本类型包装类的产生**  
+
+  在实际程序使用中，程序界面上用户输入的数据都是以字符串类型进行  存储的。而程序开发中，我们需要把字符串数据，根据需求转换成指定的基本数  据类型，如年龄需要转换成int类型，考试成绩需要转换成double类型等  
+
+基本数据类型，都有对应的引用数据类型。
+
+* byte Byte
+* short Short
+* int Integer
+* long Long
+* char Character
+* float Float
+* double Double
+* boolean Boolean
+
+```java
+//把字符串转化为int,Integer类parseInt方法
+int i = Integer.parseInt("12");
+System.out.println(i/2);//6
+
+//Integer或int转成字符串
+//使用+与字符串拼接
+int i = 3;
+String s = i+"";
+System.out.println(s+1);//"31"
+//toString(int ,int 进制),任意进制整数转成任意进制的字符串 (了解)
+String s1 = Integer.toString(5,2);//二进制字符串形式
+
+/** Integer类构造方法
+*   public Integer( int value)
+* 	public Integer ( String s)
+*   将数字格式的字符串,传递到Integer类的构造方法中
+*   创建Integer对象,包装的是一个字符串
+*   将构造方法中的字符串,转成基本数据类型,调用方法,非静态的
+*	intValue()
+*/
+Integer ii =new  Integer(10);
+Integer in = new Integer("100");
+int i = in.intValue();
+
+//Integer类常用方法
+/** Integer类的3个静态方法
+* 十进制转成二进制  toBinarString(int)
+* 十进制转成八进制  toOctalString(int)
+* 十进制转成十六进制 toHexString(int)
+* 三个方法,返回值都是以String形式出现
+*/
+System.out.println(Integer.toBinaryString(99));
+System.out.println(Integer.toOctalString(99));
+System.out.println(Integer.toHexString(999));
+/** 获取int的最大值和最小值
+*   Integer类的静态成员变量
+*   MAX_VALUE
+*   MIN_VALUE
+*/
+System.out.println(Integer.MAX_VALUE);
+System.out.println(Integer.MIN_VALUE);
+
+//int类型和String类型的相互转换
+//int -->String
+//方式1：字符串拼接
+String s1=""+number;
+System.out.println(s1);
+//推荐方式2
+//方式2：String的方法:可以把任意类型的转换成字符串
+String s2  =String.valueOf(number);
+System.out.println("s2 = " +  s2);
+//方式3
+Integer i= new  Integer(number);
+System.out.println(i.toString());
+//方式4：
+String s4=Integer.toString(number);
+System.out.println(s4);
+//String -->int
+String s="100";
+//方式1：
+//String--Integer---int
+Integer ii =new  Integer(s);//把String类型转成Integer类型
+int  x=ii.intValue();//把Integer类型转成int类型
+System.out.println(x);
+//方式2：很重要，同理，类似float
+//public static int parseInt(String s)
+int  y=Integer.parseInt(s);
+System.out.println(y);
+```
+
+**自动装箱和自动拆箱**  
+
+自动装箱,拆箱的 好处: 基本类型和引用类直接运算  
+
+自动装箱:  
+
+使用Integer.valueOf(整数值)返回一个封装了该整数值的Integer对象，即把 基本类型转为引用类型  
+
+自动拆箱:  
+
+使用Integer对象.intValue()返回Integer对象中封装的整数值，把引用类型转为基本数据类型
+
+```java
+
+public  static  void  function(){
+//引用类型  ,引用变量一定指向对象
+//自动装箱,基本数据类型1,直接变成了对象
+Integer  in  =  1; //  Integer  in  =  new  Integer(1)
+//in是引用类型,不能和基本类型运算,自动拆箱,引用类型in,转换基本类型
+//in+1  ==>  in.inValue()+1  = 2
+//in  =  2自动装箱
+in  =  in  + 1;
+System.out.println(in);
+```
+
 
 
 # Java日期类
