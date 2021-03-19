@@ -1,6 +1,6 @@
-# ③Java语法基础
+# Java语法基础
 
-[TOC]
+
 
 
 
@@ -5244,13 +5244,19 @@ System.out.println(sb);  //输出abcd
 
 - Date类表示一个特定的瞬间时间，精确到毫秒
 
+    它允许把日期表示为年月日小时，也允许初始化和解析日期字符串  
+
 - 构造方法：目前仍没有过时的只有两个
 
   - ```java
-    //该构造函数使用当前日期和时间来初始化对象	
-    Date()
+    //该构造函数使用当前日期和时间来初始化对象
+    //表示创建对象时的系统时间
+    //Date()
+  Date date = new Date();
+    System.out.println(date);//Fri Mar 19 09:00:48 CST 2021
+    
     ```
-
+    
   - ```java
     //第二个构造函数接收一个参数，该参数是从1970年1月1日起的毫秒数
     Date(long millisec)
@@ -5290,21 +5296,72 @@ System.out.println(sb);  //输出abcd
 >
 > 由于其是一个抽象类，所以使用其子类SimpleDateFormat实现日期和字符串的相互转换。
 
+*  System类方法currentTimeMillis(): 
+  * 作用：获取系统当前毫秒值 （和getTime方法类似）
+  * 定义：static long currentTimeMillis()
+  * 应用场景：  如对程序执行时间测试，计算程序的执行时间 
+
+*   DateFormat类 
+
+  ```java
+  /******************
+  public abstract class DateFormat extends Format
+  针对日期进行格式化和针对字符串进行解析的类，但是是抽象类，所以使用其子类SimpleDateFormat来实例化。
+  它以与语言无关的方式格式化并解析日期或时间。日期/时间格式化子类（如 SimpleDateFormat）允许进行格式化（也就是日期 -> 文本）、解析（文本-> 日期）和标准化。
+  成员方法：
+  Date Parse(String s) 解析：把String文本转成Date类的日期String format(Date date) 格式化：把Date类日期转换为String文本
+   ******************/
+  ```
+
+  
+
 - SimpleDateFormat的构造方法
 
-  - ```Java
-    //以传入的字符串格式进行解析或者格式化日期
-    public SimpleDateFormat(String pattern)
+  * ```java
+    //SimpleDateFormat()
+    //用默认的模式和默认语言环境的日期格式符号构造SimpleDateFormat
+    //注：此构造方法可能不支持所有语言环境。要覆盖所有地区，请使用 DateFormat 类中的工厂方法。
+    //默认中文格式化文本格式 21-3-19 上午9:19
     ```
 
+    
+
+  - ```Java
+    //用给定的模式和默认语言环境的日期格式符号构造 SimpleDateFormat
+    //注：此构造方法可能不支持所有语言环境。要覆盖所有语言环境，请使用 DateFormat 类中的工厂方法。
+    public SimpleDateFormat(String pattern)
+  //Pattern必须用模式字符来写
+    ```
+    
   - pattern的书写格式
 
     - y：表示年，例如yyyy，表示千年年份
+
     - M：表示月份，例如MM，表示月份（最多12，两位数）
+
     - d：表示月份中的天数，例如dd，表示天数（最多31，两位数）
+
     - H：表示一天中的小时数，例如HH，表示小时数（最多24，两位数）
+
     - m：表示小时中的分钟数，例如mm，表示分钟数（最大59，两位数）
+
     - s：表示分钟里的秒数，例如ss，表示秒数（最大59，两位数）
+
+      ```java
+      Date  date  = new  Date();
+      String  pattern  = "yyyy年MM月dd日  HH时mm分ss秒";
+      SimpleDateFormat  sd  = new SimpleDateFormat(pattern);
+      //格式化
+      String  format  = sd.format(date);
+      System.out.println(format);
+      //2021年03月19日  14时02分05秒
+      ‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐‐
+      //解析
+      System.out.println(sd.parse(format));
+      //Fri Mar 19 14:02:05 CST 2021
+      ```
+
+      
 
   - 该对象仅仅只是描述日期的格式，并不代表时间
 
