@@ -5387,6 +5387,52 @@ System.out.println(sb);  //输出abcd
 
     - 当pattern格式不正确，会抛出异常，非法参数
 
+
+
+# Math类
+
+```java
+//public final class Math extends Object{}
+//包含各种用于执行基本数学运算的方法，如初等质数、对数、平方根、三角函数等
+
+//字段：
+static double E://接近自然对数的底数e
+static double PI://接近圆周率π
+
+//public static int abs(int a) 返回绝对值
+System.out.println(abs(‐3.14));//3.14
+System.out.println(abs(3.14));//3.14
+
+//public static double ceil(double a) 向上取整（取一个更大的数）
+System.out.println(ceil(‐3.14));  //  ‐3
+System.out.println(ceil(3.14));  //  4
+
+//public static double floor(double a) 向下取整（取一个更小的数）
+System.out.println(floor(‐3.14));  //  ‐4
+System.out.println(floor(3.14));  //  3
+
+//public static int max(int a,int b)两个整数间的最大值
+System.out.println(max(3,  4));  //4
+System.out.println(max(E,  PI));//3.141592653589793
+
+//public static double pow(double a,double b)计算a的b次幂
+System.out.println(pow(2.0,  3.2));//9.18116
+
+//public static double random()伪随机数
+System.out.println(random());//[0.1, 1.0)
+
+//public static int round(float a)返回四舍五入
+System.out.println(round(3.5));//4
+System.out.println(round(3.4));//3
+System.out.println(round(3.6));//4
+
+//public static double sqrt(double a)计算平方根，负数返回NaN
+System.out.println(sqrt(9.0));  //3
+System.out.println(sqrt(‐1));  //NaN (not a number)
+```
+
+
+
 # IO概述
 
 **什么是IO**
