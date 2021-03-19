@@ -6318,7 +6318,498 @@ public class LowerCaseTest {
 
 # 字符流
 
+**字符流产生的原因**
 
+- 先用字节流读取英文字符和数字
+  - 没有问题 正常显示
+- 读取中文
+  - 产生了乱码问题
+
+一个字节所能表示的范围 0000 0000 -1111 1111  255个字符  
+
+用字节流处理文本数据的时候不是很方便,尤其是不同国家有不同的文字和符号
+
+
+
+**编解码**
+
+- 一个字符在计算机当中是怎样存储的?
+  - 基于某个编码表,有一个对应的整数值(编码值) 存储在计算机当中
+- 编码:
+  - 基于某个编码表,把字符数据转化成相应的编码值存储在计算机中的过程(把人看懂的东西转化为计算机看懂的东西)
+- 解码:
+  - 基于某个编码表,把计算机存储的编码值转化成相应的字符数据(把计算机看懂的转化成人看懂的东西)
+
+**产生乱码的原因**
+
+- 编解码的不一致
+
+中文编码表    '你'   0001
+
+日文编码表     'の'  0001
+
+
+
+**编码表**
+
+ASCII：美国标准信息交换码。
+用一个字节的7位可以表示。
+ISO8859-1：拉丁码表。欧洲码表
+用一个字节的8位表示。
+
+GB2312：中国的中文编码表。
+GBK：中国的中文编码表升级，融合了更多的中文文字符号。
+GB18030：GBK的取代版本
+BIG-5码 ：通行于台湾、香港地区的一个繁体字编码方案，俗称“大五码”。
+
+Unicode：国际标准码，融合了多种文字。
+
+UTF-8：可变长度来表示一个字符。
+UTF-8不同，它定义了一种“区间规则”，这种规则可以和ASCII编码保持最大程度的兼容：
+
+它将Unicode编码为00000000-0000007F的字符，用单个字节来表示  0111  1111  =  7F
+它将Unicode编码为00000080-000007FF的字符用两个字节表示 
+它将Unicode编码为00000800-0000FFFF的字符用3字节表示 
+
+1字节 0xxxxxxx 
+2字节 110xxxxx 10xxxxxx 
+3字节 1110xxxx 10xxxxxx 10xxxxxx 
+
+
+
+utf-16:
+
+jvm使用的编码表，用2个字节来编解码
+
+char : 2 字节
+
+
+
+开发当中常用的编码表:
+
+utf-8   GBK  ASCII  ISO8859-1
+
+**默认编码表**
+
+- idea当中采用utf-8编码表
+- Windows中采用GBK编码
+
+
+
+**java中编解码**
+
+
+
+**字符流的本质**
+
+```
+             			<基于某个编码表>
+【   字符输入流Reader   】				 |
+【(缓冲区，解码器，把相应)】				 |
+【(的编码值转化成字符数字)】<=============|	磁
+【		[字节输入流  ] 】				 |
+【		[InputStream] 】				 |
+	内          存				     |
+【   字符输出流Writer   】				  |
+【(缓冲区，编码器，将字符)】				  |
+【(数据转化成相应的编码值)】==============>|  盘
+【		[字节输出流  ] 】				  |
+【		[OutputStream] 】			 |
+
+字符流的本质是：字节流+编码表
+```
+
+
+
+## 字符输出流
+
+### 抽象基类
+
+#### **Writer**
+
+- 成员方法
+
+- | void           | write(char[] cbuf)        写入字符数组。                     |
+  | -------------- | ------------------------------------------------------------ |
+  | abstract  void | write(char[] cbuf,  int off, int len)       写入字符数组的某一部分。 |
+  | void           | write(int c)        写入单个字符。                           |
+  | void           | write(String str)        写入字符串。                        |
+  | void           | write(String str,  int off, int len)       写入字符串的某一部分。 |
+
+- 写入单个字符。要写入的字符包含在给定整数值的 16 个低位中，16 高位被忽略
+
+
+
+### 具体子类
+
+#### OutputStreamWriter转化流
+
+OutputStreamWriter 是字符流通向字节流的桥梁：可使用指定的 [`charset`](../../java/nio/charset/Charset.html)  将要写入流中的字符编码成字节。它使用的字符集可以由名称指定或显式给定，否则将接受平台默认的字符集。 
+
+继承关系
+
+```
+<C> OutputStreamWriter
+	<C>Writer
+		<C>Object
+		<I>Appendable
+		<I>Closeable
+		<I>Flushable
+```
+
+
+
+构造方法
+
+| OutputStreamWriter(OutputStream out)        创建使用默认字符编码的 OutputStreamWriter。 |
+| ------------------------------------------------------------ |
+| OutputStreamWriter(OutputStream out,  String charsetName)        创建使用指定字符集的 OutputStreamWriter。 |
+
+成员方法:
+
+| String | getEncoding()        返回此流使用的字符编码的名称。          |
+| ------ | ------------------------------------------------------------ |
+| void   | write(char[] cbuf,  int off, int len)       写入字符数组的某一部分。 |
+| void   | write(int c)        写入单个字符。                           |
+| void   | write(String str,  int off, int len)       写入字符串的某一部分。 |
+
+<font color=red>注意:</font>
+
+所有带缓冲区的输出流,就要执行flush操作
+
+简单使用:
+
+```java
+public class Demo {
+    public static void main(String[] args) throws IOException {
+        // 创建转化输出流对象
+        OutputStreamWriter out = new OutputStreamWriter(
+                new FileOutputStream("a.txt"));
+        // 写数据
+        String s = "我秃了";
+        //writeSingle(out, s);
+
+        // 多字符
+        //writeMuti(out, s);
+
+        // 直接写字符串
+        out.write(s,0,s.length());
+
+        out.flush();
+        // close
+        out.close();
+    }
+
+    private static void writeMuti(OutputStreamWriter out, String s) throws IOException {
+        char[] chars = s.toCharArray();
+        out.write(chars,0,chars.length);
+    }
+
+    private static void writeSingle(OutputStreamWriter out, String s) throws IOException {
+        char[] chars = s.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            out.write(chars[i]);
+        }
+    }
+}
+```
+
+
+
+#### FileWriter简化流
+
+继承关系
+
+```
+<C> FileWriter
+	<C> OutputStreamWriter
+		<C> Writer
+			<C> Object
+			<I> Appendable
+			<I> Closeable
+			<I> Flushable
+```
+
+
+
+构造方法:
+
+​     public FileWriter(String fileName)
+​     public FileWriter(String fileName, boolean append)
+
+简单使用:
+
+```java
+    public static void main(String[] args) throws IOException {
+        //     public FileWriter(String fileName)
+        //     public FileWriter(String fileName, boolean append)
+        FileWriter fileWriter = new FileWriter("a.txt");
+        fileWriter.write("你好呀");
+        fileWriter.flush();
+        fileWriter.close();
+    }
+```
+
+
+
+#### BufferedWriter 缓冲流
+
+构造方法:
+
+| BufferedWriter(Writer out)        创建一个使用默认大小输出缓冲区的缓冲字符输出流。 |
+| ------------------------------------------------------------ |
+| BufferedWriter(Writer out,  int sz)       创建一个使用给定大小输出缓冲区的新缓冲字符输出流。 |
+
+缓冲区大小是16KB
+
+新的方法:
+
+newLine        写入一个行分隔符。
+
+```java
+public class Demo {
+    public static void main(String[] args) throws IOException {
+        // 创建缓冲输出流
+        BufferedWriter bw = new BufferedWriter(
+                new FileWriter("a.txt"));
+        bw.write("我秃了");
+        // newLine()换行
+        bw.newLine();
+        bw.write("也变强了!");
+        bw.close();
+    }
+}
+```
+
+
+
+## 字符输入流
+
+
+
+### 抽象基类
+
+#### Reader
+
+成员方法
+
+| int           | read()        读取单个字符。                                 |
+| ------------- | ------------------------------------------------------------ |
+| int           | read(char[] cbuf)        将字符读入数组。                    |
+| abstract  int | read(char[] cbuf,  int off, int len)       将字符读入数组的某一部分。 |
+
+读取单个字节
+
+​	作为整数读取的字符，范围在 0 到 65535 之间 (0x00-0xffff)，如果已到达流的末尾，则返回 -1 
+
+
+
+### 具体子类
+
+#### InputStreamReader转换流
+
+InputStreamReader 是字节流通向字符流的桥梁：它使用指定的 [`charset`](../../java/nio/charset/Charset.html)  读取字节并将其解码为字符。它使用的字符集可以由名称指定或显式给定，或者可以接受平台默认的字符集。
+
+继承关系:
+
+```
+<C>InputStreamReader
+	<C>Reader
+		<C>Object
+		<I>Readable
+		<I>Closeable
+```
+
+
+
+构造方法:
+
+| InputStreamReader(InputStream in)        创建一个使用默认字符集的 InputStreamReader。 |
+| ------------------------------------------------------------ |
+| InputStreamReader(InputStream in, String charsetName)        创建使用指定字符集的 InputStreamReader。 |
+
+成员方法:
+
+| String | getEncoding()        返回此流使用的字符编码的名称。 |
+| ------ | --------------------------------------------------- |
+| int    | read()        读取单个字符。                        |
+| int    | read(char[] cbuf,  int offset, int length)          |
+
+简单使用
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        // 创建转换输入流
+        InputStreamReader in = new InputStreamReader(
+                new FileInputStream("a.txt"));
+        // 读取数据
+        //readSingle(in);
+
+        // 读取多个字符 读取的字符数，如果已到达流的末尾，则返回 -1
+
+        readMuti(in);
+
+        in.close();
+    }
+
+    private static void readMuti(InputStreamReader in) throws IOException {
+        char[] chars = new char[1024];
+        int readCount;
+        while ((readCount = in.read(chars)) != -1) {
+            System.out.println(new String(chars,0,readCount));
+        }
+    }
+
+    private static void readSingle(InputStreamReader in) throws IOException {
+        int readData = in.read();
+        System.out.println(((char) readData));
+        int readData2 = in.read();
+        System.out.println(((char) readData2));
+        int readData3 = in.read();
+        System.out.println(((char) readData3));
+        int readData4 = in.read();
+        System.out.println((readData4));
+    }
+}
+```
+
+
+
+复制文件:
+
+复制文本文件:
+
+```java
+public class Demo3 {
+    public static void main(String[] args) throws IOException {
+        // 创建输入流对象
+        InputStreamReader in = new InputStreamReader(
+                new FileInputStream("a.txt"));
+        // 创建输出流对象
+        OutputStreamWriter out = new OutputStreamWriter(
+                new FileOutputStream("b.txt"));
+        // 用while边读边写
+        char[] chars = new char[1024];
+        int readCount;
+        while ((readCount = in.read(chars)) != -1) {
+            out.write(chars,0,readCount);
+        }
+
+        // close
+        in.close();
+        out.close();
+    }
+}
+
+```
+
+<font style="color:red;font-size:20px">注意:</font>
+
+复制文件的时候,如果是文本文件,字节流字符流都可以,但是对于非文本文件,只能用字节流
+
+字节流是万能的.
+
+
+
+#### FileReader
+
+继承关系
+
+```
+<C> FileReader
+	<C> InputStreamReader
+		<C> Reader
+			<C> Object
+			<I> Readable
+			<I> Closeable
+```
+
+
+
+构造方法:
+
+​    public FileReader(String fileName)
+​     public FileReader(File file)
+
+简单使用:
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        //     public FileReader(String fileName)
+        //     public FileReader(File file)
+        FileReader reader = new FileReader("a.txt");
+        char[] chars = new char[1024];
+        int readCount = reader.read(chars);
+        System.out.println(new String(chars,0,readCount));
+        reader.close();
+    }
+}
+
+```
+
+
+
+**转化流VS简化流**
+
+- 转化流麻烦 简化流 简单
+
+- 简化流虽然简单 但是不能只能字符集 
+
+- 如果要指定字符集 只能选择转化流
+
+  
+
+
+
+#### BufferedReader
+
+构造方法
+
+| BufferedReader(Reader in)        创建一个使用默认大小输入缓冲区的缓冲字符输入流。 |
+| ------------------------------------------------------------ |
+| BufferedReader(Reader in,  int sz)       创建一个使用指定大小输入缓冲区的缓冲字符输入流。 |
+
+特殊方法
+
+| String | readLine()        读取一个文本行。 |
+| ------ | ---------------------------------- |
+|        |                                    |
+
+注意:
+
+包含该行内容的字符串，不包含任何行终止符，如果已到达流末尾，则返回 null 
+
+
+简单使用:
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        // 创建缓冲输入流对象
+        BufferedReader br = new BufferedReader(
+                new FileReader("a.txt"));
+        // 读取一个文本行readLine方法
+        //read1(br);
+        String line;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+        }
+
+        br.close();
+
+    }
+
+    private static void read1(BufferedReader br) throws IOException {
+        String s = br.readLine();
+        System.out.println(s);
+        String s2 = br.readLine();
+        System.out.println(s2);
+    }
+}
+
+```
 
 
 
@@ -6326,13 +6817,369 @@ public class LowerCaseTest {
 
 ## 数据流
 
+### DataOutputStream
+
+数据输出流允许应用程序以适当方式将基本 Java 数据类型写入输出流中。然后，应用程序可以使用数据输入流将数据读入。
+
+构造方法:
+
+DataOutputStream(OutputStream out)        创建一个新的数据输出流，将数据写入指定基础输出流。
+
+成员方法:
+
+各种write方法,我们想写入哪种数据类型的数据 就使用相对应的write方法即可
+
+简单使用:
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        // 创建数据输出流对象
+        DataOutputStream out = new DataOutputStream(
+                new FileOutputStream("a.txt"));
+        // 写入1000
+        out.writeInt(1000);
+        out.close();
+    }
+}
+```
+
+
+
+### DataInputStream
+
+数据输入流允许应用程序以与机器无关方式从底层输入流中读取基本 Java 数据类型
+
+构造方法:
+
+DataInputStream(InputStream in)        使用指定的底层 InputStream 创建一个 DataInputStream。
+
+成员方法:
+
+各种read方法
+
+简单使用
+
+```java
+public class Demo3 {
+    public static void main(String[] args) throws IOException {
+        DataInputStream dataInputStream = new DataInputStream(
+                new FileInputStream("a.txt"));
+        int readInt = dataInputStream.readInt();
+        System.out.println(readInt);
+        dataInputStream.close();
+    }
+}
+```
+
+注意:
+
+按照怎样的顺序写入,就需要按照相应的顺序读取(相应的read方法)
+
+Demo:
+
+```java
+public class Demo4 {
+    public static void main(String[] args) throws IOException {
+        write();
+        read();
+    }
+
+    private static void read() throws FileNotFoundException, IOException {
+        DataInputStream dis = new DataInputStream(
+                new FileInputStream("dos.txt"));
+        byte b = dis.readByte();
+        System.out.println(b);
+        short s = dis.readShort();
+        System.out.println(s);
+        int i = dis.readInt();
+        System.out.println(i);
+        long l = dis.readLong();
+        System.out.println(l);
+        float f = dis.readFloat();
+        System.out.println(f);
+        double d = dis.readDouble();
+        System.out.println(d);
+        char ch = dis.readChar();
+        System.out.println(ch);
+        boolean bb = dis.readBoolean();
+        System.out.println(bb);
+        dis.close();
+    }
+
+    private static void write() throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(
+                "dos.txt"));
+        dos.writeByte(1);
+        dos.writeShort(20);
+        dos.writeInt(300);
+        dos.writeLong(4000);
+        dos.writeFloat(12.34f);
+        dos.writeDouble(12.56);
+        dos.writeChar('a');
+        dos.writeBoolean(true);
+        dos.close();
+    }
+
+}
+```
+
 
 
 ## 打印流
 
+练习:
+
+需求:写一个工具类,PrintUtil,
+
+4个方法:printInt, printLnInt ,printDouble,printLnDouble
+
+```java
+public class Demo5 {
+    public static void main(String[] args) throws IOException{
+        PrintUtil printUtil = new PrintUtil(
+                new FileOutputStream("a.txt"));
+        printUtil.printLnInt(1000);
+        printUtil.printDouble(3.14);
+        printUtil.printBoolean(true);
+        printUtil.close();
+    }
+}
+
+class PrintUtil {
+    OutputStream out;
+
+    public PrintUtil(OutputStream out) {
+        this.out = out;
+    }
+/*写int数据*/
+    public void printInt(int a) throws IOException {
+        String s = String.valueOf(a);
+        out.write(s.getBytes());
+
+    }
+    public void printLnInt(int a) throws IOException {
+        String s = String.valueOf(a);
+        out.write(s.getBytes());
+        out.write(System.lineSeparator().getBytes());
+    }
+
+    /*写double数据*/
+    public void printDouble(double d) throws IOException {
+        String s = String.valueOf(d);
+        out.write(s.getBytes());
+    }
+    public void printLnDouble(double d) throws IOException {
+        String s = String.valueOf(d);
+        out.write(s.getBytes());
+        out.write(System.lineSeparator().getBytes());
+
+    }
+
+    /*写入boolean数据*/
+    public void printBoolean(boolean b) throws IOException {
+        String s = String.valueOf(b);
+        out.write(s.getBytes());
+
+    }
 
 
-## 对象流
+    public void close() throws IOException {
+        out.close();
+    }
+
+
+}
+```
+
+打印流特点
+只能操作目的地，不能操作数据来源。
+
+可以操作任意类型的数据。就是把相应的数据类型转化成字符串
+
+如果启动了自动刷新，能够自动刷新。有前提条件:println、printf 或 format 方法
+
+可以操作文件的流
+
+### PrintStream打印字节流
+
+### PrintWriter打印字符流
+
+```
+public PrintWriter(Writer out,
+                   boolean autoFlush)
+ 参数：
+out - 字符输出流
+注意:
+autoFlush - boolean 变量；如果为 true，则 println、printf 或 format 方法将刷新输出缓冲区
+```
+
+**标准输出流**
+
+System.out    默认的输出设备是显示器
+
+是打印字节流 PrintStream
+
+**标准输入流**
+
+System.in      默认的输入设备是键盘
+
+是普通字节输入流   InputStream
+
+练习:
+
+使用System.in,去模拟Scanner里面nextLine方法.键盘输入数据
+
+提示:使用BufferedReader
+
+```java
+public class Demo8 {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(System.in));
+        //String s = br.readLine();
+        //System.out.println(s);
+
+        // 新需求 : 要求键盘连续输入
+        // 增加一个结束的约定: 滚  结束
+        String line ;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+            if ("滚".equals(line)) {
+                break;
+            }
+        }
+
+        br.close();
+
+    }
+}
+
+```
+
+
+
+
+
+## 对象流(序列化与反序列流)
+
+   序列化：  就是将内存中的对象数据，转化为二进制数据，输出到外部设备，即永久保存内存中的数据
+   反序列化：将外部设备上，永久保存的数据，读取到内存中，还原成对象
+   类必须实现serializable接口（没有方法的标记接口）
+    序列化操作问题：
+    1.为啥要实现序列化和反序列化？
+          // 序列化流:  内存中的对象对象  -> 外部设备
+          // 反回序列化流： 外部设备上之前保存的对象 ——> 内存中的对象
+
+​    2.如何实现对象序列化和反序列化
+​          ObjectOuputStream#
+
+​			writeObject()
+
+​          ObjectInputStream#
+
+​			readObject()
+
+​    3.是否可以有选择性的序列化？
+​        可以有选择，对象中不想被保存的成员变量值，用transient关键字修饰
+
+​    4.序列化数据后，再次修改类，读取数据会出问题？
+​        可以，只需要，在修改过的类中定义，并且让其值，和序列化的对象所保存的serialVersionUID相同即可
+
+### ObjectOutputStream
+
+构造方法:
+
+ObjectOutputStream(OutputStream out)        创建写入指定 OutputStream 的 ObjectOutputStream。
+
+成员方法
+
+writeObject(Object obj)        将指定的对象写入 ObjectOutputStream。      
+
+注意:
+
+java.io.NotSerializableException     没有实现Serializable
+
+java.io.InvalidClassException     类信息发生了变化
+
+简单使用:
+
+```java
+public class Demo9 {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        // 序列化
+        //serialize();
+
+        // 反序列化 ObjectInputStream
+        ObjectInputStream in = new ObjectInputStream(
+                new FileInputStream("a.txt"));
+        // 读取对象数据
+        Student student = (Student) in.readObject();
+        System.out.println(student);
+
+    }
+
+    private static void serialize() throws IOException {
+        // ObjectOutputStream(OutputStream out)
+        ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream("a.txt"));
+
+        // 创建student对象
+        Student student = new Student("Kobe", 42);
+        System.out.println(student);
+        out.writeObject(student);
+
+        // close
+        out.close();
+    }
+}
+
+class Student implements Serializable {
+    String name;
+    int age;
+
+    public Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+```
+
+
+
+### ObjectInputStream
+
+构造方法
+
+ObjectInputStream(InputStream in)        创建从指定 InputStream 读取的 ObjectInputStream。
+
+成员方法:
+
+readObject()        从 ObjectInputStream 读取对象。
+
+
+
+# 总结
+
+| 类型     | 字节输出流           | 字节输入流          | 字符输出流         | 字符输入流        |
+| -------- | -------------------- | ------------------- | ------------------ | ----------------- |
+| 基类     | OutputStream         | InputStream         | Writer             | Reader            |
+| 文件相关 | FileOutputStream     | FileInputStream     | FileWriter         | FileReader        |
+| 转换相关 |                      |                     | OutputStreamWriter | InputStreamReader |
+| 缓冲相关 | BufferedOutputStream | BufferedInputStream | BufferedWriter     | BufferedReader    |
+| 数据相关 | DataOutputStream     | DataInputStream     |                    |                   |
+| 打印相关 | PrintStream          |                     | PrintWriter        |                   |
+| 对象相关 | ObjectOutputStream   | ObjectInputStream   |                    |                   |
+
+
 
 
 
