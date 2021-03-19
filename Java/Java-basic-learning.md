@@ -5431,6 +5431,36 @@ System.out.println(sqrt(9.0));  //3
 System.out.println(sqrt(‐1));  //NaN (not a number)
 ```
 
+# System类
+
+```java
+//System类方法currentTimeMillis()
+//获取系统当前毫秒值
+//static  long  currentTimeMillis()
+//可用于计算程序的执行时间
+
+//System类方法exit()方法
+System.exit (0) //退出虚拟机,所有程序全停止,即使finally也不能幸免
+    
+//System类方法gc
+System.gc() //回收垃圾
+//JVM在内存中,收取对象的垃圾,当没有更多引用指向该对象时,会自动调用垃圾回收机制回收堆中的对象,同时调用回收对象所属类的finalize方法
+
+/* 
+* System类方法arraycopy
+* System类方法,复制数组
+* arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+* Object src, 要复制的源数组
+* int srcPos, 数组源的起始索引
+* Object dest,复制后的目标数组
+* int destPos,目标数组起始索引
+* int length, 复制几个
+*/
+int[]  src  =  {11,22,33,44,55,66};
+int[]  desc  =  {77,88,99,0};
+System.arraycopy(src,  1,  desc,  1, 2);//将src数组的1位置开始(包含1位置)的两个元素,拷贝到desc的1,2位置上
+```
+
 
 
 # IO概述
