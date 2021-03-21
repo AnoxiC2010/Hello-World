@@ -40,7 +40,7 @@
 | negative one               | -1                                     |
 | decimal                    | 小数，十进制的                         |
 | decimal point              | 小数点                                 |
-| syntax                     | 语法，句法                             |
+| syntax                     | 语法，句法，语构                       |
 | division                   | 除法                                   |
 | expression                 | 表达式                                 |
 | statement                  | 语句 代码                              |
@@ -63,6 +63,7 @@
 | typecasting                | 类型转换                               |
 | null terminator            | 空结束符 \0                            |
 | null character             | 空字符\0                               |
+| terminating character      | \0和上面两个一种意思                   |
 | new line character         | 换行符\n                               |
 | systematically             | 有系统地，有组织地                     |
 | readability                | 可读性，易读                           |
@@ -70,6 +71,8 @@
 | shorthand                  | 速记法，简略表达方式                   |
 | recursively                | 递归地                                 |
 | passing                    | 传值                                   |
+| argument                   | 参数（传入的 passed in）               |
+| parameter                  | 参数（方法内的 used within）           |
 | downside                   | 缺点，不利方面                         |
 | predicate                  | 断言，表明，使基于                     |
 | capture                    | 捕获                                   |
@@ -105,7 +108,6 @@
 | escaping the backslash     | 反斜 反斜 t （让反斜杠不作为格式输出） |
 | camel case                 | 驼峰拼写法                             |
 | intuitive                  | 直觉的，易懂的                         |
-| conditional                | 条件句                                 |
 | declare                    | 声明                                   |
 | initialize                 | 初始化                                 |
 | assignment operator        | 赋值运算符                             |
@@ -119,8 +121,89 @@
 | modulus operator           | 模运算符                               |
 | remainder                  | 余数                                   |
 | dimension                  | 方面，尺寸，维                         |
+| trivia                     | 琐事，冷知识，问答用的各科知识         |
+| increment operator         | 增量运算符                             |
+| decrement operator         | 减量运算符                             |
+| typos                      | 打错字，拼写错误                       |
+| plus equals operator       | +=运算符                               |
+| associativity              | 结合性，结合律                         |
+| negated                    | 负的，否定的                           |
+| negate                     | 使无效，否定                           |
+| negation operator          | 否定运算符                             |
+| strongly typed             | 强类型                                 |
+| loosely typed              | 弱类型                                 |
+| concatenation              | 连结，一系列相关联的事物（或事件）     |
+| duck typing                | 动态类型                               |
+| typecasting                | 类型强制转化                           |
+| implicit                   | 含蓄的，隐式的                         |
+| explicit                   | 明确的，显示的                         |
+| lossless                   | 无损的                                 |
+| lossy                      | 有损耗的                               |
+| implicit type promotion    | 隐式类型提升                           |
+| quiz                       | 小测验                                 |
+| whitespace insensitive     | 空白符不分（空格 制表 换行）           |
+| function                   | 函数                                   |
+| include statement          | 包括声明                               |
+| visualize                  | 想象；构思；设想                       |
+| boolean logic              | 布尔逻辑                               |
+| boolean algebra            | 布尔代数                               |
+| truth table                | 真值表                                 |
+| algebra                    | 代数                                   |
+| control flow               | 控制流                                 |
+| branching                  | 分支                                   |
+| looping                    | 循环                                   |
+| logic gate                 | 逻辑门，逻辑闸                         |
+| conditional                | 条件句                                 |
+| loops                      | 循环                                   |
+| scoping                    | 作用域                                 |
+| lifetime                   | 生命期，寿命                           |
+| inherently                 | 与生俱来地，固有地                     |
+| conceptual                 | 概念（上）的；观念（上）的             |
+| chalkboard                 | 黑板                                   |
+| controversial              | 引起争论的；有争议的                   |
+| legitimate                 | 合理合情的，合法的                     |
+| indentation                | 首行缩进                               |
+| crammed                    | 拥挤不堪的，塞满的                     |
+| ramble                     | 漫步；闲聊，瞎扯                       |
+| relational operator        | 关系运算符                             |
+| comparison operator        | 比较运算符                             |
+| spectrum                   | 光谱，范围                             |
+| contextualize              | 将...置于上下文中，语境化              |
+| flip                       | 翻转（否定）                           |
+| pseudo random              | 伪随机                                 |
+| short circuiting           | 短路                                   |
+| XOR(Exclusive OR)          | 异或                                   |
+| Inclusive OR               | 兼或                                   |
+| cumbersome                 | 大而笨重的；冗长的；累赘的             |
+| innermost                  | 最里面的；内心深处的                   |
+| falling through case       | case穿越                               |
+| repetitive                 | 重复乏味的                             |
+| nutshell                   | 简明                                   |
+| distracted                 | 注意力分散,思想不集中的,心猿意马       |
+| finite                     | 有限制的，有限的                       |
+| integral number            | 整数                                   |
+| enumeration                | 枚举                                   |
+| infinite                   | 无限的，无穷的                         |
+| iterator                   | 迭代器(比如for i 的 i)                 |
+| iteration                  | （一次）迭代，（一次）循环             |
+| sanity                     | 明智，神志正常                         |
+| edge case                  | 边界情况（如数组边界，循环边界）       |
+| sidetrack                  | 使转变话题；使转移目标                 |
+| fibonacci                  | 斐波纳契                               |
+| pseudo code                | 伪代码                                 |
+| discrete                   | 离散的，互不相连的                     |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+| end                        |                                        |
