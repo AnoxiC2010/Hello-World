@@ -192,7 +192,7 @@
 | fibonacci                  | 斐波纳契                               |
 | pseudo code                | 伪代码                                 |
 | discrete                   | 离散的，互不相连的                     |
-|                            |                                        |
+| concurrency                | 并发                                   |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
