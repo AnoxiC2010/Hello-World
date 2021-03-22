@@ -7658,6 +7658,7 @@ Core Java中有这样一句话：”没有任何语言方面的需求要求一�
 
 ```java
 //参考https://blog.csdn.net/canot/article/details/51087772
+//https://www.jianshu.com/p/b6e3c0f02aa2 这篇没看，应该更深入
 //isInterrupted的经典使用代码    
     public void run(){    
             try{    
