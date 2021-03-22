@@ -1,4 +1,4 @@
-# Java语法基础
+Java语法基础
 
 
 
@@ -4269,9 +4269,11 @@ String虽然是对象 但是它不可变 任何时候 你只要修改 就直接�
         //e隐式为final
     }
     //注：捕获多个异常时，异常变量隐含为final变量，不能在子句体中为e赋不同的值。
+    ```
   ```
     
   - 注意：无论你能够匹配多少种异常类型，始终都只有一个异常对象被接收，对象名只写一个
+  ```
 
 - catch当中填入要捕捉的异常类型，如果能够匹配这个对象，那么就会执行catch代码块中的代码
 
@@ -5482,6 +5484,10 @@ System.arraycopy(src,  1,  desc,  1, 2);//将src数组的1位置开始(包含1�
 ```
 
 
+
+#  数字格式化
+
+查资料
 
 # IO概述
 
@@ -7189,7 +7195,7 @@ readObject()        从 ObjectInputStream 读取对象。
 
 
 
-# 总结
+# IO流总结
 
 | 类型     | 字节输出流           | 字节输入流          | 字符输出流         | 字符输入流        |
 | -------- | -------------------- | ------------------- | ------------------ | ----------------- |
@@ -7200,6 +7206,1080 @@ readObject()        从 ObjectInputStream 读取对象。
 | 数据相关 | DataOutputStream     | DataInputStream     |                    |                   |
 | 打印相关 | PrintStream          |                     | PrintWriter        |                   |
 | 对象相关 | ObjectOutputStream   | ObjectInputStream   |                    |                   |
+
+
+
+
+
+# 操作系统相关知识
+
+```
+java代码是在某一条执行路径下按顺序执行的
+一个执行路径就是一个线程。
+单线程（顺序） 多线程（“同时”）
+|			|...
+|/|			|  |
+|\|			|..|...
+|			|  |  |
+|/|			|  |  |
+|\|			|  |  |
+```
+
+**线程**
+
+- 线程是CPU进程资源调度与分配的基本单位,线程依赖于进程而存在,每个进程可以有多个子任务,每个子任务都可以当做线程,从执行路径的角度来讲,线程就是一个执行路径.
+
+
+
+**进程**
+
+- 一个计算机程序在某一数据集合上的运行活动,进程是操作系统进行资源分配与调度的基本单位.
+- 简单理解,进程就是一个正在运行的软件(程序)
+- 进程之间是相互独立 互不影响
+
+**线程与进程的关系**
+
+- 进程中可以有多个线程,线程依赖于进程存在
+
+- 线程共享进程中的资源.
+
+  ```
+  进程的上下文切换：
+  1. 保护现场
+  2. 恢复现场
+  |    C     P    U   |  进程1     进程2
+  | 寄存器A  | 寄存器B  |  a = 1     d = 10
+  |     ↑.........↑   |  b = 2     e = 20
+  |     | 运算器   |   |  ...       ...
+  |     ```````````   |
+  ```
+
+**串行**
+
+- 一个任务一个任务按照顺序执行
+
+**并行**
+
+- 在同一时刻,多个任务同时执行
+
+**并发**
+
+- 在同一时间段内,多个任务同时执行
+
+  ===<u>|任务A|任务B|任务C|</u>===> 串行
+
+  ​       <u>|任务A|</u>
+
+  ​       <u>|任务B|</u>
+
+  ===<u>|任务C|</u>===> 并行
+
+  ​       <u>|任务A|</u>
+
+  ​           <u>|任务B|</u>
+
+  =======<u>|任务C|</u>===> 并发
+
+****
+
+
+
+**同步、异步 概念**
+
+同步与异步描述的是被调用者的。 
+
+如 A 调用 B：
+
+ 如果是同步，B 在接到 A 的调用后，会立即执行要做的事。A 的本次调用可以得到结 果。(你走我不走 我走你不走)
+
+ 如果是异步，B 在接到 A 的调用后，不保证会立即执行要做的事，但是保证会去做，B 在做好了之后会通知 A。A 的本次调用得不到结果，但是 B 执行完之后会通知 A。
+
+举例:
+
+同步:
+
+我给书店老板打电话,问有没有java书,老板接电话,说我去看看,电话不挂断.找到了回拿起电话回复
+
+异步:
+
+我给书店老板打电话,问有没有java书,老板接电话,说我去看看,然后把电话挂了.找到了会打电话通知我.
+
+多线程是天生异步的.
+
+实际应用
+
+```
+比如注册页面
+后台接收用户注册数据，如不重复，入数据库，并给用户发送邮件。此时active状态为0，待用户右键确认之后修改active为1并返回前端注册成功页面给用户。
+这里发送右键就是异步，要不用户如果不确认邮件，前端页面一直转圈。
+```
+
+
+
+elasticSearch 理解成为在内存的数据库
+
+
+
+****
+
+# java程序运行
+
+**java命令启动java程序的原理**
+
+- java命令,创建jvm进程
+- jvm进程创建一个线程,主线程 main
+- 执行主线程中的main方法
+
+**jvm是单线程还是多线程**
+
+- jvm是多线程的,起码有一个垃圾回收线程
+
+
+
+# 多线程的实现方式一:继承Thread
+
+**文档实例**
+
+*Thread类线程* 是程序中的执行线程。Java 虚拟机允许应用程序并发地运行多个执行线程。
+
+```java
+class PrimeThread extends Thread {
+	long minPrime;
+    PrimeThread(long minPrime) {
+        this.minPrime = minPrime;
+    }
+    public void run() {
+		//compute primes larger than minPrime
+        ...
+    }
+}
+```
+
+**步骤**
+
+1. 继承Thread类
+2. 重写里面的run方法
+3. 创建子类对象
+4. start方法去启动线程
+
+示例:
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        MyThread myThread = new MyThread();
+
+// 启动线程
+        myThread.start();
+                }
+                }
+
+class MyThread extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i);
+        }
+    }
+}
+```
+
+**获取设置线程名称**
+
+- 获取 getName()
+
+  - 默认线程名 Thread-0   类名+数字
+
+- 设置 setName()
+
+- Thread(String name)        分配新的 Thread 对象。
+
+- 如何获取主线程的名称
+
+  - | static Thread | currentThread()        返回对当前正在执行的线程对象的引用。 |
+    | ------------- | ----------------------------------------------------------- |
+
+```java
+public class Demo1 {
+    public static void main(String[] args) {
+        // static Thread currentThread()
+        // 返回对当前正在执行的线程对象的引用。
+        Thread thread = Thread.currentThread();
+        System.out.println(thread.getName());
+        MyThread myThread = new MyThread("吴彦祖");
+        myThread.start();
+    }
+}
+
+class MyThread extends Thread {
+    public MyThread(String name) {
+        super(name);
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(getName() + "---" + i);
+        }
+    }
+}
+```
+
+
+
+
+
+start方法执行
+
+-------------<u>JVM</u>------------           .......底层函数 [win]=>算法=>CPU资源
+
+|start()方法=>start0()|-------|-----底层函数 [mac]=>算法=>CPU资源
+
+--------------------------------           -----底层函数 [mac]=>算法=>CPU资源
+
+
+
+**注意事项**
+
+- 一个Thread或Thread子类对象才代表一个线程
+- 为什么要重写run方法？
+  - 只有Thread中的run方法中代码才会在子线程中执行
+  - 为了保证子线程中运行的是我们的想要他执行的代码，我们要重写run方法（换句话说，把我们想要在子线程中执行的任务封装在了run方法中）
+- 一个方法，被哪个线程调用，这个方法就运行在调用它的那个线程当中
+- 启动线程，必须要用start方法而不是run方法。如果只是线程对象.run()  那么这仅仅只是普通方法调用。
+- 同一个Thread对象或子类对象只能被启动一次。如果我想启动多个线程的话，只能创建多个对象IllegalThreadStateException
+
+# 线程调度方式
+
+两种调度方式
+
+线程调度是指系统为线程分配处理器使用权的过程。
+调度的方式主要有两种：
+
+1. 协同式线程调度。
+   a. 如果使用协同式调度的多线程系统，线程的执行时间，由线程本身来控制，线程把自己的工作执行完了之后
+      主动通知系统切换到另外一个线程上去。
+
+   b. 其最大的好处是实现简单，坏处是线程执行时间不可控
+
+2. 抢占式线程调度
+   a. 如果使用抢占式调度的多线程系统，那么每个线程将由系统来分配执行时间，线程的切换不由线程本身决定。
+   b. 其最大的好处是，线程的执行时间是可控的
+
+java中采用的是抢占式线程调度方式
+
+# 线程优先级
+
+**操作系统的线程调度**
+
+- 静态优先级+动态优先级
+- 正在CPU上执行的线程会随着执行时间的延长而降低优先级,等待的线程会随着等待的时间的延长优先级而升高
+
+**获取 设置优先级**
+
+- get 和 set方法
+
+- ```java
+  public class Demo2 {
+      public static void main(String[] args) {
+          MyThread2 t1 = new MyThread2();
+          MyThread2 t2 = new MyThread2();
+          t1.setName("短风");
+          t2.setName("细风");
+          // 设置线程优先级 线程优先级的范围1-10
+          t1.setPriority(Thread.MAX_PRIORITY);
+          t2.setPriority(Thread.MIN_PRIORITY);
+          t1.start();
+          t2.start();
+          // 获取优先级
+          // 默认优先级 5
+          int priority = t1.getPriority();
+          System.out.println(priority);
+          int priority2 = t2.getPriority();
+          System.out.println(priority2);
+      }
+  }
+  
+  class MyThread2 extends Thread {
+      @Override
+      public void run() {
+          for (int i = 0; i < 10; i++) {
+              System.out.println(getName()+"----"+i);
+          }
+      }
+  }
+  ```
+
+- 为什么大的优先级没有先执行?
+
+  - 我们设置的优先级是静态优先级,仅仅只是给操作系统的一种建议.
+
+- java官方： 线程优先级并非完全没有用，我们Thread的优先级，它具有统计意义，总的来说，高优先级的线程占用的cpu执行时间多一点，低优先级线程，占用cpu执行时间，短一点
+
+
+
+# 线程控制API
+
+## 休眠线程sleep
+
+```java
+public class SleepThreadDemo {
+    public static void main(String[] args) {
+        SleepThread t = new SleepThread();
+
+        t.start();
+    }
+}
+
+class SleepThread extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(getName()+"---"+i);
+            try {
+                //Thread.sleep(2000);
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+
+
+## 合并线程join
+
+**2个问题**
+
+- 谁等待:调用join的代码在哪个线程中运行就是哪个线程等待
+
+- 等待谁:等待调用join的那个线程
+
+  ```
+  ↓main
+  ↓___
+   __|执行join的线程  插队
+  ↓   
+  main
+  ```
+
+  
+
+```java
+public class JoinThreadDemo {
+    public static void main(String[] args) {
+        System.out.println("main start");
+        JoinThread joinThread = new JoinThread();
+        joinThread.setName("55开");
+        joinThread.start();
+        try {
+            joinThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("main end");
+    }
+}
+
+class JoinThread extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(getName()+"----"+i);
+        }
+    }
+}
+```
+
+
+
+## 守护线程daemon
+
+分类:
+
+- 用户线程
+- 守护线程
+
+setDaemon(boolean on)        将该线程标记为守护线程或用户线程。
+
+注意;
+
+将该线程标记为守护线程或用户线程。<font color=red>当正在运行的线程都是守护线程时，Java 虚拟机退出。 </font>
+
+该方法必须在启动线程前调用。 
+
+java.lang.IllegalThreadStateException:启动线程之后调用
+
+## 礼让线程yield
+
+| static void | yield()        暂停当前正在执行的线程对象，并执行其他线程。 |
+| ----------- | ----------------------------------------------------------- |
+
+```java
+public class YieldThreadDemo {
+    public static void main(String[] args) {
+        YieldThread t1 = new YieldThread();
+        YieldThread t2 = new YieldThread();
+
+        t1.setName("金牌讲师");
+        t2.setName("粤港澳第一赌神");
+
+        t1.start();
+        t2.start();
+    }
+}
+
+class YieldThread extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(getName()+"----"+i);
+            // yield() 暂停当前正在执行的线程对象，并执行其他线程。
+            Thread.yield();
+            // 为什么没有你一个我一个的执行呢?
+            // 虽然调用了yield方法,放弃CPU的执行权,但是java采用的是抢占式调度方式
+            // 仍然会参加下一轮的CPU竞争 并不能保证一定保证被哪个线程抢到执行权.
+        }
+    }
+}
+```
+
+
+
+## 中断线程stop,interrupt
+
+练习:
+
+如何安全的终止线程? 不用任何线程控制api , 当终止的时候 把记录  当前时间 + 终止信息保存到 log.txt
+
+提示:使用flag标记 ,FileWriter 
+
+```java
+public class SecurityStopDemo {
+    public static void main(String[] args) {
+        StopThread2 stopThread2 = new StopThread2();
+        stopThread2.setName("张三");
+        stopThread2.start();
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        stopThread2.flag = false;
+    }
+}
+
+class StopThread2 extends Thread {
+    boolean flag = true;
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            if (flag) {
+                System.out.println(getName() + "----" + i);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+
+                }
+            } else {
+
+                // flag 为 false说明线程终止
+                System.out.println("线程终止");
+                // 记录哪个线程 什么时间发生了中断
+                try {
+                    FileWriter fileWriter =
+                            new FileWriter("../day19_thread02/log.txt");
+                    SimpleDateFormat simpleDateFormat =
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String formatTime = simpleDateFormat.format(new Date());
+                    String s = formatTime + ": " + getName() + " 发生了中断,数据已保存";
+                    fileWriter.write(s);
+                    fileWriter.write(System.lineSeparator());
+                    fileWriter.flush();
+                    fileWriter.close();
+                    
+                    
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                // 进行一些数据保存的操作
+                return;
+            }
+        }
+```
+
+interrupt
+
+```java
+public class InterruptThreadDemo {
+    public static void main(String[] args) {
+        StopThread3 stopThread3 = new StopThread3();
+        stopThread3.setName("女流");
+        stopThread3.start();
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // 抛出中断异常 相当于泼了一盆冷水
+        stopThread3.interrupt();
+    }
+}
+
+class StopThread3 extends Thread {
+    @Override
+    public void run() {
+        System.out.println("stop before");
+        for (int i = 0; i < 10; i++) {
+            System.out.println(getName()+"----"+i);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                //e.printStackTrace();
+                System.out.println("有异常");
+            }
+        }
+        System.out.println("stop end");
+    }
+}
+```
+
+
+
+# 线程的生命周期
+
+**五种线程状态**
+
+新建:线程对象刚刚创建出来 没有start 
+
+就绪:执行start方法 启动了 没有CPU的执行权
+
+执行:抢到了CPU的执行权 该线程在CPU上运行 
+
+阻塞:没有CPU的执行权 还缺少一些必要条件 
+
+死亡:线程中的run方法执行完,被当做垃圾被垃圾回收机制回收
+
+**各个状态之间的转换**
+
+```
+【新建】----------start方法---------↓
+	.-->除CPU资源外满足了器他条件->【就绪】<-----|
+	↑                  抢到CPU执行权↓   被抢走CPU执行权
+【阻塞】<----sleep join----------【执行】------↑
+				     run方法执行完成↓
+                               【死亡】
+```
+
+
+
+# 多线程的实现方式二:Runnable
+
+**Runnable**
+
+文档示例
+
+```java
+class PrimeRun implements Runnable {
+	long minPrime;
+    PrimeRun(long minPrime) {
+        this.minPrime = minPrime;
+    }
+    public void run() {
+        //compute primes larger than minPrime
+        ...
+    }
+}
+```
+
+**步骤**
+
+1.实现Runnable接口
+
+2.重写run方法
+
+3.创建Runnable子类对象
+
+4.创建Thread对象,并且把刚创建的Runnable子类对象作为参数传递
+
+5.start方法启动
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        MyRunnable myRunnable = new MyRunnable();
+        // thread 对象才代表线程
+        Thread thread = new Thread(myRunnable);
+
+        thread.setName("宋仲基");
+
+        thread.start();
+    }
+}
+
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Thread.currentThread().getName()+"---"+i);
+        }
+    }
+}
+```
+
+
+
+**注意事项**
+
+- 我们Runnable接口子类的run()方法代码，会运行在子线程当中。
+
+- 所以，在线程的第二种实现方式中，我们自己定义子类，实现Runnable接口的run方法，将要在子线程中执行
+
+- 但是，Runnable子类对象，并不代表线程，它只代表，要在线程中执行的任务。
+
+  我们认为，从逻辑上说，第二种方法逻辑十分清晰：
+
+- 线程就是一条执行路径，至于在线程这条执行路径上，究竟执行的是什么样的具体代码， 应该和线程本身没有关系的
+
+- 也就是说，线程，和在线程(执行路径)上执行的任务应该是没有什么直接关系的
+
+- 线程实现的第二种方式，把线程(Thread对象代表线程) 和在 线程上执行的任务(Ruannable子类对象)分开
+
+```java 
+// 为什么Runnable当中的run方法会运行在子线程当中
+new Thread(Runnable target)
+
+Thread{
+private Runnable target;
+init(xxx){
+	this.target = target;
+}
+run (){
+	if(target!=null){
+		target.run();
+	}
+}
+}
+```
+
+
+
+# 方式一VS方式二
+
+方式二一 VS 方式二：
+
+- 方式一实现步骤较方式二少
+- 方式一的实现方式，存在单重继承的局限性
+- 方式二将线程和任务解耦
+- 方式二，便于多线程数据的共享
+
+# 数据安全问题
+
+练习:
+
+多线程仿真如下场景：
+假设A电影院正在上映某电影，该电影有100张电影票可供出售，现在假设有3个窗口售票。请设计程序模拟窗口售票的场景。
+
+分析：
+3个窗口售票，互不影响，同时进行。
+3个窗口共同出售这100张电影票
+
+结果:
+
+- 产生了重复的票
+- 产生了不存在的票
+
+方式一:
+
+```java
+public class Demo3 {
+    public static void main(String[] args) {
+        SellWindow sellWindow = new SellWindow();
+        SellWindow sellWindow2 = new SellWindow();
+        SellWindow sellWindow3 = new SellWindow();
+
+        sellWindow.setName("A窗口");
+        sellWindow2.setName("B窗口");
+        sellWindow3.setName("C窗口");
+
+        sellWindow.start();
+        sellWindow2.start();
+        sellWindow3.start();
+    }
+}
+
+class SellWindow extends Thread {
+    static int tickets = 100;
+    @Override
+    public void run() {
+        while (true) {
+            if (tickets > 0) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(getName()+"卖了第"+tickets--+"票");
+            }
+        }
+    }
+}
+```
+
+方式二:
+
+```java
+public class Demo4 {
+    public static void main(String[] args) {
+        SellWindow2 sellWindow2 = new SellWindow2();
+
+        Thread thread = new Thread(sellWindow2);
+        Thread thread2 = new Thread(sellWindow2);
+        Thread thread3 = new Thread(sellWindow2);
+
+        thread.setName("窗口A");
+        thread2.setName("窗口B");
+        thread3.setName("窗口C");
+
+        thread.start();
+        thread2.start();
+        thread3.start();
+
+    }
+}
+
+class SellWindow2 implements Runnable {
+    int tickets = 100;
+    @Override
+    public void run() {
+        while (true) {
+            // 假设是线程A抢到CPU的执行权 tickets=100
+            // 线程B抢到了CPU的执行权  100
+            
+            // 不存在的原因 假设A执行 此时 tickets=1
+            if (tickets > 0) {
+                try {
+                    // 线程A睡眠 B睡眠
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(Thread.currentThread().getName()
+                +"卖了第"+tickets-- + "票");
+                // A走到这里  100 
+                // 又发生了线程切换 B抢到了CPU的执行权 100
+                // A输出 卖了第100 张票
+                // B输出 卖了第100 张票
+                
+                // tickets--拆成3步
+                // 1.取值  2.做-1操作  3.重写赋值
+                
+                
+                // ABC三个线程都进入了if
+                // 最坏情况
+                // A 卖了第1张票 此时还剩0张
+                // B 卖了第0张票 此时还剩-1张票
+                // C 卖了第-1张票 此时还剩-2张票
+            }
+        }
+    }
+}
+```
+
+
+
+## 产生数据安全问题的原因
+
+分析:
+
+- 多线程的运行环境
+- 多线程访问了共享数据
+- 存在非原子操作
+  - 什么是原子操作?  一个操作要么一次完成 要么不执行
+
+
+
+# 解决数据安全问题
+
+先从逻辑上，解决把一组操作变成原子操作这件事情
+   思路1：如果我们能在一个线程，对共享变量的一组操作的执行过程，能够阻止线程切换，那么很自然的，这一组操作就变成了原子操作。
+          但是思路1我们实现不了： 抢占式线程调度，代码层面(线程中执行的代码)，无法控制线程调度
+
+   思路2：我们无法阻止线程切换，但是我们换个思路，我们给共享变量，加一把锁，利用锁来实现原子操作
+          使用锁，可以给共享变量加锁，从而保证：
+			a. 只有加锁的线程，能够访问到共享变量
+			b. 而且，在加锁线程，没有完成对共享共享变量的，一组操作之前，不会释放锁，
+			c. 只要不释放锁.其他线程，即使被调度执行，也无法访问共享变量
+
+
+
+锁的概念
+
+```
+Thread-01      |-----------|
+Thread-02	   x Thread-03 |
+  排队          |-----------|
+```
+
+
+
+## 解决方式一:synchronized
+
+**语法**
+
+```java
+synchronized(锁对象){
+	// 要同步的代码 对共享数据的操作
+}
+问题的关键是()里面填什么
+```
+
+**锁对象是什么**
+
+- 可以是任意锁对象 但是要注意 一定必须是同一个锁对象
+
+**同步方法的锁对象**
+
+- this
+
+**静态方法锁对象**
+
+- 字节码文件对象
+
+```java
+public class Demo2 {
+    public static void main(String[] args) {
+        SellWindow2 sellWindow = new SellWindow2();
+        Thread t1 = new Thread(sellWindow);
+        Thread t2 = new Thread(sellWindow);
+        Thread t3 = new Thread(sellWindow);
+        t1.setName("窗口A");
+        t2.setName("窗口B");
+        t3.setName("窗口C");
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+}
+
+class SellWindow2 implements Runnable {
+    static int tickets = 100;
+    Object obj = new Object();
+    //A a = new A();
+    int i = 0;
+
+    @Override
+    public void run() {
+        while (true) {
+            if (i % 2 == 0) {
+                // 字节码文件对象 .class对象  
+                synchronized (SellWindow2.class) {
+                    if (tickets > 0) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println(Thread.currentThread().getName()
+                                + "卖了第" + tickets-- + "票");
+                    }
+                }
+            } else {
+                sell();
+            }
+            i++;
+
+        }
+    }
+	// 同步方法时 是this
+    static private synchronized void sell() {
+
+        if (tickets > 0) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName()
+                    + "卖了第" + tickets-- + "票");
+
+
+        }
+    }
+}
+```
+
+
+
+注意:
+
+同步代码块的细节：
+    a. synchronized代码块中的锁对象，可以是java语言中的任意对象(java语言中的任意一个对象，都可以充当锁的角色仅限于synchronized代码块中)：
+        1)因为java中所有对象，内部都存在一个标志位，表示加锁和解锁的状态
+        2)所以其实锁对象，就充当着锁的角色
+        所谓的加锁解锁，其实就是设置随对象的标志位，来表示加锁解锁的状态。
+
+​    b.  我们的代码都是在某一条执行路径(某一个线程中运行)，当某个线程执行到同步代码块时，
+​        会尝试在当前线程中，对锁对象加锁
+​        1） 此时，如果锁对象处于未加锁状态，jvm就会设置锁对象的标志位(加锁)，并在锁对象中记录，是哪个线程加的锁
+​            然后，让加锁成功的当前线程，执行同步代码块中的代码
+
+​        2） 此时，如果锁对象已经被加锁，且加锁线程不是当前线程，系统会让当前线程处于阻塞状态(等着)，
+​            直到加锁线程，执行完了对共享变量的一组操作，并释放锁
+
+
+​    c. 加锁线程何时释放锁？
+​       当加锁线程，执行完了同步代码块中的代码(对共享变量的一组操作)，在退出同步代码块之前，
+​       jvm自动清理锁对象的标志位，将锁对象变成未上锁状态(释放锁)
+
+ 千万要注意：
+         a. 虽然，synchronized代码块，中的锁对象，可以是java语言中的任意对象
+         b. 但是，在多线程运行环境下，想要让访问 同一个共享变量的， 多个synchronized代码块中的代码是原子操作
+            注意，对同一个共享变量的访问，必须使用同一个锁对象。
+
+
+
+
+
+## 解决方式二:Lock
+
+文档示例
+
+```java
+Lock l = ...;
+l.lock();
+try{
+    //access the resource protected by this lock
+} finally {
+    l.unlock();
+}
+```
+
+语法:
+
+```java
+lock()
+// 加锁
+unlock()
+// 释放锁
+```
+
+常用子类:
+
+ReentrantLock
+
+使用:
+
+```java
+public class Demo3 {
+    public static void main(String[] args) {
+        SellWindow3 sellWindow = new SellWindow3();
+        Thread t1 = new Thread(sellWindow);
+        Thread t2 = new Thread(sellWindow);
+        Thread t3 = new Thread(sellWindow);
+        t1.setName("窗口A");
+        t2.setName("窗口B");
+        t3.setName("窗口C");
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+}
+
+class SellWindow3 implements Runnable {
+    int tickets = 100;
+    Lock lock = new ReentrantLock();
+    /* 如何使用lock */
+    @Override
+    public void run() {
+        while (true) {
+            // 加锁
+            lock.lock();
+            try{
+                if (tickets > 0) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println(Thread.currentThread().getName()
+                            + "卖了第" + tickets-- + "票");
+                }
+            }finally {
+                // 释放锁
+                lock.unlock();
+            }
+        }
+    }
+}
+```
+
+
+
+## 方式一VS方式二
+
+ Lock锁对象 VS synchoronized 锁对象
+
+   区别
+
+      1.  synchronized 锁对象，只提供了用来模拟锁状态的标志位(加锁和释放锁)，
+          但是加锁和释放锁的行为，都是由jvm隐式完成(和synchronized 锁对象没关系)，
+          所以synchronized 锁对象不是一把完整的锁
+
+   2.一个Lock对象，就代表一把锁，而且还是一把完整的锁，
+     Lock对象，它如果要实现加锁和释放锁，不需要synchronized关键字配合，它自己就可以完成
+     Lock(接口): lock() 加锁
+                 unlock 释放锁
+
+   3. 两种锁对象，实现完全不同的
+      联系： 都可以实现线程同步
+
+          1.  synchronized(锁对象) {
+                需要同步的代码
+
+          }
+          
+            2.  lock.lock()
+            需要同步的代码
+            lock.unlock()
+                学习了Lock锁对象之后，我们就有两种方式，构造同步代码块，从而实现线程通过(构造原子操作)，
+                实际开发的时，使用哪种方式呢？ 推荐 synchronized代码块
+                    1. 两种方式，实现线程同步，效果相同，但是 使用synchronized代码块的方式要简单的多
+          
+                         2. 虽然说在jdk早期版本中，两种方式加锁和释放锁，确实有效率上的差别，Lock锁机制加锁释放锁
+              效率高一些，但是，在今天的jdk中，两种方式加锁和释放锁的效率已经相差无几了
+
+# 死锁
+
+## 什么是死锁
+
+## 产生死锁的情况
+
+## 解决死锁
+
+### 方式一
+
+### 方式二
+
+# 生产者和消费者模型
+
+# 线程通信
+
+## 等待唤醒机制
+
+# 多线程工具
+
+## 线程池
+
+### 三种线程池
+
+### 多线程实现方式三:Callable
+
+## 定时器
 
 
 
