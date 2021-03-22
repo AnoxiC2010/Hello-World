@@ -23,3 +23,7 @@ The "standard" input stream. This stream is already open and ready to supply inp
 # java.io.FileNotFoundException: C:\D\aaa (Access is denied)
 
 我创建字节输入流的时候，文件路径传了文件夹，导致这个错误，传入正确的文件路径即可。(Access is denied)让我误以为是C盘没有权限，又是已管理员运行程序又是重启，对比之前的正常代码才发现是文件夹的问题。
+
+# java.lang.IllegalThreadStateException
+
+一个线程重复start，抛出异常但该线程会继续执行到结束。但重复start的错误代码所在主线程之后的代码不会执行。
