@@ -7227,7 +7227,7 @@ java代码是在某一条执行路径下按顺序执行的
 
 **线程**
 
-- 线程是CPU进程资源调度与分配的基本单位,线程依赖于进程而存在,每个进程可以有多个子任务,每个子任务都可以当做线程,从执行路径的角度来讲,线程就是一个执行路径.
+- 线程是CPU进行资源调度与分配的基本单位,线程依赖于进程而存在,每个进程可以有多个子任务,每个子任务都可以当做线程,从执行路径的角度来讲,线程就是一个执行路径.
 
 
 
@@ -7484,8 +7484,8 @@ java中采用的是抢占式线程调度方式
       public static void main(String[] args) {
           MyThread2 t1 = new MyThread2();
           MyThread2 t2 = new MyThread2();
-          t1.setName("短风");
-          t2.setName("细风");
+          t1.setName("短");
+          t2.setName("细");
           // 设置线程优先级 线程优先级的范围1-10
           t1.setPriority(Thread.MAX_PRIORITY);
           t2.setPriority(Thread.MIN_PRIORITY);
@@ -7624,7 +7624,7 @@ public class YieldThreadDemo {
         YieldThread t2 = new YieldThread();
 
         t1.setName("金牌讲师");
-        t2.setName("粤港澳第一赌神");
+        t2.setName("第一赌神");
 
         t1.start();
         t2.start();
@@ -8338,7 +8338,7 @@ class SellWindow3 implements Runnable {
 
           1.  synchronized(锁对象) {
                 需要同步的代码
-
+    
           }
           
             2.  lock.lock()
@@ -8355,13 +8355,214 @@ class SellWindow3 implements Runnable {
 
 ## 什么是死锁
 
+2个或以上的线程竞争资源 而造成的互相等待的现象 
+
+```
+  .---拥有-->资源A<--等待---.
+线程A                     线程B
+  `---等待-->资源B<--拥有---`
+都需要集齐资源释放
+```
+
+
+
 ## 产生死锁的情况
+
+```java
+synchronized(objA){
+	synchronized(objB){
+		// 代码
+	}
+}
+```
+
+死锁例子:
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        DieLock dieLock = new DieLock(true);
+        DieLock dieLock1 = new DieLock(false);
+
+        Thread t1 = new Thread(dieLock);
+        Thread t2 = new Thread(dieLock1);
+
+        t1.start();
+        t2.start();
+    }
+}
+/*该类用来描述 锁*/
+class MyLock {
+    // 定义了2把锁
+    static final Object objA = new Object();
+    static final Object objB = new Object();
+}
+
+class DieLock implements Runnable {
+    // 成员变量
+    boolean flag;
+
+    public DieLock(boolean flag) {
+        this.flag = flag;
+    }
+
+    @Override
+    public void run() {
+        // synchronized(objA){
+        //	synchronized(objB){
+        //		// 代码
+        //	}
+        //}
+        if (flag) {
+            synchronized (MyLock.objA) {
+                System.out.println("if A");
+                synchronized (MyLock.objB) {
+                    System.out.println("if B");
+                }
+            }
+        } else {
+            synchronized (MyLock.objB) {
+                System.out.println("else B");
+                synchronized (MyLock.objA) {
+                    System.out.println("else A");
+                }
+            }
+        }
+
+    }
+}
+```
+
+
 
 ## 解决死锁
 
 ### 方式一
 
+更改加锁顺序 加锁顺序保持一致
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        DieLock dieLock = new DieLock(true);
+        DieLock dieLock1 = new DieLock(false);
+
+        Thread t1 = new Thread(dieLock);
+        Thread t2 = new Thread(dieLock1);
+
+        t1.start();
+        t2.start();
+    }
+}
+/*该类用来描述 锁*/
+class MyLock {
+    // 定义了2把锁
+    static final Object objA = new Object();
+    static final Object objB = new Object();
+}
+
+class DieLock implements Runnable {
+    // 成员变量
+    boolean flag;
+
+    public DieLock(boolean flag) {
+        this.flag = flag;
+    }
+
+    @Override
+    public void run() {
+        // synchronized(objA){
+        //	synchronized(objB){
+        //		// 代码
+        //	}
+        //}
+        if (flag) {
+            synchronized (MyLock.objA) {
+                System.out.println("if A");
+                synchronized (MyLock.objB) {
+                    System.out.println("if B");
+                }
+            }
+        } else {
+            synchronized (MyLock.objA) {
+                System.out.println("else B");
+                synchronized (MyLock.objB) {
+                    System.out.println("else A");
+                }
+            }
+        }
+    }
+}
+```
+
+
+
 ### 方式二
+
+再加一把锁  把一个非原子操作变成一个原子操作
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        DieLock dieLock = new DieLock(true);
+        DieLock dieLock1 = new DieLock(false);
+
+        Thread t1 = new Thread(dieLock);
+        Thread t2 = new Thread(dieLock1);
+
+        t1.start();
+        t2.start();
+    }
+}
+/*该类用来描述 锁*/
+class MyLock {
+    // 定义了2把锁
+    static final Object objA = new Object();
+    static final Object objB = new Object();
+    static final Object objC = new Object();
+}
+
+class DieLock implements Runnable {
+    // 成员变量
+    boolean flag;
+
+    public DieLock(boolean flag) {
+        this.flag = flag;
+    }
+
+    @Override
+    public void run() {
+        // synchronized(objA){
+        //	synchronized(objB){
+        //		// 代码
+        //	}
+        //}
+        if (flag) {
+            synchronized (MyLock.objC) {
+                synchronized (MyLock.objA) {
+                    System.out.println("if A");
+                    synchronized (MyLock.objB) {
+                        System.out.println("if B");
+                    }
+                }
+            }
+        } else {
+            synchronized (MyLock.objC) {
+                synchronized (MyLock.objB) {
+                    System.out.println("else B");
+                    synchronized (MyLock.objA) {
+                        System.out.println("else A");
+                    }
+                }
+            }
+
+        }
+
+    }
+}
+```
+
+
 
 # 生产者和消费者模型
 
@@ -8369,15 +8570,648 @@ class SellWindow3 implements Runnable {
 
 ## 等待唤醒机制
 
+线程间通信，Java中主要通过Object中的方法来实现：
+wait()          阻止自己
+notify()        通知别人
+notifyAll()    通知别人
+
+    wait方法
+    1. 阻塞功能：
+        当在某线程中，对象上.wait(), 在哪个线程中调用wait(), 导致哪个线程处于阻塞状态
+        当某线程，因为调用执行某对象的wait(),而处于阻塞状态，我们说，该线程在该对象上阻塞。
+    	 Object A = 	new Object()  o.wait()
+    2. 唤醒条件
+       当某线程，因为某对象A的wait(), 而处于阻塞状态时，如果要唤醒该线程，只能在其他线程中，
+       再同一个对象(即对象A)上调用其notify()或notifyAll()
+       即在线程的阻塞对象上，调用notify或notifyAll方法，才能唤醒，在该对象上阻塞的线程
+    3. 运行条件
+          当前线程必须拥有此对象监视器。
+          监视器：指synchronized代码块中的锁对象
+        即我们只能在，当前线程所持有的synchronized代码块汇中的，锁对象上调用wait方法，
+        才能正常执行
+        如果我不在同步代码块中调用就会有这样一个异常
+        IllegalMonitorStateException
+        示例:
+        public class Demo {
+        public static void main(String[] args) {
+            A a = new A();
+            try {
+                a.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    class A {
+    
+    }
+        
+    4. 执行特征
+          a.该线程发布(release)对此监视器的所有权
+          b.等待(阻塞)
+
+notify:
+
+- 唤醒在此对象监视器上等待的单个线程。
+- 如果所有线程都在此对象上等待，则会选择唤醒其中一个线程。
+- 选择是任意性的
+
+
+
+面试题：
+    Thread.sleep VS Object.wait()
+
+1. 所属不同：
+   a. sleep定义在Thread类，静态方法
+   b. wait定义在 Object类中，非静态方法
+
+2. 唤醒条件不同
+   a. sleep: 休眠时间到
+   b. wait: 在其他线程中，在同一个锁对象上，调用了notify或notifyAll方法
+
+3. 使用条件不同：
+   a. sleep 没有任何前提条件
+   b. wait(), 必须当前线程，持有锁对象，锁对象上调用wait()
+
+4. 休眠时，对锁对象的持有，不同：（最最核心的区别）
+   a. 线程因为sleep方法而处于阻塞状态的时候，在阻塞的时候不会放弃对锁的持有
+   b. 但是wait()方法，会在阻塞的时候，放弃锁对象持有
+
+
+
+例子:
+
+```
+生产者--->蒸笼--->消费者
+蒸笼属于共享数据，非空则生产者停消费者吃，空则消费者停生产者在生产
+```
+
+
+
+```
+分析:
+类定义:
+蒸笼类 Box
+生产者线程  消费者线程
+包子  Food
+
+方法:
+生产包子的方法  setFood(Food newFood)
+吃包子的方法    eatFood()
+判断蒸笼状态方法  boolean isEmpty()
+```
+
+代码
+
+第一版
+
+```java
+/*蒸笼类*/
+public class Box {
+    // 定义成员变量包子
+    Food food;
+
+    // 定义方法
+    // 生产包子
+    public void setFood(Food newFood) {
+        food = newFood;
+        System.out.println(Thread.currentThread().getName()
+        +"生产了"+newFood);
+    }
+    // 吃包子
+    public void eatFood() {
+        System.out.println(Thread.currentThread().getName()
+                + "吃了" + food);
+        food = null;
+    }
+
+    // 判断蒸笼状态方法
+    public boolean isEmpty() {
+        return food==null;
+        // 如果为true 表示蒸笼为空
+        // 如果false 表示蒸笼非空
+    }
+
+}
+
+/*包子类*/
+class Food {
+    // 定义成员变量
+    String name;
+    int price;
+
+    public Food(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    @Override
+    public String toString() {
+        return "Food{" +
+                "name='" + name + '\'' +
+                ", price=" + price +
+                '}';
+    }
+}
+
+package com.cskaoyan.producer_consumer.V1;
+
+public class ConsumerTask implements Runnable{
+    // 蒸笼
+    Box box;
+
+    public ConsumerTask(Box box) {
+        this.box = box;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (box) {
+                // 消费者: 吃包子
+                //判断蒸笼状态
+                if (box.isEmpty()) {
+                    //如果蒸笼为空 说明没有包子
+                    //阻止自己吃
+                    try {
+                        box.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    //如果蒸笼非空 说明有包子
+                    box.eatFood();
+                    //吃包子 并且通知生产者再生产
+                    box.notify();
+                }
+            }
+        }
+    }
+}
+
+package com.cskaoyan.producer_consumer.V1;
+
+import java.util.Random;
+public class ProducerTask implements Runnable{
+    // 定义蒸笼
+    Box box;
+    Food[] foods = {new Food("杭州小笼包", 5),
+            new Food("开封灌汤包", 30), new Food("天津狗不理", 50)};
+    Random random;
+
+    public ProducerTask(Box box) {
+        this.box = box;
+        random = new Random();
+    }
+
+    public ProducerTask() {
+
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (box) {
+                // 生产者  : 生产包子
+                //判断蒸笼状态
+                if (box.isEmpty()) {
+                    //如果为空 说明没有包子
+                    //生产包子   通知消费者来吃
+                    // random.nextInt(int bound) [0,bound)
+                    int index = random.nextInt(foods.length);
+                    box.setFood(foods[index]);
+                    box.notify();
+                } else {
+                    //如果非空 说明有包子
+                    //阻止自己生产包子
+                    try {
+                        box.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+
+public class TestDemo {
+    public static void main(String[] args) {
+        // 创建生产者 消费者任务
+        Box box = new Box();
+        ProducerTask producerTask = new ProducerTask(box);
+        ConsumerTask consumerTask = new ConsumerTask(box);
+
+        // 创建线程
+        // 生产者线程
+        Thread t1 = new Thread(producerTask);
+        Thread t2 = new Thread(consumerTask);
+
+        t1.setName("生产者");
+        t2.setName("消费者");
+
+        // 启动线程
+        t1.start();
+        t2.start();
+    }
+}
+
+```
+
+第二版本
+
+```java
+public class TestDemo {
+    public static void main(String[] args) {
+        // 创建蒸笼对象
+        Box box = new Box();
+        // 创建生产者 消费者任务
+        ProducerTask producerTask = new ProducerTask(box);
+        ConsumerTask consumerTask = new ConsumerTask(box);
+
+        // 创建线程
+        Thread t1 = new Thread(producerTask);
+        Thread t3 = new Thread(producerTask);
+
+        t1.setName("生产者1");
+        t2.setName("消费者1");
+
+        // start
+        t1.start();
+        t2.start();
+    }
+}
+
+
+public class ConsumerTask implements Runnable{
+    Box box;
+
+    public ConsumerTask(Box box) {
+        this.box = box;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            box.eatFood();
+        }
+    }
+}
+
+
+import java.util.Random;
+// 生产者
+public class ProducerTask implements Runnable{
+    Box box;
+    Food[] foods = {new Food("上海生煎包",15),
+            new Food("叉烧包",10),new Food("黄金开口笑",30)};
+    Random random;
+
+    public ProducerTask(Box box) {
+        this.box = box;
+        random = new Random();
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            int index = random.nextInt(foods.length);
+            box.setFood(foods[index]);
+        }
+    }
+}
+
+public class Box {
+    Food food;
+
+    // 生产包子 只有生产者执行
+    public synchronized void setFood(Food newFood) {
+        // 生产包子
+        //判断蒸笼状态
+        if (food == null) {
+            //如果为空 说明没有包子
+            //生产包子   通知消费者来吃
+            food = newFood;
+            System.out.println(Thread.currentThread().getName()
+            +"生产了"+newFood);
+            this.notify();
+        } else {
+            //如果非空 说明有包子
+            //阻止自己生产包子
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+    // 吃包子 只有消费者执行
+    public synchronized void eatFood() {
+        // 吃包子
+        //判断蒸笼状态
+        if (food == null) {
+            //如果蒸笼为空 说明没有包子
+            //阻止自己吃
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            //如果蒸笼非空 说明有包子
+            //吃包子 并且通知生产者再生产
+            System.out.println(Thread.currentThread().getName()
+            +"吃了"+food);
+            food = null;
+            this.notify();
+        }
+
+    }
+}
+
+class Food {
+    String name;
+    int price;
+
+    @Override
+    public String toString() {
+        return "Food{" +
+                "name='" + name + '\'' +
+                ", price=" + price +
+                '}';
+    }
+
+    public Food(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+}
+```
+
+**当有多个生产者和消费者的时候  出现卡顿的现象**
+
+假设生产者1线程获取了CPU的执行权,蒸笼是空的,另外3个线程 生产者2 消费者1 消费者2 都在阻塞
+
+生产者1生产包子,notify方法  唤醒线程 . 是随机的
+
+如果唤醒的是消费者线程 没有问题
+
+但是唤醒的是生产者2线程 判断蒸笼是否为空  非空  wait方法 造成4个线程阻塞.
+
+怎么解决?
+
+notifyAll方法
+
+**虚假唤醒**
+
+生产者1应该唤醒的是消费者线程  但是  notifyAll方法 生产者2线程也被唤醒
+
+
+
+
+
+**为什么wait, notify方法不定义在Thread类中?**
+
+- 锁对象可以是任意java对象
+
+
+
+# 完整的线程转换图
+
+```
+                        ↓---------其他阻塞
+      sleep()时间到join线程执行完毕     ↑join() sleep()等
+                        ↓            ↑
+|新建状态|--start()-->|就绪状态|--->|执行状态|--run()结束-->|死亡状态|
+                                      ↓ ↓
+                      ↓--synchronized-` `---wait()--↓   
+                  |同步阻塞|<--notify或notifyAll--|等待阻塞|
+```
+
+
+
 # 多线程工具
 
 ## 线程池
 
+为什么会有线程池?
+
+```
+Thread t = new Thread()
+当run方法执行完 就进入了死亡状态 被回收
+想要重新使用线程 还要重新创建 
+就产生了线程池
+```
+
+
+
 ### 三种线程池
+
+```java
+//JDK5提供了一Executors来产生线程池，有如下方法：
+ExecutorService newCachedThreadPool()
+// 1.会根据需要创建新线程，也可以自动删除，60s处于空闲状态的线程
+// 2.线程数量可变，立马执行提交的异步任务（异步任务：在子线程中执行的任务）
+ExecutorService newFixedThreadPool(int nThreads)
+// 1.线程数量固定
+// 2.维护一个无界队列（暂存已提交的来不及执行的任务）
+// 3.按照任务的提交顺序，将任务执行完毕  
+ExecutorService newSingleThreadExecutor()
+// 1.单个线程
+// 2.维护了一个无界队列（暂存已提交的来不及执行的任务）
+// 3.按照任务的提交顺序，将任务执行完毕
+
+```
+
+
+
+**如何使用**
+
+线程池的使用：ExecutorService(接口)
+Future<T> submit(Callable<T> task)
+Future<?> submit(Runnable task)
+
+第一种方式   Future<?> submit(Runnable task)
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        // 向线程池中提交任务submit()
+        pool.submit(new MyRunnable());
+        pool.submit(new MyRunnable());
+        pool.submit(new MyRunnable());
+        // 关闭线程池
+        //pool.shutdown();
+        
+        pool.shutdownNow();
+    }
+}
+
+class MyRunnable implements Runnable {
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Thread.currentThread().getName()
+            +"----"+i);
+        }
+    }
+}
+```
+
+
+
+第二种方式 Future<T> submit(Callable<T> task)
+
+```java
+Future 表示异步计算的结果
+public class Demo2 {
+    public static void main(String[] args) {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        Future future = pool.submit(new MyCallableTask());
+        // get()
+        // 如有必要，等待计算完成，然后获取其结果。
+        try {
+            System.out.println("get befor");
+            String s = (String) future.get();
+            System.out.println("get after");
+            System.out.println(s);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+}
+// 可以理解为多线程的实现方式三
+// Callable 和 Runnable的区别  一个带返回值 一个不带
+class MyCallableTask implements Callable {
+
+    // 注意 这里就不在是run方法了
+    @Override
+    public Object call() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Thread.currentThread().getName()
+            +"-----"+i);
+        }
+        Thread.sleep(10000);
+        return "hello call";
+    }
+}
+```
+
+
 
 ### 多线程实现方式三:Callable
 
-## 定时器
+```java
+public class Demo3 {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        // FutureTask(Callable<V> callable)
+        // 创建一个 FutureTask，一旦运行就执行给定的 Callable。
+        FutureTask futureTask = new FutureTask(new MyCallable());
+
+        Thread thread = new Thread(futureTask);
+
+        thread.start();
+
+        String s = (String) futureTask.get();
+        System.out.println(s);
+    }
+}
+
+class MyCallable implements Callable {
+
+    @Override
+    public Object call() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Thread.currentThread().getName()
+                    + "----" + i);
+        }
+        return "1234";
+    }
+}
+```
+
+
+
+## 定时任务
+
+定时器
+
+Timer()
+
+```
+定时器中维护了一个线程
+|定时任务|___|___|___|___|
+小顶堆
+按照将要执行的时间顺序进行排序
+```
+
+
+
+```java
+Timer的调度功能：
+schedule(TimerTask task, Date time)
+schedule(TimerTask task, long delay, long period)
+schedule(TimerTask task, Date firstTime, long period)
+scheduleAtFixedRate(TimerTask task, long delay, long period)
+```
+
+
+
+定时任务
+
+TimerTask()
+
+
+
+例子
+
+```java
+public class Demo {
+    public static void main(String[] args) throws ParseException {
+        Timer timer = new Timer();
+        // schedule(TimerTask task, Date time)
+        //schedule(TimerTask task, long delay, long period)
+        //schedule(TimerTask task, Date firstTime, long period)
+        //scheduleAtFixedRate(TimerTask task, long delay, long period)
+        String s = "2021-3-23 16:07:10";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = simpleDateFormat.parse(s);
+        //timer.schedule(new MyTask(),date);
+        //timer.schedule(new MyTask(),5000,3000);
+        //timer.schedule(new MyTask(),date,5000);
+        timer.scheduleAtFixedRate(new MyTask(),5000,3000);
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // cancel()
+        // 取消此计时器任务。
+        timer.cancel();
+    }
+}
+
+class MyTask extends TimerTask {
+
+    @Override
+    public void run() {
+        System.out.println("爆炸了!boom!");
+    }
+}
+```
+
+
 
 
 
