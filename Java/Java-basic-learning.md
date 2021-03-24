@@ -9360,7 +9360,7 @@ DatagramPacket(byte[] buf,  int offset, int length)       构造  DatagramPacket
 | int    | getLength()        返回将要发送或接收到的数据的长度。   |
 | int    | getOffset()        返回将要发送或接收到的数据的偏移量。 |
 
-
+> 注意启动多线程，同时首发报文时，如果发送线程选择结束关闭socket的话，接受线程的socket就会报错，记得在异常判断中做出对策
 
 
 
@@ -9427,13 +9427,9 @@ Socket(String host,  int port)       创建一个流套接字并将其连接到�
 
 | OutputStream | getOutputStream()        返回此套接字的输出流。 |
 | ------------ | ----------------------------------------------- |
-|              |                                                 |
 
 | InputStream | getInputStream()        返回此套接字的输入流。 |
 | ----------- | ---------------------------------------------- |
-|             |                                                |
-
-
 
 ## ServerSocket
 
@@ -9447,15 +9443,14 @@ ServerSocket(int port)        创建绑定到特定端口的服务器套接字�
 
 | Socket | accept()        侦听并接受到此套接字的连接。 |
 | ------ | -------------------------------------------- |
-|        |                                              |
-
-
 
 
 
 注意事项:
 
-- java.net.ConnectException: Connection refused: connect 必须先启动服务端
+- java.net.ConnectException: Connection refused: connect 必须先启动服务端，先启动客户端报错
+- 通过socket获得的InputStream在读取时，不要用while((readCount = in.read(bytes)) != -1)判断，经测试这和读取文件不一样，不会返回-1.
+- 客户端上传文件时，先发送文件名在发送文件，服务端会连续读取文件名和内容而报错，客户端发送完文件sleep一点点，就能让服务端分开获取文件名和文件内容。当然这种愚蠢的处理方法以后掌握了更高端的操作之后就不存在这个问题了。
 
 
 
