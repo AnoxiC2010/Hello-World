@@ -10065,3 +10065,45 @@ public class Demo7 {
 
 
 
+# 反射编写泛型数组代码
+
+```java
+//创建与原数组类型相同的新数组的通用的数组代码。
+public static Object goodCopyOf(Object a, int newLength){
+    Class cl = a.getClass();
+    if(!cl.isArray()) return null;
+    Class componentType = cl.getComponentType();
+    int length = Array.getLength(a);
+    Object newArray = Array.newInstance(componentType, newlength);
+    System.arraycopy(a, 0, newArray, 0, Math.min(length, newLength));
+    return newArray;
+}
+/**********************************
+这个CopyOf方法可以洪濑扩展任意类型的数组，不仅是对象数组。
+参数声明为Object而不是对象型数组Object[]是因为如整形数组类型int[]可以被转换成Object，但不能转换成对象数组。
+**********************************/
+```
+
+> java.lang.reflect.Array 1.1
+>
+> * static Object get(Object array, int index)
+>
+> * static xxx getXxx(Object array, int index)
+>
+>   (xxx是boolean、byte、char、double、float、int、long、short之中的一种基本类型。)这些方法将返回储存在给定位置上的给定数组的内容。
+>
+> * static void set(Object array, int index, Object newValue)
+>
+> * static setXxx(Object array, int index, xxx newValue)
+>
+>   (xxx是boolean、byte、char、double、float、int、long、short之中的一种基本类型。)这些方法将一个新值储存到给定位置上的给定数组中。
+>
+> * static int getLength(Object array)
+>
+>   返回数组的长度
+>
+> * static Object newInstance(Class componentType, int length)
+>
+> * static Object newInstance(Class componentType, int[] lengths)
+>
+>   返回一个具有给定类型、给定维数的新数组。
