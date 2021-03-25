@@ -10063,9 +10063,7 @@ public class Demo7 {
 }
 ```
 
-
-
-# 反射编写泛型数组代码
+## 反射编写泛型数组代码
 
 ```java
 //创建与原数组类型相同的新数组的通用的数组代码。
@@ -10107,3 +10105,7 @@ public static Object goodCopyOf(Object a, int newLength){
 > * static Object newInstance(Class componentType, int[] lengths)
 >
 >   返回一个具有给定类型、给定维数的新数组。
+
+## 关于反射调用方法
+
+> invoke的参数和返回值必须是Object类型。意味着必须进行多次转换。会使编译器错过检查代码的机会，而且是用反射获得方法指针的代码要比仅仅直接调用方法明显慢一些。鉴于此，建议尽在必要的时候才使用Method对象，而最好使用接口以及Java SE 8中的lambda表达式。建议Java开发者不要使用Method对象的回调功能。使用接口进行回调会使得代码的执行速度更快，更易于维护。
