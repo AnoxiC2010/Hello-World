@@ -8338,7 +8338,7 @@ class SellWindow3 implements Runnable {
 
           1.  synchronized(锁对象) {
                 需要同步的代码
-        
+            
           }
           
             2.  lock.lock()
@@ -9481,6 +9481,570 @@ ServerSocket(int port)        创建绑定到特定端口的服务器套接字�
   测试shutdownInput虽然能返回-1，但是之后就不能使用流了，把我循环的工作搞成了一次性的...另寻他法。
 
 
+
+# 反射
+
+## 类加载
+
+**加载**
+
+通过类加载器获得二进制字节流
+在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口
+
+**连接**
+验证：确保被加载类的正确性(正确性的校验)
+
+​	cafe babe : magic number 起校验作用的
+
+准备：负责为类的静态成员分配内存并设置默认初始化值
+
+解析：将类中的符号引用(跟编译原理相关)替换为直接引用(内存地址)
+
+**初始化**
+给静态成员变量赋初值，执行静态代码块内容
+
+
+
+**类加载时机 （类初始化时机）**
+
+创建类的实例(首次创建该类对象)
+访问类的静态变量(首次)
+调用类的静态方法(首次)
+使用反射方式来强制创建某个类或接口对应的java.lang.Class对象
+加载某个类的子类，会先触发父类的加载
+直接使用java.exe命令来运行某个主类，也就是执行了某个类的main()方法
+
+
+
+**类加载器**
+
+类加载器的分类(jdk8)
+Bootstrap ClassLoader 根类加载器
+Extension ClassLoader 扩展类加载器
+System  ClassLoader  系统类加载器
+
+
+
+**java代码在计算机中的三个阶段**
+
+```
+ Person.java 
+[Person {    ]                 [  Class对象    ]
+[//成员变量   ]                 [（字节码文件对象）]
+[//成员方法   ]                 [               ]
+[//构造方法   ]                 [Field[]        ]
+[}           ]                 [描述类中的成员变量]
+	  ↓         通过类加载器     [Method[]       ]==>[Person p = new Person()]
+	javac     ClassLoader加载   [描述成员方法     ]
+	  ↓                        [Constructor[]   ]
+[Person.class]                 [描述构造方法      ]
+源文件阶段Source                  Class类对象阶段          运行时阶段Runtime
+
+```
+
+
+
+# 反射技术
+
+## 反射是什么
+
+获取类运行时信息的一种技术,这种技术叫做反射技术.
+
+换句话说,我们使用反射技术,类对于我们来说 是透明的, 我们相当于站在了上帝视角,可以获取类当中的所有信息
+
+## 获取字节码文件对象的三种方式
+
+Class类需要注意的地方
+
+```java
+/*final 说明不能被继承*/
+public final class Class<T> implements java.io.Serializable,
+                              GenericDeclaration,
+                              Type,
+                              AnnotatedElement {
+    private static final int ANNOTATION= 0x00002000;
+    private static final int ENUM      = 0x00004000;
+    private static final int SYNTHETIC = 0x00001000;
+
+    private static native void registerNatives();
+    static {
+        registerNatives();
+    }
+     /*private 说明不能通过new创建，只能通过反射获取*/
+    private Class(ClassLoader loader) {
+```
+
+
+
+Class.forName("全类名")
+
+
+
+类名.class()
+
+
+
+对象.getClass()
+
+```java
+public class Demo2 {
+    public static void main(String[] args) throws ClassNotFoundException {
+        // 第一种方式 Class.forName("全类名")
+        Class personClass = Class.forName("com.baidu.domain.Person");
+
+        // 第二种方式 类名.class
+        Class personClass1 = Person.class;
+
+        // 第三种方式  对象.getClass()
+        Person person = new Person();
+        Class personClass2 = person.getClass();
+
+        // 这3个对象是同一个吗? 同一个字节码文件对象
+        System.out.println(personClass == personClass1);
+        System.out.println(personClass == personClass2);
+    }
+}
+```
+
+注意:
+
+```java
+public class Demo3 {
+    public static void main(String[] args) throws ClassNotFoundException {
+        //Class c = Class.forName("com.baidu.getcls.A");
+        // 静态代码块会执行吗? Class.forName  执行了
+
+        Class c2 = A.class;
+        // 静态代码块会执行吗?   A.class  这种方式不会触发类加载
+    }
+}
+
+class A {
+    static {
+        System.out.println("loading A");
+    }
+}
+```
+
+
+
+## 配置文件Properties
+
+**原理**
+
+```
+是个table
+className=com.baidu.domain.Person
+   key键           value值
+|className|com.baidu.domain.Person|
+|  ...    |      ...              |
+|  ...    |      ...              |
+```
+
+
+
+**怎么使用**
+
+Properties
+
+`Properties` 类表示了一个持久的属性集
+
+构造方法:
+
+Properties()        创建一个无默认值的空属性列表。
+
+成员方法:
+
+| void | load(InputStream inStream)        从输入流中读取属性列表（键和元素对）。 |
+| ---- | ------------------------------------------------------------ |
+| void | load(Reader reader)        按简单的面向行的格式从输入字符流中读取属性列表（键和元素对）。 |
+
+getProperty(String key)        用指定的键在此属性列表中搜索属性。
+
+
+
+**编解码注意：**
+
+* load(InputStream inStream) 源码中默认的字节流编码是ISO8859-1，所以配置文件中的中文读取后是乱码，要手动在创建流的时候指定正确的编码。
+* IDEA新创建的properties文件编码默认是GBK，谨记properties文件和输入流编解码一致。
+
+```java
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.*;
+import java.util.Properties;
+/*配置文件一般放数据库配置信息 还有一些第三方的账号信息*/ 
+public class Demo {
+    public static void main(String[] args) throws SQLException, IOException {
+        //String url = "jdbc:mysql://localhost:3306/test?useSSL=false";
+        //String name = "root";
+        //String password = "123456";
+
+        // 通过配置文件读取配置信息
+        Properties properties = new Properties();
+        FileInputStream in = new FileInputStream("../day22_reflect/config.properties");
+        properties.load(in);
+        String url = properties.getProperty("url");
+        String name = properties.getProperty("userName");
+        String password = properties.getProperty("password");
+
+        // 通过数据库驱动 获取连接
+        Connection connection = DriverManager.getConnection(url, name, password);
+
+        String selectInfo = "select * from user";
+        // 预编译
+        PreparedStatement preparedStatement =
+                connection.prepareStatement(selectInfo);
+        // 执行查询操作
+        ResultSet resultSet = preparedStatement.executeQuery();
+        // 取数据
+        while (resultSet.next()) {
+            int userId = resultSet.getInt("userId");
+            String userName = resultSet.getString("userName");
+            System.out.println("ID: " + userId + "用户名: " + userName);
+        }
+        connection.close();
+
+    }
+}
+```
+
+```java
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Properties;
+public class Demo2 {
+    public static void main(String[] args) throws IOException {
+        // 通过配置文件读取配置信息
+        Properties properties = new Properties();
+        //FileInputStream in = new FileInputStream("../day22_reflect/config.properties");
+        InputStreamReader in = new InputStreamReader(
+                new FileInputStream("../day22_reflect/config.properties"),"GBk");
+        properties.load(in);
+        String url = properties.getProperty("url");
+        String name = properties.getProperty("userName");
+        String password = properties.getProperty("password");
+        System.out.println(url);
+        System.out.println(name);
+        System.out.println(password);
+    }
+}
+
+```
+
+
+
+## 怎么使用反射
+
+反射技术的起点就是获取字节码文件对象
+
+### 需要掌握的
+
+#### 获取构造方法
+
+**通过反射获取所有构造方法**
+
+- Constructor[] getConstructors() 
+  - ​     返回一个包含某些 `Constructor` 对象的数组，这些对象反映此 `Class`  对象所表示的类的所有公共构造方法。
+- Constructor[] getDeclaredConstructors()
+  - 返回 `Constructor` 对象的一个数组，这些对象反映此 `Class` 对象表示的类声明的所有构造方法。
+
+**获取指定的构造方法**
+
+- Constructor<T> getConstructor(Class<?>... parameterTypes)
+  -  返回一个 `Constructor` 对象，它反映此 `Class` 对象所表示的类的指定公共构造方法
+  -  java.lang.NoSuchMethodException 因为去获取了非public的构造方法了
+- Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes)
+  - 返回一个 `Constructor` 对象，该对象反映此 `Class` 对象所表示的类或接口的指定构造方法。
+
+**如何利用获得的构造方法实例化**
+
+newInstance(参数列表)
+
+通过私有的构造方法 : java.lang.IllegalAccessException
+
+```java
+import java.lang.reflect.Constructor;
+public class Demo1 {
+    public static void main(String[] args) throws Exception{
+        // 获取字节码文件对象
+        Class personClass = Class.forName("com.baidu.domain.Person");
+        // 获取所有public构造方法
+        // Constructor[] getConstructors()
+        System.out.println("获取所有public构造方法-------------");
+        Constructor[] constructors = personClass.getConstructors();
+        for (Constructor c :
+                constructors) {
+            System.out.println(c);
+        }
+        System.out.println("获取所有构造方法--------------");
+        Constructor[] declaredConstructors = personClass.getDeclaredConstructors();
+        System.out.println(declaredConstructors.length);
+        for (Constructor c :
+                declaredConstructors) {
+            System.out.println(c);
+        }
+        // 获取指定的构造方法
+        System.out.println("获取指定的构造方法--------------");
+        Constructor constructor = personClass.getConstructor(String.class, int.class, boolean.class);
+        System.out.println(constructor);
+        System.out.println("获取指定的非public构造方法---------");
+        Constructor declaredConstructor = personClass.getDeclaredConstructor(String.class);
+        System.out.println(declaredConstructor);
+
+        System.out.println("通过public构造方法进行实例化---------");
+        Person person = (Person) constructor.newInstance("张三", 20, true);
+        System.out.println(person);
+
+        System.out.println("通过非public构造方法进行实例化---------");
+        // setAccessible(true) 忽略java语法检查 暴力的方法
+        declaredConstructor.setAccessible(true);
+        Person person2 = (Person) declaredConstructor.newInstance("李四");
+        System.out.println(person2);
+
+    }
+}
+
+```
+
+
+
+**可变长参数**
+
+```java
+/*
+    可变长参数
+    1.这个参数是可变的 1-n
+    2.可变长参数可以理解为数组
+    3.可变长参数只能有1个
+ */
+public class Demo2 {
+    public static void main(String[] args) {
+        m(1);
+        m(1,2);
+        m(1,2,3);
+        m(new int[]{1,2,3});
+        m1("哈哈",1);
+        m1("哈哈",1,2,3);
+    }
+
+    public static void m(int... arg) {
+        System.out.println("执行了 func  m!");
+    }
+    public static void m1(String s,int... arg){
+        System.out.println("执行了 m1!");
+    }
+
+}
+
+```
+
+
+
+#### 获取成员变量
+
+**获取所有的public成员变量**
+
+Field[] getFields()
+
+**获取所有的成员变量**
+
+Field[] getDeclaredFields()
+
+**获取指定的public成员变量**
+
+Field getField(String name)
+
+**获取指定的成员变量**
+
+Field getDeclaredField(String name)
+
+**设置 获取成员变量的值**
+
+- Object get(Object obj)：获取值，传入对象
+- void set(Object obj, Object value)：赋值，传入对象
+
+
+
+#### 获取成员方法
+
+**获取所有的public的成员方法**
+
+Method[] getMethods()
+
+**获取所有的成员方法**
+
+Method[] getDeclaredMethods()
+
+**获取指定的public的成员方法**
+
+Method getMethod(String name, Class<?>... parameterTypes)
+
+**获取指定的成员方法**
+
+Method getDeclaredMethod(String name, Class<?>... parameterTypes
+
+
+
+**如何调用方法**
+
+Object invoke(Object obj, Object... args) 对带有指定参数的指定对象调用由此 `Method` 对象表示的底层方法。
+
+
+
+```java
+public class Person {
+    public String name;
+    private int age;
+    protected boolean gender;
+
+    public Person() {
+    }
+
+    public Person(String name, int age, boolean gender) {
+        this.name = name;
+        this.age = age;
+        this.gender = gender;
+    }
+
+    private Person(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", gender=" + gender +
+                '}';
+    }
+
+    public void eat(){
+        System.out.println("eat food");
+    }
+
+    private void eat(String s) {
+        System.out.println("eat " + s);
+    }
+}
+```
+
+应用场景:
+
+一般用于框架 
+
+```
+|姓名|年龄|性别|成绩|  public class Student {
+|张三|20  |男 |   |     String name;
+|李四|28  |女 |   |     int age;
+|   |    |   |   |      boolean gender;
+                        int score;
+     ORM             }
+字节码文件对象获取constructor实例化
+获取Fields
+for(){
+//遍历
+field.set(obj, value)
+}
+```
+
+
+
+### 了解
+
+反编译成员变量
+
+```java
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+public class Demo6 {
+    public static void main(String[] args) throws Exception{
+        // public class Person {
+        //    public String name;
+        //    private int age;
+        //    protected boolean gender;
+        // }
+
+        Class c = Class.forName("java.io.BufferedInputStream");
+        StringBuilder s = new StringBuilder();
+        //s.append("public class Person {");
+        s.append(Modifier.toString(c.getModifiers()) +
+                " class " + c.getSimpleName() + "{");
+        s.append("\r\n");
+        Field[] declaredFields = c.getDeclaredFields();
+        for (Field field : declaredFields) {
+            s.append("\t");
+            int modifiers = field.getModifiers();
+            String strModifiers = Modifier.toString(modifiers);
+            s.append(strModifiers);
+            s.append(" ");
+            // 获取类型
+            String typeName = field.getType().getSimpleName();
+            s.append(typeName);
+            s.append(" ");
+            // 获取field名字
+            String fieldName = field.getName();
+            s.append(fieldName);
+            s.append(";");
+            s.append("\r\n");
+        }
+        s.append("}");
+        System.out.println(s);
+    }
+}
+
+```
+
+反编译成员方法:
+
+```java
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+public class Demo7 {
+    public static void main(String[] args) throws Exception{
+        Class c = Class.forName("java.io.BufferedInputStream");
+        StringBuilder s = new StringBuilder();
+        s.append(Modifier.toString(c.getModifiers())
+                + " class " + c.getSimpleName() + "{");
+        s.append("\r\n");
+        Method[] declaredMethods = c.getDeclaredMethods();
+        for (Method m :
+                declaredMethods) {
+            s.append("\t");
+            // 权限修饰符
+            int modifiers = m.getModifiers();
+            String strModifiers = Modifier.toString(modifiers);
+            s.append(strModifiers);
+            s.append(" ");
+            String returnTypeName = m.getReturnType().getSimpleName();
+            s.append(returnTypeName);
+            s.append(" ");
+            // 方法名
+            String name = m.getName();
+            s.append(name);
+            s.append("(");
+            // 获取参数
+            Class[] parameterTypes = m.getParameterTypes();
+            for (int i = 0; i < parameterTypes.length; i++) {
+                s.append(parameterTypes[i].getSimpleName());
+                s.append(",");
+            }
+            if (parameterTypes.length > 0) {
+                s.deleteCharAt(s.length() - 1);
+            }
+            s.append(");");
+            s.append("\r\n");
+        }
+        s.append("}");
+        System.out.println(s);
+
+    }
+}
+```
 
 
 
