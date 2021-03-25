@@ -9666,6 +9666,24 @@ getProperty(String key)        用指定的键在此属性列表中搜索属性�
 **编解码注意：**
 
 * load(InputStream inStream) 源码中默认的字节流编码是ISO8859-1，所以配置文件中的中文读取后是乱码，要手动在创建流的时候指定正确的编码。
+
+  ```java
+  if (inStream != null) {
+      //The line below is equivalent to calling a
+      //ISO8859-1 decoder.
+      c = (char) (0xff & inByteBuf[inOff++]);
+  } else {
+      c = inCharBuf[inOff++];
+  }
+  //实测用默认字节流读取之后，在用"ISO8859-1"解码为字节数组，再用该字节数组以GBK编码得到的字符串能正常显示,也说明了IDEA默认properties文件时GBK编码
+  String username = properties.getProperty("username");
+  byte[] bytes = username.getBytes("ISO8859-1");
+  String s = new String(bytes, "GBK");
+  System.out.println(s);
+  ```
+
+  
+
 * IDEA新创建的properties文件编码默认是GBK，谨记properties文件和输入流编解码一致。
 
 ```java
@@ -10041,7 +10059,6 @@ public class Demo7 {
         }
         s.append("}");
         System.out.println(s);
-
     }
 }
 ```
