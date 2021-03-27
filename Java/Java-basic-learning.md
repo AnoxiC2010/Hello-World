@@ -10550,16 +10550,34 @@ GC Roots包含的对象：
 ##  相关概念
 
 - shallow size
+
   - 就是对象本身占用的内存大小，也就是对象头加成员变量占用内存大小的总和
+
 - retained size
+
   - 是该对象自己的shallow size 加上仅可以从该对象访问（直接或者间接访问）的对象的shallow size之和
+
   - 是该对象被GC之后所能回收的内存的总和
 
-![image-20210326143436423](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210326143436423.png)
+  - ```
+    .---------[GC Roots]----.
+    ↓		      ↓         ↓
+    [obj5]	←	<obj1>		|
+    		      ↓		    ↓
+    <obj4>	←	<obj2>	→	[obj3]
+    ```
 
 当GC roots到obj1的访问链断开 回收obj1时, 会去回收obj1  obj2  obj4 这3个对象(obj1直接或间接访问到的对象,也就是retained size)
 
-![image-20210326143602413](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210326143602413.png)
+```
+.---------[GC Roots]----.
+↓		      ↓         ↓
+[obj5]	←	    		|                  ←	<obj1>
+		      ↓		    ↓                         ↓
+    	←	    	→	[obj3]       <obj4>	←	<obj2>	→
+```
+
+
 
 
 
