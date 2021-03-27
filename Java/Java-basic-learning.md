@@ -10104,3 +10104,288 @@ public static Object goodCopyOf(Object a, int newLength){
 ## 关于反射调用方法
 
 > invoke的参数和返回值必须是Object类型。意味着必须进行多次转换。会使编译器错过检查代码的机会，而且是用反射获得方法指针的代码要比仅仅直接调用方法明显慢一些。鉴于此，建议尽在必要的时候才使用Method对象，而最好使用接口以及Java SE 8中的lambda表达式。建议Java开发者不要使用Method对象的回调功能。使用接口进行回调会使得代码的执行速度更快，更易于维护。
+
+
+
+[TOC]
+
+# 注解
+
+## 什么是注释
+
+注释有三种形式:
+1,单行注释：//
+2,多行注释：/*    */
+3,文档注释：/**  */
+
+## 什么是注解
+
+相比较于注释：
+     1，注解和注释都是为代码添加额外信息
+     2，定义不同。注解是Java的一种数据类型，和class，接口具有同等地位
+     3，作用不同。注解是给编译器看的，编译不过会报错
+     4，使用位置不同。注解的使用位置有严格限制
+     5，注释完全不参与class文件和之后的JVM内存，只存在于Java文件层次，但是注解可以参与。
+
+Java 注解用于为 Java 代码提供元数据。作为元数据，注解不直接影响你的代码执行，但也有一些类型的注解实际上可以用于这一目的。Java 注解是从 Java5 开始添加到 Java 的。
+
+将注解理解为生活中的标签，往抽象地说，标签并不一定是一张纸，它可以是对人和事物的属性评价。在程序中，想象一下代码都是具有生命的，注解就是对代码这个鲜活生命的描述，凸出他们的个性。比如我们把纹身当成黑恶势力的标签，这个标签的对象是人，这个人不是一个好人，就好比override的对象是方法，这个方法是一个复写了父类的方法。
+
+# 自定义注解
+
+## 注解定义
+
+```java
+语法:
+权限修饰符 @Interface 注解名称{
+
+}
+```
+
+
+
+## 注解体定义
+
+```java
+语法
+权限修饰符 @Interface 注解名称{
+	属性类型 属性名称 ();
+    属性类型 属性名称 ();
+    属性类型 属性名称 ();
+}
+
+a. 所有的基本数据类型
+b. String类型
+c. Class类型
+d. 枚举类型
+e. 以上类型的数组
+```
+
+举例:
+
+```java
+// 注解定义
+public @interface MyAnnotation {
+    //int minAge() default 18;
+    //int maxAge() default 25;
+    int value();
+    String[] name();
+    boolean gender();
+    Class param();
+    Class[] params();
+    // 等等 上述 类型 以及他们的数组
+}
+```
+
+
+
+# 注解的使用
+
+## 使用的注意事项
+
+给注解中的数据赋值有两种方式：
+
+- 使用注解时，给每个数据赋值，即括号里写
+  在定义注解时，给每个注解定义默认值，这样的话在使用注解时，没被赋值的数据就用默认值。但是注意引用类型的数据，其默认值不能取null
+- 若注解中的数据是value，且只有名为value的数据需要赋值，这样的赋值可以简写
+
+```java
+// 注解定义
+public @interface MyAnnotation {
+    //int minAge() default 18;
+    //int maxAge() default 25;
+    int value();
+}
+
+//使用
+class Stu {
+    // 当注解中的属性名为value时,赋予初值的时候可以不用  (属性名=属性值) 可以直接赋值
+    // 当有默认值的时候也可以省略赋值 默认值关键字为default
+    @MyAnnotation(10)
+    int age;
+
+    public Stu(int age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Stu{" +
+                "age=" + age +
+                '}';
+    }
+}
+```
+
+
+
+# 注解处理器
+
+练习:
+
+创建一个学生对象,约束条件要求年龄在18-25,名字长度小于5个字符
+
+将学生类中的构造方法设置为private,我们就不能通过new 去创建对象,我们想到可以利用反射去做.自己构建一个注解处理器.
+
+思路:
+
+通过反射 去创建学生对象 , 但是在创建之前要 先获取 学生类中的成员变量,并判断他们是否使用了注解,如果使用了,那么我们去获取他的注解实例,从而获取他的注解中的属性值.拿到属性值之后,去判断我们传递的参数是否合法,如果不合法 那么抛出 异常.
+
+注解定义:
+
+```java
+//注解定义
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD,ElementType.CONSTRUCTOR,ElementType.METHOD,ElementType.TYPE})
+public @interface AgeBound {
+    int maxAge()default 25;
+    int minAge()default 18;
+}
+@Retention(RetentionPolicy.RUNTIME)
+@interface nameBound {
+    int nameLimit()default 5;
+}
+```
+
+注解使用:
+
+```java
+public class Student {
+    @AgeBound()
+    int age;
+
+    @nameBound()
+    String name;
+
+    @AgeBound()
+    private Student( String name,int age) {
+        this.age = age;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "age=" + age +
+                ", name='" + name + '\'' +
+                '}';
+    }
+}
+
+```
+
+注解处理器:
+
+```java
+//写法没问题，没有作用是因为并未设置元注解
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+/*
+利用注解，结合我们自定义的注解处理器，实现如下需求：
+定义一个Student类,包含name和age两个成员
+name中包含的字符个数不得超过指定值(具体的约束条件信息-> 注解)
+age必须在指定范围内(具体的约束条件信息-> 注解)
+name和age都满足条件才能创建Student对象，否则抛出异常。(该效果由注解处理器来实现)
+ */
+public class StudentFactory {
+    Class stuClass;
+
+    public StudentFactory() {
+        this.stuClass = Student.class;
+    }
+
+    public Student getStudent(String name, int age) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
+        // 校验姓名
+        judgeName(name);
+        // 校验年龄
+        judgeAge(age);
+
+        Constructor declaredConstructor =
+                stuClass.getDeclaredConstructor(String.class,int.class);
+        declaredConstructor.setAccessible(true);
+        Student student = (Student) declaredConstructor.newInstance(name, age);
+        return student;
+    }
+
+    private void judgeAge(int age) throws NoSuchFieldException {
+        // 获取age 成员变量
+        Field ageField = stuClass.getDeclaredField("age");
+        // 判断成员变量 是否使用了注解
+        boolean annotationPresent = ageField.isAnnotationPresent(AgeBound.class);
+        if (annotationPresent) {
+            // 获取注解实例
+            AgeBound annotation = ageField.getAnnotation(AgeBound.class);
+            // 获取具体的属性值
+            int minAge = annotation.minAge();
+            int maxAge = annotation.maxAge();
+            // 做校验
+            if (age < minAge || age > maxAge) {
+                throw new IllegalArgumentException("年龄不合法:  "
+                +age);
+            }
+        }
+
+
+    }
+
+    private void judgeName(String name) throws NoSuchFieldException {
+        // 获取属性name中的值
+        // 先获取成员变量
+        Field nameField = stuClass.getDeclaredField("name");
+        // 判断一下 是否使用了注解
+        // isAnnotationPresent 是否使用了注解  为true 说明使用了 false 没使用
+        boolean annotationPresent = nameField.isAnnotationPresent(nameBound.class);
+        System.out.println(annotationPresent);
+        if (annotationPresent) {
+            // 获取注解实例
+            nameBound annotation = nameField.getAnnotation(nameBound.class);
+            //获取属性name中的值
+            int nameLimit = annotation.nameLimit();
+            // 校验工作
+            if (name.length() > nameLimit) {
+                throw new  IllegalArgumentException("姓名不合法:  "+name.length());
+            }
+        }
+    }
+}
+
+```
+
+> java.lang.reflect.AccessibleObject
+>
+> 直接已知子类Field, Method, Constructor
+>
+> * boolean isAccessible()
+>
+>   获取此对象 的accessible标志值，默认为false，即不管修饰符为public还是private等，都是false。根据源码其指的是是否忽略语言层面的检查。所以用isAccessible判断是否需要setAccessible是没有作用的。只有setAccessible之后才会改变其状态。
+
+# 元注解
+
+## 什么是元注解
+
+描述注解的注解     元数据 meta data (描述数据的数据)
+
+## 2种常用元注解
+
+### @Target
+
+      @Target元注解，注解可以作用的目标
+         对于注解而言，可以作用的目标：
+         1. 整个类    ElementType.TYPE
+         2. 成员变量   ElementType.FIELD
+         3. 构造方法   ElementType.CONSTRUCTOR
+         4. 成员方法   ElementType.METHOD
+
+### @Retention
+
+      @Retention元注解，来定义我们自己定义的注解的保留级别.
+        1. RetentionPolicy.RUNTIME
+        2. RetentionPolicy.CLASS
+        3。RetentionPolicy.SOURCE
+
