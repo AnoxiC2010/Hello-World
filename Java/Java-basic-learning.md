@@ -10389,3 +10389,177 @@ public class StudentFactory {
         2. RetentionPolicy.CLASS
         3。RetentionPolicy.SOURCE
 
+
+
+
+
+
+
+# 内存管理方式
+
+## 显示内存管理
+
+### 显示内存管理是什么
+
+内存的申请 释放都是程序员做的  malloc()   free()
+
+### 常见问题
+
+#### 内存泄漏
+
+#### 野指针
+
+```
+100M-1M=99M            malloc：申请内存；free：释放内存
+|模块一|------↓	     野指针：模块一释放资源，模块二模块三还在引用对象A
+|模块二|--->|对象A|      内存泄露：没有模块去释放对象A，导致可用的内存减少了
+|模块三|------↑
+```
+
+
+
+## 隐式内存管理
+
+### 隐式内存管理是什么
+
+由垃圾回收机制去处理
+
+### 优缺点
+
+优点：增加了程序的可靠性，减小了memory leak
+缺点：无法控制GC的时间，耗费系统性能
+
+# GC-Garbage collection
+
+## 如何确定垃圾
+
+### 引用计数
+
+弊端 （互相引用）
+
+```
+A中的引用计数器是1
+|对象A|
+ ↓  ↑
+|对象B|
+B中的引用计数器是1
+```
+
+
+
+互相引用:
+
+```java
+public class CircularRefTest {
+ private CircularRefTest instance = null; 
+ private byte[] buffer = new byte[1024 * 1024];
+ public static void main(String[] args) { 
+CircularRefTest a = new CircularRefTest(); 
+CircularRefTest b = new CircularRefTest();
+ a.instance = b; 
+ b.instance = a;
+
+ a = null;
+ b = null; 
+ // 主动回收垃圾
+ System.gc(); 
+} 
+} 
+```
+
+
+
+### 根搜索
+
+```
+|-------|            堆
+|       |
+|引用变量|------>|A|-->|B|  | C |
+|       |	           ↓    ↓ ↑
+|       |       |D|   |E|  | F |
+| 栈    |        ↑
+|-------|  |方法去中的静态属性引用的对象|
+
+GC Roots包含的对象：
+虚拟机栈中引用的对象，方法去中的静态属性引用的对象
+```
+
+
+
+## 如何回收垃圾
+
+**回收算法**
+
+#### 标记清除算法
+
+```
+垃圾对象	1		标记清除算法			
+存活对象	0					
+未使用	-1					
+回收前				回收后		
+1	0	1		-1	0	-1
+0	-1	0	→	0	-1	0
+1	0	1		-1	0	-1
+				假设要创建一个数组		
+				但是无法创建一个连续的存储空间		
+特点：实现简单，但是会造成垃圾碎片
+```
+
+
+
+#### 标记复制算法
+
+```
+垃圾对象			1								
+存活对象			0								
+未使用			-1				标记复制算法				
+			分配内存区域						保留区域		
+回收前			1	0	1				-	-	-
+			0	-1	0		→		-	-	-
+			1	0	1				-	-	-
+			成为新的保留区域						新的内存分配区		
+			-	-	-				0	0	0
+回收后			-	-	-				0		
+			-	-	-						
+特点：			1. 一次性回收大片的连续空间。								
+			2. 不会产生内存碎片。								
+			3. 如果说有少量对象存活的情况，复制起来很快，使用于少量对象存活的情况。								
+			4. 但是，内存利用率低。								
+			5. 如果有大量对象存活，就需要复制大量对象，效率就低了。								
+
+```
+
+
+
+#### 标记整理算法
+
+![image-20210326143128170](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210326143128170.png)
+
+回收过后会将存活对象排序放置 不会造成内存碎片 ,但是每次移动 都会消耗时间
+
+#### 分带收集算法
+
+![image-20210326114725269](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210326114725269.png)
+
+## 何时回收垃圾
+
+- 申请heap space失败后会触发GC回收
+- 系统进入idle后一段时间会进行回收
+- 主动调用GC进行回收
+
+##  相关概念
+
+- shallow size
+  - 就是对象本身占用的内存大小，也就是对象头加成员变量占用内存大小的总和
+- retained size
+  - 是该对象自己的shallow size 加上仅可以从该对象访问（直接或者间接访问）的对象的shallow size之和
+  - 是该对象被GC之后所能回收的内存的总和
+
+![image-20210326143436423](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210326143436423.png)
+
+当GC roots到obj1的访问链断开 回收obj1时, 会去回收obj1  obj2  obj4 这3个对象(obj1直接或间接访问到的对象,也就是retained size)
+
+![image-20210326143602413](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210326143602413.png)
+
+
+
