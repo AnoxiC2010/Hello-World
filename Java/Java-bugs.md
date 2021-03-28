@@ -27,3 +27,18 @@ The "standard" input stream. This stream is already open and ready to supply inp
 # java.lang.IllegalThreadStateException
 
 一个线程重复start，抛出异常但该线程会继续执行到结束。但重复start的错误代码所在主线程之后的代码不会执行。
+
+
+
+# java.lang.StackOverflowError
+
+```
+public class Demo {
+    Demo demo = new Demo();
+    public static void main(String[] args) {
+        Demo demo = new Demo();
+    }
+}
+//目前分析是构造器调用导致的栈溢出，而不是引用导致的栈溢出。要确认一下，我认为新的引用应该出现在堆上而不是栈上
+```
+
