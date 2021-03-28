@@ -193,14 +193,14 @@
 | pseudo code                | 伪代码                                 |
 | discrete                   | 离散的，互不相连的                     |
 | concurrency                | 并发                                   |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
+| callable                   | 可调用的                               |
+| divisible                  | 可除尽                                 |
+| indefinite                 | 无限期的；不明确的                     |
+| decay                      | 衰减；衰败；如数组传入方法衰变为指针   |
+| scalable                   | 可扩展的                               |
+| Behind-The-Scenes          | 幕后的，在后台                         |
+| indirection operator       | 间接运算符 *                           |
+| dereference                | 间接引用，间接访问                     |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
