@@ -10579,5 +10579,499 @@ GC Roots包含的对象：
 
 
 
+# 数据结构集合类
+
+链表&数组
+
+数据结构&实现
+
+Collection集合类
+
+Map集合类
 
 
+
+1.什么是数据结构?
+
+数据结构是相互之间存在一种或多种特定关系的数据元素的集合。
+
+数据 + 结构/关系
+
+
+
+2.数据结构和JAVA有什么关系?（数据结构在JAVA上的表现）
+
+Java需要临时存储数据, 用集合类临时存储, 我们又希望存储的操作效率更高, 底层组织按照特定(数据结构)方式来组织存储数据。
+
+数据结构本身和JAVA没有任何关系,
+
+只不过JAVA中有多种集合、数组、等集合性质的多对象存储结构,
+
+有时候我们希望更便捷,更具有逻辑性的操作这些集合或者数组数据
+
+所以,我们根据数据结构的组织方式, 构建了一些特殊的JAVA集合类
+
+用于描述了一些JAVA对象的底层数据的组成关系
+
+
+
+3.数据结构的种类和JAVA中的集合类别有哪些?
+
+数据结构: 集合, 线性表, 树  /  图
+
+集合类: Collection, Map
+
+
+
+**为什么需要集合类？**
+    很多情况下，我们需要对一组对象进行操作。而且很可能事先并不知道到底有多少个对象。为了解决这个问题呢，Java 就提供了集合类供我们使用。(存储更多类型问题, 扩容问题, 内存空间浪费问题, 数据查找问题, 数据删除问题等等)
+
+**集合类的特点**
+    a. 只能存储引用数据类型
+    b. 可以自动地调整自己的大小
+
+**数组和集合类都是容器，它们有何不同？**
+    a. 数组可以存储基本数据类型的数据，集合不可以。
+    b. 数组的长度是固定的，集合可以自动调整自己的大小。
+    c. 数组的效率高，相对来说集合效率比较低。
+    d. 数组没有API，集合有丰富的API。
+
+
+
+## 数据结构: 关系
+
+数据结构是相互之间存在一种或多种特定关系的数据元素的集合。
+
+公式：数据结构=数据+结构
+
+数据：用类型表示
+
+结构：在任何问题中，数据元素都不是孤立存在的，它们之间都存在着某种关系，这种数据元素相互之间的关系称为结构。
+
+元素之间，通常有以下四种基本结构：
+
+•集合
+
+集合：结构中的数据元素之间除了同属于一个集合的关系之外，别无其他关系。这里的集合和数学中集合的概念是一致的。一”堆”数据, 
+
+•线性结构
+
+线性结构：结构中的数据元素之间存在一个对一个的关系。一串有序的数据
+
+•树形结构
+
+树形结构：结构中的数据元素之间存在一个对多个的关系。树有根节点和子树构成, 子树也是一棵树 (一对多的关系)
+
+•图或网状结构
+
+图或网状结构：结构中的数据元素之间，存在多个对多个的关系。
+
+
+
+## 逻辑结构&物理结构
+
+前面分类中定义的关系，描述的是数据元素间的逻辑关系，因此又称为逻辑结构。
+
+但是仅仅知道数据元素间的逻辑关系是不够的，因为我们得实现自己的数据结构。
+
+因此，我们得关注数据结构在计算机底层是如何表示的？
+
+数据结构在计算机中的表示，称为数据的物理结构，又称为存储结构或者映像。
+
+数据的表示很简单。
+
+构的表示可以分为两种：顺序存储结构 (顺序映像) 和 链式存储结构 (非顺序映像)。
+
+•顺序映像：借助元素在存储器中的相对位置来表示数据元素之间的逻辑关系。(数组)
+
+•非顺序映像：借助指示元素存储地址的”指针”，来表示数据元素的逻辑关系。(链表)
+
+## 数组
+
+- Q1: 数组我们都很熟悉，那你理解的数组是什么样的呢？它的最主要特点是什么呢？
+
+  数组是顺序存储, 所以可以随机访问.
+
+  数组的本质是固定大小的连续的内存空间，并且这片连续的内存空间又被分割成等长的小空间。它最主要的特点是随机访问。
+
+  数组的长度是固定的
+
+  数组只能存储同一种数据类型的元素
+
+  注意：在Java中只有一维数组的内存空间是连续，多维数组的内存空间不一定连续。
+
+  那么数组又是如何实现随机访问的呢？
+
+  寻址公式：i_address = base_address + i * type_length
+
+- Q2: 为什么数组的索引是一般都是从0开始的呢？
+
+  假设索引不是从0开始的，而是从1开始的，那么我们有两种处理方式：
+
+  寻址公式变为： i_address = base_address + (i – 1) * type_length
+
+  浪费开头的一个内存空间，寻址公式不变。
+
+  在计算机发展的初期，不管是CPU资源，还是内存资源都极为宝贵，所以在设计编程语言的时候，索引就从0开始了，而我们也一直延续了下来。
+
+  历史遗留问题,现在的编程语言有些索引是从1开始的，甚至有些编程语言还支持负数索引,如 ‘’易语言’’从1开始
+
+
+
+- Q3: 为什么数组的效率比链表高？
+
+   数组是连续存储, 链表是非连续存储
+
+  CPU一天，内存一年；内存一天，IO十年。
+
+### 数组的基本操作
+
+- 添加 (保证元素的顺序)
+
+  最好情况：O(1)
+
+  最坏情况：移动n个元素，O(n)
+
+  平均情况：移动 n/2 个元素，O(n)
+
+- 删除 (保证元素的顺序)
+
+  最好情况：O(1)
+
+  最坏情况：移动n-1个元素，O(n)
+
+  平均情况：移动(n-1)/2个元素，O(n)
+
+- 查找
+
+  a. 根据索引查找元素：O(1)
+
+  b. 查找数组中与特定值相等的元素
+
+  ①大小无序：O(n)
+
+  ②大小有序：O(log2n)
+
+**总结: 数组增删慢，查找快。**
+
+## **链表**
+
+形象地说，链表就是用一串链子将结点串联起来。
+
+结点：包含数据域和指针域。
+
+数据域：数据
+
+指针域：下一个结点的地址
+
+```java
+Class Node{
+    String value;
+    Node next;
+}
+```
+
+```
+结点： |数据域|指针域|
+链表： |_____|_____|→|_____|_____|→|_____|_____|→|_____|_____|
+```
+
+**链表的分类：**
+
+![image-20210329223615898](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210329223615898.png)
+
+循环链表用的一般比较少，但是当处理的数据具有环形结构时，就特别适合用循环链表，比如约瑟夫问题。接下来我们讨论下单链表和双向链表。
+
+## 单链表
+
+单链表：
+
+增加(在某个结点后面添加) 
+
+删除(在某个结点后面删除) 
+
+查找
+
+   a. 根据索引查找元素      
+
+   b. 查找链表中与特定值相等的元素
+
+​      ①元素大小有序        
+
+​      ②元素大小无序
+
+总结：链表增删快，查找慢。
+
+## 双向链表
+
+很容易验证，前面那些操作，双向链表和单链表的时间复杂度是一样的。那为什么在工程上，我们用的一般是双向链表而不是单链表呢 (比如JDK中的 LinkedList & LinkedHashMap)？
+
+那自然是双向链表有单链表没有的独特魅力——它有一条指向前驱结点的链接。
+
+增加 (在某个结点前面添加元素)删除 (删除该结点)
+
+查找
+
+   a. 查找前驱结点
+
+   b. 根据索引查找元素
+
+   c. 查找链表中与特定值相等的元素
+
+​     ① 元素大小无序
+
+​     ② 元素大小有序 
+
+总结：虽然双向链表更占用内存空间，但是它在某些操作上的性能是优于单链表的。
+
+思想：用空间换取时间。
+
+## 循环单链表
+
+循环单链表: (单链表的基础上进行的改进)一个结点只有后继结点, 并且尾结点后继指向头结点
+
+## 双向循环链表
+
+双向链表的改进, 头结点前驱指向尾结点, 尾结点后继指向头结点
+
+时间复杂度和空间复杂度:
+
+理论分析: 
+
+应用分析:  用空间换时间(我们从应用角度分析)
+
+很容易验证，前面那些操作，双向链表和单链表的时间复杂度是一样的。那为什么在工程上，我们用的一般是双向链表而不是单链表呢 (比如JDK中的 LinkedList & LinkedHashMap)？
+
+LinkedList → List → Collection
+
+是一个集合类, 
+
+集合类 : 看做一个数据容器
+
+Java临时存储数据. 
+
+实际在java代码中对数据进行操作, 更多的是查找操作
+
+
+
+## 数组VS链表
+
+| **时间复杂度** | **数组** | **链表** |
+| -------------- | -------- | -------- |
+| 插入&删除      | O(n)     | O(1)     |
+| 访问           | O(1)     | O(n)     |
+
+数组和链表的插入，删除，随机访问操作的时间复杂度刚好相反。
+
+① 数组使用的是连续的内存空间，可以利用CPU的高速缓存预读数据。链表的内存空间不是连续的，不能有效预读数据。当然如果数组过大，系统没有足够的连续内存空间，会抛出OOM。
+
+② 数组的缺点是大小固定，没法动态的调整大小。如果要存储一些对象，如果数组太大，浪费内存空间；如果数组太小，我们需要重新申请一个更大数组，并将数据拷贝过去，耗时。
+
+③如果业务对内存的使用非常苛刻，数组更适合。因为结点有指针域，更消耗内存。而且对链表的频繁插入和删除，会导致结点对象的频繁创建和销毁，有可能会导致频繁的GC活动。
+
+数组更加高效，链表更加灵活。
+
+## 什么是线性表
+
+线性表：n个数据元素的有序序列。
+
+首先，线性表中元素的个数是有限的。
+
+其次，线性表中元素是有序的。
+
+那这个”序”指的是什么呢？
+
+如果以ai表示数据元素，则线性表可以记为 {a1, … , ai-1, ai, ai+1, … , an}
+
+表中, ai-1在 ai 之前，同时ai+1 在 ai 之后，我们称ai-1是ai的直接前驱，ai+1是ai的直接后继。
+
+除表头和表尾元素外，其它元素都有唯一前驱和唯一后继，其唯一前驱或唯一后继确定了该元素在线性表中的位置。
+
+因此，线性表中，每个数据元素都有一个确定的位序，这个确定的位序我们称之为索引。
+
+表头元素有唯一后继，无前驱，表尾元素有唯一前驱，无后继。
+
+## 链表练习
+
+**快慢指针的使用**
+
+求链表的中间元素（快慢指针）
+
+判断链表中是否有环(circle)（快慢指针）
+
+```
+数学问题，有环快慢指针一定会相遇，而且慢指针不会走完一圈。我把链按极限密集情况想象为一条光滑的曲线，尾巴自来卷，卷回来解除了身体形成了一个小圆。
+或者想象为正方形
+          ____
+__________|__|
+```
+
+有环的话判断环的始发点（快慢指针）
+
+```
+根据上面的想象进行数学计算
+环外曲线长x，圆环周长y，环始发点到相遇点距离m
+慢指针路程x+m
+快指针路程x+L*y+m (L为相遇时快指针在换上熬过的整数圈)
+右有快指针速度为慢指针的2倍数
+故：2*(x+m) = x+L*y+m
+简化为：x = L*y-m
+配一下：x = (L-1)y + (y-m)
+想象一下，容易完美理解的最简情况下x=y-m其实就是慢指针从相遇点走到环始发点
+```
+
+反转单链表(我的鲤鱼旗飘飘法很容易理解)
+
+使用链表/数组实现一个线性表 ArrayList
+
+```java
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class Demo {
+    public static void main(String[] args) {
+        //0 1 2 3 4 5 6 7
+        Node n07 = new Node("7", null);
+        Node n06 = new Node("6", n07);
+        Node n05 = new Node("5", n06);
+        Node n04 = new Node("4", n05);
+        Node n03 = new Node("3", n04);
+        Node n02 = new Node("2", n03);
+        Node n01 = new Node("1", n02);
+        Node n00 = new Node("0", n01);
+        System.out.println(n00);
+
+        /*n07.next = n05;//寻找圈的始发点
+        String circleStart = findCircleStart(n00);
+        System.out.println(circleStart);*/
+
+        /*n07.next = n03;//检查单向链表中是否有圈
+        boolean hasCircle = hasCirclePart(n00);
+        System.out.println(hasCircle);*/
+       /* Node midNode = getMidNode(n00);//查找中间值
+        System.out.println(midNode);*/
+        /*Node reversed = reverseNode(n00);//反向单向链表
+        System.out.println(reversed);*/
+    }
+
+    //检查有圈圈的单向链表中的圈始发点：快慢指针
+    private static String findCircleStart(Node head) {
+        Node fast = head;
+        Node slow = head;
+        while (fast.next != null && fast.next.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
+            if (fast == slow) {
+                break;
+            }
+        }
+        if (fast.next == null || fast.next.next == null) {
+            throw new RuntimeException("不存在圈异常");
+        }
+        fast = head;
+        while (fast.next != null) {
+            fast = fast.next;
+            slow = slow.next;
+            if (fast == slow) {
+                break;
+            }
+        }
+        return fast.value;
+    }
+
+    //检查单向链表中是否有循环圈: 快慢指针
+    public static boolean hasCirclePart(Node head) {
+        boolean flag = false;
+        Node fast = head;
+        Node slow = head;
+        while (fast.next != null && fast.next.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
+            if (fast == slow) {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
+    }
+
+    //查找单向链表中间值：快慢指针
+    private static Node getMidNode(Node head) {
+        Node fast = head;
+        Node slow = head;
+        while (fast.next != null && fast.next.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
+        }
+        return slow;
+    }
+
+    //反序单向链表
+    private static Node reverseNode(Node head) {
+        Node hooker = null;//想象成两串飘动的鲤鱼旗，这是我新建的一个鲤鱼旗勾点，让另一串鲤鱼旗一个个都挂上来
+        Node mid = head;
+        while (mid.next != null) {
+            Node next = mid.next;
+            mid.next = hooker;
+            hooker = mid;
+            mid = next;
+        }
+        mid.next = hooker;
+        hooker = mid;
+        return hooker;
+    }
+}
+
+class SgNodeList {
+    Node head;
+    int size;
+
+    public void add(String value) {//尾插新元素
+        if (value == null) throw new IllegalArgumentException("非法参数，试图添加null");
+        if (head == null) {
+            head = new Node(value, null);
+            size++;
+            return;
+        }
+        Node temp = head;
+        while (temp.next != null) {
+            temp = temp.next;
+        }
+        temp.next = new Node(value, null);
+        size++;
+    }
+    //TODO
+    public boolean addByIndex(int index, String value) {//按下标插入新元素
+        boolean flag = true;
+        return flag;
+    }
+    @Override
+    public String toString() {
+        return "SingleNodeList{" +
+                "head=" + head +
+                ", size=" + size +
+                '}';
+    }
+}
+class Node {//节点，本来应该写在集合类里，将就测试用吧
+    String value;
+    Node next;
+
+    public Node(String value, Node next) {
+        this.value = value;
+        this.next = next;
+    }
+    @Override
+    public String toString() {
+        return "Node{" +
+                "value='" + value + '\'' +
+                ", next=" + next +
+                '}';
+    }
+}
+```
+
+ 
