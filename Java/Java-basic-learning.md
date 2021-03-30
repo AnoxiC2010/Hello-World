@@ -12212,6 +12212,93 @@ public class MyStackLinked<T> {
 
 - 非顺序映像
 
+- ```java
+  /**
+   * 用链表来实现一个队列:
+   */
+  public class MyQueue<E> {
+  
+      Node  top;// 头结点
+      Node end;// 尾结点
+      int size;
+  
+      // offer: 入队列
+      // poll: 出队列
+      // peek: 查看队头元素
+  
+      /**
+       * 入队列操作
+       * @param e 要入队列的元素
+       * @return  返回添加是否成功
+       */
+      public boolean offer(E e){
+          // 创建一个新节点
+          Node node = new Node(e, null);
+  
+  
+          if (size == 0){// 代表着是一个空链表
+              end = node;
+              top = node;
+              size++;
+              return true;
+          }
+  
+          // 让原本链表的尾结点的下一个结点, 指向这个新结点
+          end.next = node;
+          // 尾结点后移
+          end = node;
+          size++;
+          return true;
+      }
+  
+      /**
+       * 出队列操作
+       * @return 被出队列的元素
+       */
+      public E poll(){
+          if (size == 0) {// 空链表
+              return null;
+          }
+  
+          E oldValue = top.value;
+  
+          top = top.next;
+          // 如果原本链表中仅有一个元素, 删除元素, 需要把头尾结点都置空
+          if (size == 1) end = null;
+          size--;
+          return oldValue;
+      }
+      /**
+       * 队列头元素
+       * @return 队列头元素
+       */
+      public E peek(){
+          if (size == 0) {// 空链表
+              return null;
+          }
+          return top.value;
+      }
+      public boolean isEmpty(){
+          return size == 0;
+      }
+  
+      public int size(){
+          return size;
+      }
+      class Node{
+          E value;
+          Node next;
+  
+          public Node(E value, Node next) {
+              this.value = value;
+              this.next = next;
+          }
+      }
+  }
+  ```
+
+  
+
   ```java
   private static final int DEFAULT_CAPACITY = 10;
   private static final int MAX_CAPACITY = Integer.MAX_VALUE - 8;
