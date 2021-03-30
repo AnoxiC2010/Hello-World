@@ -11733,7 +11733,7 @@ fs.add(new F());// 可以
 fs.add(new S());// 可以
 ```
 
-
+> 总觉的除了向上限定的通配以外毫无用处，向下限定和不限定都是能接收，不能使用添加、修改操作，是我现在还理解不了祖师爷的精妙吧
 
 增强for循环(foreach)
 
@@ -11920,6 +11920,10 @@ List<String> list = Arrays.asList(strs);
 
 1. 缓存
 2. 利用队列实现 BFS:breadth first search 广度优先搜索/ 遍历
+
+
+
+
 
 # 二叉树
 
