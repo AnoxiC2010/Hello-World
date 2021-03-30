@@ -11811,9 +11811,20 @@ String [] strs = {“a”, “b”, “c”};
 List<String> list = Arrays.asList(strs);
 ```
 
+# 数据结构
 
+Java 应用业务逻辑的, 处理数据, 临时存储数据,  → 集合类(在java中批量性的临时存储数据) 
 
-# 线性表
+集合类: 数据容器
+底层结构: 数组  链表  
+
+数据结构:  集合,  线性表,   树,   // 图（目前没有研究图的精力） 
+
+线性表: 一个有序序列, 除了头尾元素之外每一个元素, 都有唯一的前驱和后继
+
+操作受限的线性表: 栈和队列
+
+## 线性表
 
 **逻辑结构**
 
@@ -11864,10 +11875,131 @@ List<String> list = Arrays.asList(strs);
 
 实现：
 
-顺序映像
-非顺序映像
+顺序映像(数组：初始化和扩容)
 
+```java
+/**
+ * 使用数组实现一个栈集合类
+ * 数据容器
+ * 数组
+ * 栈
+ */
+public class MySatckArray<T> {
+    private int MAX_CAPACITY = Integer.MAX_VALUE - 8; // 允许的最大值
+    private Object []  arr;
+    private int size;
+    public MySatckArray() {
+        this.arr = new Object[3];//Java集合一般是10或者16,扩容一般是1.5或2倍
+    }
+    public  MySatckArray(int initCapacity) {
+        // 参数检验
+        if (initCapacity < 1  || initCapacity > MAX_CAPACITY)throw new IllegalArgumentException("initCapacity is Illegal");
+        // 创建一个给定长度的数组
+        arr = new Object[initCapacity];
+    }
+    public boolean push(T t){//压栈
+        // 判断数组存储的元素是否已经存满了
+        if (arr.length == size){// 数组已经存满了
+            int newLen = getLen();// 获取一个新的数组长度
+            grow(newLen);// 扩容
+        }
+        arr[size++] = t;
+        return true;
+    }
+    // 扩容数组 : 旧数组里面存储的内容转移到新数组里面
+    private void grow(int newLen) {
+        Object [] objs = new Object[newLen];
+        for (int i = 0; i < arr.length; i++) {
+            objs[i] = arr[i];
+        }
+  //也可以直接用arr = Arrays.copyOf(this.arr, newlen);
+        arr = objs;
+    }
+    private int getLen() {//扩容长度
+        // 获取旧长度
+        int oldLen = arr.length;
+        //  获取一个新长度
+        int newLen = (oldLen * 2);
+        if (newLen < 0 || newLen > MAX_CAPACITY){
+            newLen = MAX_CAPACITY;
+        }//可以直接在最开始判断size==MAX_CAPACITY抛异常
+        if (oldLen == newLen) throw new RuntimeException("stack is full");
+        return newLen;
+    }
+    public T pop(){//弹栈
+        // 判断栈是否为空
+        if (isEmpty()) throw new RuntimeException("stack is empty");
+        T oldValue = (T)arr[size - 1];
+        size--;
+        return oldValue;
+        //直接return (T)arr[--size]也行
+    }
+    public T peek(){//查看栈顶
+        // 判断栈是否为空
+        if (isEmpty()) throw new RuntimeException("stack is empty");
+        return (T)arr[size - 1];
+    }
+    public boolean isEmpty(){
+        return size == 0;
+    }
+    public int size(){
+        return size;
+    }
+}
+```
 
+非顺序映像(链表)
+
+```java
+/**
+ * 使用链表实现一个栈集合
+ * 数据容器
+ * 链表
+ * 栈
+ */
+public class MyStackLinked<T> {
+    private Node top;
+    private int size;
+    // 入栈: push
+    public boolean push(T value){
+        // 不希望存储null值
+        if (value == null) return false;
+        // 头插法
+        top = new Node(value , top);
+        size++;
+        return true;
+    }
+    // 出栈: pop
+    public T pop(){
+        // 先判断有没有元素
+        if (isEmpty())throw new RuntimeException("stack is empty");
+        T oldValue = top.value;
+        top = top.next;
+        size--;
+        return oldValue;
+    }
+    // 查看栈顶元素:  peek
+    public T peek(){
+        // 先判断有没有元素
+        if (isEmpty())throw new RuntimeException("stack is empty");
+        return top.value;
+    }
+    public boolean isEmpty(){
+        return size == 0;
+    }
+    public int size(){
+        return size;
+    }
+    class Node{//内部类只用用外围类的泛型
+        T value;
+        Node next;
+        public Node(T value, Node next) {
+            this.value = value;
+            this.next = next;
+        }
+    }
+}
+```
 
 **栈列的应用**
 
@@ -11879,9 +12011,53 @@ List<String> list = Arrays.asList(strs);
 
    实现reNumber(str)方法,反转字符串
 
+   ```java
+   private static String reNumber(String str) {
+           MySatckArray<Character> stack = new MySatckArray<>();
+           for (int i = 0; i < str.length(); i++) {
+               stack.push(str.charAt(i));
+           }
+           // 上述所有的单个字符已经入栈
+           StringBuffer buffer = new StringBuffer();
+           while (!stack.isEmpty()){
+               Character pop = stack.pop();
+               buffer.append(pop);
+           }
+           return buffer.toString();
+       }
+   ```
+
 3.   括号匹配问题 
      
      实现judgeBracket(str)方法来判断括号匹配
+     
+     ```java
+     // {}[] ()
+         private static boolean judgeBracket(String str) {
+             MyStackLinked<Character> stack = new MyStackLinked<>();
+             for (int i = 0; i < str.length(); i++) {
+                 char c = str.charAt(i);
+                 if (c == '{'){
+                     stack.push('}');
+                 }else if (c == '('){
+                     stack.push(')');
+                 }else if (c == '['){
+                     stack.push(']');
+                 } else if (c == ']' || c == '}' || c == ')'){
+                     Character pop = stack.pop();
+                     if (pop == c){
+     
+                     }else {
+                        // 不相等
+                        return false;
+                     }
+                 }
+             }
+             return stack.isEmpty();
+         }
+     ```
+     
+     
      
 4. 编译器利用栈实现表达式求值
 
@@ -11895,9 +12071,12 @@ List<String> list = Arrays.asList(strs);
       弹出完成, 该操作符入栈
       如果有右括号, 才弹出左括号
    4, 栈中元素完全弹出
-   ```
-
    
+   中缀表达式:  1 + 2 * 3 – 72 
+   前缀表达式:   - + 123 *72
+   后缀表达式:   123 * + 72 *-
+   怎么把中缀转化为前缀和后缀? 栈
+   ```
 
 5. 浏览器的前进后退功能
 
@@ -11910,6 +12089,8 @@ List<String> list = Arrays.asList(strs);
 队列也是一种”操作受限”的线性表，体现在一端插入数据在另一端删除数据，特性是FIFO。
 
 ![image-20210330170427383](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210330170427383.png)
+
+> 在java阻塞队列用的还是相对而言(Stack) 还是比较常用的, 一般都处于一些代码/第三方插件的底层代码
 
 **队列的实现**
 
@@ -11929,6 +12110,105 @@ List<String> list = Arrays.asList(strs);
 实现：
 
 - 顺序映像
+
+  ```java
+  /**
+   *  实现一个队列
+   *  集合类: 数据容器
+   *  数组
+   *  队列
+   */
+  public class MyQueueArray<T> {
+      private int MAX_CAPACITY = Integer.MAX_VALUE - 8;
+      private Object[] arr;// 队列所持有的底层数组
+      private  int size;// 元素数量
+  
+      private int head;// 队头标记
+      private int end;// 队尾标记
+  
+      public MyQueueArray(){
+          arr = new Object[10];
+      }
+      public MyQueueArray(int initCapacity){
+          if (initCapacity < 1 || initCapacity > MAX_CAPACITY)throw new IllegalArgumentException("initCapacity = "+ initCapacity);
+          arr = new Object[initCapacity];
+      }
+      // 入队列: offer
+      public boolean offer(T t){
+          // 判断数组是否是满的
+          if (size == arr.length){
+              int newLen = getLen();
+              grow(newLen);
+          }
+          // 可以存储
+         if (isEmpty()){
+  
+         }else {
+             end = (end + 1) % arr.length;
+         }
+  
+          arr[end] = t;
+          size++;
+  
+          return true;
+      }
+      private void grow(int newLen) {
+          Object[] objects = new Object[newLen];
+  
+          // 把旧数组元素中的内容转移到新数组
+          for (int i = 0; i < arr.length; i++) {
+              int index = (head + i) % arr.length;
+              objects[i] = arr[index];
+          }
+          //TODO: 除了把新数组, 赋值给arr, 还要转移头和尾的标记
+          arr = objects;
+          head = 0;
+          end = size - 1;
+      }
+      private int getLen() {
+          // 获取旧长度
+          int oldLen = arr.length;
+          //  获取一个新长度
+          int newLen = (oldLen * 2);
+          if (newLen < 0 || newLen > MAX_CAPACITY){
+              newLen = MAX_CAPACITY;
+          }
+          if (oldLen == newLen) throw new RuntimeException("stack is full");
+  
+          return newLen;
+      }
+      // 出队列: poll
+      public T poll(){
+          if (isEmpty()) throw new RuntimeException("queue is empty");
+  
+          T oldValue = (T)arr[head];
+  
+          // head 后移1位然后和数组长度取余
+          head = (head + 1) % arr.length;
+          size--;
+  
+          if (isEmpty()){// 如果删除的是最后一个元素, 要特殊处理
+              head = 0;
+              end = 0;
+          }
+          return oldValue;
+      }
+      // 查看队头元素方法: peek
+      public T peek(){
+          if (isEmpty()) throw new RuntimeException("queue is empty");
+  
+          return (T)arr[head];
+      }
+      public boolean isEmpty(){
+          return size == 0;
+      }
+      public int size(){
+          return size;
+      }
+  }
+  ```
+
+  
 
 - 非顺序映像
 
