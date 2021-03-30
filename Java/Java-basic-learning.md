@@ -11677,13 +11677,61 @@ class DBnodeList {//我的双向链表集合
 **泛型通配符：**
 
 > 为了解决模拟类似于数组协变功能而产生的的, 并且它避免了数组协变所带来的的问题(类型问题)
+>
+> 在java中, 数组是一个非常特殊的存在, jvm底层做了很多适配(不要把数组的情况类比到别的位置)
+>
+> ```java
+> F[] fs = new F[10];
+> S[] ss = new S[10];
+> fs = ss;//没问题，数组的协变，F[]也可以是Object[]，可以往里添加Object的子类元素或F的子类元素，不报错，但运行时发现和实际数组不一致会报错
+> ```
+
+泛型不允许协变
+
+```java
+ArrayList<F> fs = new ArrayList<F>();
+ArrayList<S> ss = new ArrayList<S>();
+fs = ss;// 报错, 泛型不允许协变
+
+class F {}
+class S extends F{}
+```
 
 ① 泛型通配符<?>
 	任意类型，如果没有明确，那么就是Object以及任意的Java类了
+
+```java
+ArrayList<?> objs =  new ArrayList<S>();
+objs =  new ArrayList<F>();//可以
+objs =  new ArrayList<Integer>();//可以
+//可以接收，但是objs不能add，因为无法知晓实际元素的实力类型
+//objs.add(new S());// 报错,
+//objs.add(new F());// 报错
+//objs.add(new Object());// 报错
+```
+
 ② ? extends E
 	向下限定，E及其子类
+
+```java
+ArrayList<? extends F> fs =  new ArrayList<S>();
+fs =  new ArrayList<F>();//可以,fs引用能向下接收子类元素的集合
+fs =  new ArrayList<Object>();// 报错 因为Object 是f的父类
+//同理不能add
+fs.add(new F());// 报错,
+fs.add(new Object());// 报错,
+fs.add(new S());// 报错,
+```
+
 ③ ? super E
 	向上限定，E及其父类
+
+```java
+ArrayList<? super F> fs =  new ArrayList<F>();//fs引用何以向上接收F即其父类为的元素的集合
+//fs.add(new Object());//报错
+fs.add(new F());// 可以
+fs.add(new S());// 可以
+```
 
 
 
