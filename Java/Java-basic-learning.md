@@ -10933,6 +10933,7 @@ __________|__|
 使用链表/数组实现一个线性表 ArrayList
 
 ```java
+//下为以上练习
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11082,4 +11083,525 @@ class Node {//节点，本来应该写在集合类里，将就测试用吧
 }
 ```
 
- 
+ 双向链表示例
+
+```java
+参考：
+/**
+ *  实现一个双向链表
+ *  集合类: 容器
+ *  底层结构: 双向链表
+ *  数据结构: 线性表
+ *
+ */
+public class MyDBLinked {
+
+    private Node head;// 头结点
+    private Node end; // 尾结点
+    private int size;
+
+    public boolean add(String str){
+        if (str == null) throw new IllegalArgumentException("str is null");
+
+        // 链表是否为空
+        if (head == null || size == 0){
+            head = new Node(null, str, null);
+            end = head;
+            size++;
+            return true;
+        }
+        // 链表不空
+        // 添加尾部
+
+        // 创建一个新节点, 让它之前指向原本的end
+        Node node = new Node(end, str, null);
+        // 让旧尾结点的下一个指向新添加节点
+        end.next = node;
+        // 尾结点标记后移
+        end = node;
+
+        size++;
+        return true;
+    }
+
+    public boolean remove(String str){
+        if (str == null) throw new IllegalArgumentException("str is null");
+        if (isEmpty()) throw new RuntimeException("linked is null");
+
+
+        // 删除是不是头结点
+        if (str.equals(head.value)){// 删除的就是头结点
+
+            head = head.next;
+            if (head == null){// 链表仅有这一个元素
+                end = null;
+            } else {// 链表不仅有一个元素
+                head.pre = null;
+            }
+            size--;
+            return true;
+        }
+
+        // 一定意味着: 删除的不是头结点
+
+        // 找出要删除的非头结点
+        Node mid = head;
+        while (mid.next != null && !mid.next.value.equals(str)){
+            mid = mid.next;
+        }
+
+        // 代码运行到这一步: 意味着上述循环有两种跳出条件
+        // mid.next == null  --> 没找到
+        // mid.next.value.equals(str) --> 找到了
+
+        if (mid.next == null) return false;
+
+        // 找到了
+        // mid.next 是要删除的元素
+        Node removeNode = mid.next;
+
+        // 删除removeNode
+
+        if (removeNode.next == null){ // 如果删除的是最后一个元素
+            end = removeNode.pre;
+            end.next = null;
+
+        }else {// 删除的是中间元素
+
+            // 让删除元素之后的元素前驱指向要删除元素的前驱
+            removeNode.next.pre = removeNode.pre;
+            removeNode.pre.next = removeNode.next;
+        }
+
+        size--;
+        return true;
+    }
+
+    public boolean contains(String str){
+        if (str == null) throw new IllegalArgumentException("str is null");
+        if (isEmpty()) throw new RuntimeException("linked is null");
+
+        Node mid = head;
+        while (mid != null  && !mid.value.equals(str)){
+            mid = mid.next;
+        }
+        // mid == null
+        // mid.value.equals(str)
+        if (mid == null){
+            return false;
+        }else {
+            return true;
+        }
+    }
+//
+//    public boolean set(String oldValue, String newValue){
+//
+//    }
+//
+    public boolean add(int index, String str){
+        if (str == null) throw new IllegalArgumentException("str is null");
+        if (index < 0 || index > size) throw new IllegalArgumentException("index is Illegal");
+
+
+        //如果添加的是头结点位置
+        if (index == 0){
+            // 先判断链表是否为空
+            if (head == null || size == 0){// 原本链表为空
+                head = new Node(null, str, null);
+                end = head;
+            }else {// 原本链表不空
+                Node node = new Node(null, str, head);
+                head.pre = node;
+                head = node;
+            }
+            size++;
+            return true;
+        }
+
+        // 如果添加的不是头位置
+        if (index == size){// 如果添加的尾部, 调用另外一个尾部添加方法处理
+            return  add(str);
+        }
+
+        // 代表着: 添加的是中间的某个位置
+        // index
+        Node mid = head;
+        if (index < size/2){// 靠近头部
+            mid = head;
+            int tag = 1;
+            while (tag != index){
+                mid = mid.next;
+                tag++;
+            }
+            // mid要添加位置的前一个位置
+
+        } else {// 靠近尾部
+            mid = end;
+            int tag = size;
+            while (tag != index){
+                mid = mid.pre;
+                tag--;
+            }
+            // mid要添加位置的前一个位置
+        }
+
+        // 把新元素, 添加到mid之后
+        Node node = new Node(mid, str, mid.next);
+
+        mid.next.pre = node;
+        mid.next = node;
+        size++;
+
+        return true;
+    }
+
+    public String remove(int index){
+        // 参数效验
+        if (isEmpty()) throw new RuntimeException("linked is null");
+        if (index < 0 || index >= size) throw new IllegalArgumentException("index is Illegal");
+
+
+        // 删除的是头结点
+        if (index == 0){
+            // 如果删除的是头结点, 先判断删除的结点是不是就是唯一的一个结点
+            String oldValue = head.value;
+            if (size == 1){// 唯一结点
+                head = null;
+                end = null;
+            }else {// 链表中结点超过1个
+                head = head.next;
+                head.pre = null;
+            }
+            size--;
+            return oldValue;
+        }
+
+        if (index == size-1){// 如果删除的是尾结点
+            String oldValue  = end.value;
+            end = end.pre;
+            end.next = null;
+            size--;
+            return oldValue;
+        }
+
+
+        // 删除的普通情况:
+        // index 更靠近那边
+        Node mid = head;
+        if (index < size/2){// 靠近头部
+            mid = head;
+            int tag = 1;
+            while (tag != index){
+                mid = mid.next;
+                tag++;
+            }
+            // mid要添加位置的前一个位置
+
+        } else {// 靠近尾部
+            mid = end;
+            int tag = size;
+            while (tag != index){
+                mid = mid.pre;
+                tag--;
+            }
+            // mid要添加位置的前一个位置
+        }
+        // mid 就是要删除元素的前一个结点
+
+        // 要删除的结点
+        Node removeNode = mid.next;
+        String oldValue = removeNode.value;
+
+        removeNode.next.pre = removeNode.pre;
+        removeNode.pre.next = removeNode.next;
+        size--;
+
+        return oldValue;
+    }
+
+//    public String get(int index){
+//
+//    }
+//
+//
+//    public String set(int index, String newValue){
+//
+//    }
+
+    // 返回链表存储的元素
+    public int size(){
+        return size;
+    }
+
+    // 判断链表是否为空
+    public boolean isEmpty(){
+        return size == 0;
+    }
+
+    @Override
+    public String toString() {
+        return "MyLinked{" +
+                "head=" + head +
+                '}';
+    }
+
+    class Node{
+        Node pre;
+        String value;
+        Node next;
+        public Node(Node pre, String value, Node next) {
+            this.pre = pre;
+            this.value = value;
+            this.next = next;
+        }
+
+        @Override
+        public String toString() {
+            return "Node{" +
+                    "value='" + value + '\'' +
+                    ", next=" + next +
+                    '}';
+        }
+    }
+}
+```
+
+```java
+自己练练
+/**
+add(String);add(int,String);remove(String);contains(String);get(int);set(int,String);isEmpty();getSize().
+ */
+public class DBdemo {
+    public static void main(String[] args) {
+        DBnodeList list = new DBnodeList();
+        list.add("zs");
+        list.add("ls");
+        list.add("ww");
+        list.add("zl");
+        System.out.println(list);
+        System.out.println(list.get(0));
+        list.set(3, "天");
+        System.out.println(list);
+        list.remove("天");
+        System.out.println(list);
+        System.out.println("contains 天 " + list.contains("天"));
+        System.out.println("contains zs " + list.contains("zs"));
+        list.add(0, "景");
+        System.out.println(list);
+        list.add(3, "风");
+        System.out.println(list);
+        list.remove(4);
+        System.out.println(list);
+
+    }
+}
+
+class DBnodeList {//我的双向链表集合
+    private Dnode head;
+    private Dnode end;
+    private int size;
+
+    //尾部添加元素
+    public boolean add(String value) {
+        if (value == null) throw new IllegalArgumentException("非法参数，试图传入null");//不允许null元素
+        if (isEmpty()) {//集合内容为空
+            head = new Dnode(null, value, null);
+            end = head;
+            size++;
+            return true;
+        }
+        //集合只有一个元素的情况,不需要这么判断，直接尾接就行了
+        Dnode newNode = new Dnode(end, value, null);
+        end.next = newNode;
+        end = newNode;
+        size++;
+        return true;
+    }
+    //按照下标添加元素
+    public boolean add(int index, String value) {
+        if (value == null) throw new IllegalArgumentException("非法参数，试图传入null");//不允许null元素
+        if (index < 0 || index > size) throw new IllegalArgumentException("下标越界，非法 index = " + index);//参数校验
+        if(isEmpty()) {//如果集合内容为空
+            head = end = new Dnode(null, value, null);
+            size++;
+            return true;
+        }
+        if(index == size) {//如果插入尾部
+            return add(value);
+        }
+        //头部以后插入
+        Dnode mid = getNodeAtIndex(index);
+        if(mid == head) {//如果是插入头部,如果只有一个元素那么一定会进入头部的
+            Dnode newNode = new Dnode(null, value, head);
+            head.pre = newNode;
+            head = newNode;
+        } else {//不是头部的话肯定不只有一个元素
+            Dnode newNode = new Dnode(mid.pre, value, mid);
+            mid.pre.next = newNode;
+            mid.pre = newNode;
+        }
+        size++;
+        return true;
+    }
+
+    //按值删除元素
+    public boolean remove(String value) {
+        if (value == null) throw new IllegalArgumentException("非法参数，试图传入null");//不允许null元素
+        if(isEmpty()) throw new RuntimeException("集合内容为空");
+        Dnode mid = getNodeByValue(value);//按值寻找
+        if(mid == null) {//说明遍历到尾巴也没找到匹配的
+            return false;
+        }
+        //如果是头
+        if(mid == head) {
+            head = head.next;
+            if(size == 1) {//如果集合只有一个元素
+                end = head;
+            } else {//集合不只有一个元素
+                head.pre = null;
+            }
+            size--;
+            return true;
+        }
+        //如果是头部以后
+        if(mid == end){//如果是尾巴
+            end = end.pre;
+            end.next = null;
+        } else  {//不是尾巴的话
+            mid.next.pre = mid.pre;
+            mid.pre.next = mid.next;
+        }
+        size--;
+        return true;
+    }
+    //按照下标删除
+    public String remove(int index) {
+        if (index < 0 || index >= size) throw new IllegalArgumentException("下标越界，非法 index = " + index);//参数校验
+        String oldValue = null;
+        Dnode mid = getNodeAtIndex(index);//获取该下标节点
+        if(size == 1) {//如果只有一个元素
+            oldValue = head.value;
+            head = end = null;
+            size--;
+            return oldValue;
+        }
+        //不知一个元素的话
+        if(mid == head) {//如果是头部
+            oldValue = head.value;
+            head = head.next;
+            head.pre = null;
+        } else if(mid == end) {//如果是尾巴
+            oldValue = end.value;
+            end = end.pre;
+            end.next = null;
+        } else {//如果是中间部分
+            oldValue = mid.value;
+            mid.pre.next = mid.next;
+            mid.next.pre = mid.pre;
+        }
+        size--;
+        return oldValue;
+    }
+
+    //集合是否包含值为参数的元素
+    public boolean contains(String value) {
+        if(isEmpty() || value == null) return false;//逻辑是非法参数不包含，集合内容空不包含任何
+        return getNodeByValue(value) != null;//找的返回true找不到返回false
+    }
+    //按照下标获取元素
+    public String get(int index) {//第一条校验也能判处集合内容为空的情况。
+        if (index < 0 || index >= size) throw new IllegalArgumentException("下标越界，非法 index = " + index);//参数校验
+        Dnode mid = getNodeAtIndex(index);
+        return mid.value;
+    }
+    //按照下标设置元素的值
+    public String set(int index, String newValue) {
+        if (index < 0 || index >= size) throw new IllegalArgumentException("下标越界，非法 index = " + index);//参数校验
+        if (newValue == null) throw new IllegalArgumentException("非法参数，试图传入null");//不允许null元素
+        Dnode mid = getNodeAtIndex(index);
+        String oldVale = mid.value;
+        mid.value = newValue;
+        return oldVale;
+    }
+    //按照值寻找节点
+    private Dnode getNodeByValue(String value) {
+        Dnode mid = head;
+        if(value.equals(mid.value)){
+            return head;
+        }
+        while (mid.hasNext() && !value.equals(mid.next.value)) {//按名字寻找删除元素位置之前的元素
+            mid = mid.next;
+        }
+        if(!mid.hasNext()) {//说明遍历到尾巴也没找到匹配的
+            return null;
+        }
+        return mid.next;
+    }
+    //获取给定下标位置的节点
+    private Dnode getNodeAtIndex(int index) {
+        Dnode mid;
+        if (isLeftIndex(index)) {//根据下标偏向左侧或右侧从快的一侧寻找
+            mid = head;
+            int tag = 0;
+            if (tag != index) {
+                mid = mid.next;
+                tag++;
+            }
+        } else {
+            mid = end;
+            int tag = size - 1;
+            if (tag != index) {
+                mid = mid.pre;
+                tag--;
+            }
+        }
+        return mid;
+    }
+
+    public boolean isEmpty() {//判断集合内容是否为空
+        return size == 0 && head == null;
+    }
+    public int getSize() {
+        return size;
+    }
+    private boolean isLeftIndex(int index) {//判断下标在偏向左侧还是右侧
+        return (index < size / 2) ? true : false;
+    }
+
+    @Override
+    public String toString() {
+        return "DBnodeList{" +
+                "head=" + head +
+                ", size=" + size +
+                '}';
+    }
+    class Dnode {//我的双向节点
+        private Dnode pre;
+        private String value;
+        private Dnode next;
+
+        public Dnode(Dnode pre, String value, Dnode next) {
+            this.pre = pre;
+            this.value = value;
+            this.next = next;
+        }
+
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        public boolean hasPre() {
+            return pre != null;
+        }
+
+        @Override
+        public String toString() {
+            return "{" +
+                    "v='" + value + '\'' +
+                    ", next=" + next +
+                    '}';
+        }
+    }
+}
+```
+
