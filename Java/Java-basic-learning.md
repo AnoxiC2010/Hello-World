@@ -11735,7 +11735,42 @@ fs.add(new S());// 可以
 
 > 总觉的除了向上限定的通配以外毫无用处，向下限定和不限定都是能接收，不能使用添加、修改操作，是我现在还理解不了祖师爷的精妙吧
 
-增强for循环(foreach)
+## 关于自然顺序（泛型通配应用）
+
+Java自然顺序, 就是实现了Comparable的compareTo方法的比较结果, 就是java的自然顺序
+
+```java
+// 对于MySet这个类型存储的数据T : 仅要求满足一个条件, 他是Comparable一个子类
+public class Demo {
+    public static void main(String[] args) {
+        //由于泛型通配的限定，User不实现接口就报错
+        MySet<User> set = new MySet<>();
+    }
+}
+class MySet<T extends Comparable<T>>{
+    public void add(T t){
+        // t拿来做比较大小,再存储
+    }
+}
+class User implements Comparable<User>{
+    String name;
+    String age;
+    @Override
+    public int compareTo(User o) {
+        return 0;
+    }
+}
+```
+
+## 泛型的擦除
+
+在Java 中的泛型, 仅存在于编译之前, 当编译的时候统统会被擦除, 变成Object类型,  并且对泛型使用的代码代码遍历时, 会产生类型强转。
+
+可反编译字节码后查看编译器为我们做的事。
+
+
+
+**增强for循环(foreach)**
 
 增强for概述
 简化数组和Collection集合的遍历
@@ -11754,7 +11789,7 @@ for(元素数据类型 变量 : 数组或者Collection集合) {
 
 > public interface Iterable<T> 实现这个接口的对象，允许使用foreach循环。
 
-可变长参数
+**可变长参数**
 
 可变参数概述
 	定义方法的时候不知道该定义多少个参数，我们就可以使用可变长参数。
