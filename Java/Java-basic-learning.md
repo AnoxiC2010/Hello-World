@@ -12078,6 +12078,25 @@ public class MyStackLinked<T> {
    怎么把中缀转化为前缀和后缀? 栈
    ```
 
+   [中缀表达式转换成前缀表达式和后缀表达式的极其简单方法](https://blog.csdn.net/yu757371316/article/details/48456413)
+
+   ```
+   a+b*c-(d+e)
+   第一步：按照运算符的优先级对所有的运算单位加括号~
+           式子变成拉：((a+(b*c))-(d+e))
+   第二步：转换前缀与后缀表达式
+           前缀：把运算符号移动到对应的括号前面
+                 则变成拉：-( +(a *(bc)) +(de))
+                 把括号去掉：-+a*bc+de  前缀式子出现
+           后缀：把运算符号移动到对应的括号后面
+                 则变成拉：((a(bc)* )+ (de)+ )-
+                 把括号去掉：abc*+de+-  后缀式子出现
+                 
+   或者根据中缀表达式画出二叉树，然后根据后序遍历，即可得出后缀表达式，前序遍历即可得出前缀表达式
+   ```
+
+   > 后缀表达法，又称为逆波兰（Reverse Polish Notation ,RPN ），在四则混合运算的程序设计中用到
+
 5. 浏览器的前进后退功能
 
 6. 利用栈实现 DFS: depth-first-search  深度优先遍历
@@ -12611,3 +12630,342 @@ Q：普通的BST最终都会倾斜，我们能否对其改进，实现自平衡�
 
 
 
+# 常见的排序算法
+
+## 插入排序
+
+插入排序的思想是每次将一个待排序的记录按其关键字大小插入到前面已经排好序的子序列中, 直到全部记录插入完成.
+
+eg:
+
+![image-20210331150225312](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331150225312.png)
+
+```java
+public int[] sort(int[] arr )  {
+
+        // 下标为1的位置开始遍历，因为前面只有一个元素
+        for (int i = 1; i < arr.length; i++) {
+
+            // 记录遍历到的插入数据
+            int tmp = arr[i];
+
+            // 从有序序列最右边的开始比较大小，找到比其小的数
+            int j = i;
+            while (j > 0 && tmp < arr[j - 1]) {
+                arr[j] = arr[j - 1];
+                j--;
+            }
+			arr[j] = tmp;
+        }
+        return arr;
+    }
+```
+
+
+
+## 希尔排序
+
+先将整个待排序的记录序列分割成为若干子序列分别进行直接插入排序，待整个序列中的记录"基本有序"时，再对全体记录进行依次直接插入排序.
+
+eg:
+
+![image-20210331151746953](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331151746953.png)
+
+```java
+public int[] sort(int[] arr)  {
+        // 排序数组长度
+        int length = arr.length;
+        int temp;
+
+        // 初始步长为数组长度的一半, 每次迭代步长减半
+        for (int step = length / 2; step >= 1; step /= 2) {
+
+            // 根据步长遍历序列排序
+            for (int i = step; i < length; i++) {
+                temp = arr[i];
+                
+                // 分组的直接插入排序
+                int j = i - step;
+                while (j >= 0 && arr[j] > temp) {
+                    arr[j + step] = arr[j];
+                    j -= step;
+                }
+                arr[j + step] = temp;
+            }
+        }
+
+        return arr;
+    }
+```
+
+
+
+## 冒泡排序
+
+它重复地走访过要排序的元素列，依次比较两个相邻的元素，如果顺序错误就把他们交换过来。走访元素的工作是重复地进行直到没有相邻元素需要交换，也就是说该元素列已经排序完成.
+
+eg:
+
+![image-20210331151905694](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331151905694.png)
+
+```java
+public int[] sort(int[] arr) {
+        
+        for (int i = 1; i < arr.length; i++) {
+            // 标记全部有序。
+            boolean flag = true;
+
+            // 每一趟遍历都从0开始 遍历到arr.length - i
+            // (每一趟也都会产生一个最大值在尾部有序)
+            for (int j = 0; j < arr.length - i; j++) {
+                // 前后比较, 有序跳过, 无序交换
+                if (arr[j] > arr[j + 1]) {
+                    int tmp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = tmp;
+
+                    flag = false;
+                }
+            }
+
+            // 已经全部有序, 跳出
+            if (flag) break;
+        }
+        return arr;
+    }
+```
+
+
+
+## 快速排序
+
+通过一趟排序将要排序的数据分割成独立的两部分，其中一部分的所有数据都比另外一部分的所有数据都要小，然后再按此方法对这两部分数据分别进行快速排序，整个排序过程可以递归进行，以此达到整个数据变成有序序列.
+
+eg:
+
+![image-20210331152012501](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331152012501.png)
+
+```java
+ public int[] sort(int[] arr) {
+
+        // 递归排序
+        return quickSort(arr, 0, arr.length - 1);
+    }
+
+    private int[] quickSort(int[] arr, int left, int right) {
+        if (left < right) {
+            // 把arr划分左右两块, 保证元素满足大小情况:
+            // 0 ~ partitionIndex-1  <  partitionIndex+1  ~ right
+            int partitionIndex = partition(arr, left, right);
+            // 递归0 ~ partitionIndex-1, 使其有序
+            quickSort(arr, left, partitionIndex - 1);
+            // 递归partitionIndex+1  ~ right, 使其有序
+            quickSort(arr, partitionIndex + 1, right);
+        }
+        return arr;
+    }
+
+    private int partition(int[] arr, int left, int right) {
+        // 以最left为基准值
+        int pivot = arr[left];
+        // 从左向右, 从右向左; 相向而行, 直到相遇
+        while (left < right){
+            // 从右向左, 直到找到小于基准值的值
+            while (left < right && arr[right] >= pivot){
+                --right;
+            }
+            // 交换找到的这个小于基准值的值(换到前面)
+            arr[left] = arr[right];
+
+            // 从左向右, 直到找到大于基准值的值
+            while (left < right && arr[left] <= pivot){
+                ++left;
+            }
+            // 交换找到的这个大于于基准值的值(换到后面)
+            arr[right] = arr[left];
+        }
+        // 确定这个基准值, 在该序列的位置
+        // 右侧大于基准值
+        // 左侧小于基准值
+        arr[left] = pivot;
+        return left;
+    }
+```
+
+
+
+## 选择排序
+
+第一次从待排序的数据元素中选出最小（或最大）的一个元素，存放在序列的起始位置，然后再从剩余的未排序元素中寻找到最小（大）元素，然后放到已排序的序列的末尾。以此类推，直到全部待排序的数据元素的个数为零.
+
+eg:
+
+![image-20210331152138878](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331152138878.png)
+
+```java
+public int[] sort(int[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            int min = i;
+
+            // 获取最小值位置
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[j] < arr[min]) {
+                    min = j;
+                }
+            }
+
+            // 把最小值交换到i的位置
+            if (i != min) {
+                int tmp = arr[i];
+                arr[i] = arr[min];
+                arr[min] = tmp;
+            }
+        }
+        return arr;
+    }
+
+```
+
+
+
+## 堆排序
+
+堆积是一个满足-----子结点的键值总是小于(大于)它的父节点的近似完全二叉树的结构.
+其中又分为两种堆积方式：
+	大顶堆：每个节点的值都大于或等于其子节点的值
+	小顶堆：每个节点的值都小于或等于其子节点的值
+
+eg:
+
+![image-20210331152230760](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331152230760.png)
+
+```java
+public int[] sort(int[] arr) {
+
+        int len = arr.length;
+        // 建堆操作
+        buildMaxHeap(arr, len);
+
+        // 遍历堆
+        for (int i = len - 1; i > 0; i--) {
+            // 把根节点(当前未遍历元素最大值)移到后面(交换), 表示该元素是当前无序序列的最大值
+            swap(arr, 0, i);
+            len--;
+            // 保证经过交换的堆, 满足堆积性质
+            heapify(arr, 0, i);
+        }
+        return arr;
+    }
+
+    private void buildMaxHeap(int[] arr, int len) {
+        // 从len/2的位置向前遍历到0, 保证都满足'堆积'性质
+        for (int i = (int) Math.floor(len / 2); i >= 0; i--) {
+            // 让i极其子树满足堆积性质
+            heapify(arr, i, len);
+        }
+    }
+
+    private void heapify(int[] arr, int i, int len) {
+        // 找到i的左右子节点位置
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        // 记录最大值元素位置
+        int largest = i;
+
+        // 判断左子节点是否小于根节点
+        if (left < len && arr[left] > arr[largest]) {
+            largest = left;
+        }
+        // 判断右子节点是最大节点
+        if (right < len && arr[right] > arr[largest]) {
+            largest = right;
+        }
+
+        // 如果最大节点不是根节点, 说明需要把最大值交换到根节点
+        // 交换之后, 要保证被交换的根节点要符合'堆积'兴致(递归处理)
+        if (largest != i) {
+            swap(arr, i, largest);
+            heapify(arr, largest, len);
+        }
+    }
+
+    private void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+```
+
+
+
+## 归并排序
+
+把一个待排序的序列分为多个子序列,  然后使每个子序列有序，再合并若干子序列, 重复上书过程, 直到不断合并得到一个有序序列 .
+
+若将两个有序表合并成一个有序表，称为二路归并 .
+
+eg:
+
+![image-20210331152323619](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331152323619.png)
+
+```java
+  public  int[] sort(int[] arr){
+        return sort(arr,0, arr.length - 1);
+    }
+    private int[] sort(int[] arr,  int left,  int right){
+        // 获取左右中间位置
+        int mid = (left + right) / 2;
+
+        if(left < right){
+            // 左序列排序 left ~ mid
+            sort(arr,left, mid);
+            // 右序列排序 mid + 1 ~ right
+            sort(arr,mid+1,  right);
+
+            //合并左右有序序列
+            merge(arr,  left,  mid, right );
+        }
+        return arr;
+    }
+
+    private void merge(int[] arr,  int left, int mid, int right) {
+        // 定义一个新数组
+        int[] temp = new int[right - left + 1];
+        // 左有序序列起点
+        int i= left;
+        // 右有序序列起点
+        int j = mid+1;
+        int k=0;
+
+        //遍历比较, 选取小值存放到新数组
+        while(i <= mid && j <= right){
+            if(arr[i]<=arr[j]){
+                temp[k++] = arr[i++];
+            }else{
+                temp[k++] = arr[j++];
+            }
+        }
+
+        // 左边剩余的数据存到新数组
+        while(i<=mid){
+            temp[k++] = arr[i++];
+        }
+        // 右边剩余的数据存到新数组
+        while(j <= right){
+            temp[k++] = arr[j++];
+        }
+
+        // 把新数组中的有序序列,转移到旧数组
+        for(int x=0; x < temp.length; x++){
+            arr[x + left] = temp[x];
+        }
+    }
+```
+
+
+
+## 排序的比较
+
+各种排序算法的对比
+
+![image-20210331152419983](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331152419983.png)
