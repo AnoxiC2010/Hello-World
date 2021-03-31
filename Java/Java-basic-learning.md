@@ -12144,7 +12144,7 @@ public class MyStackLinked<T> {
          if (isEmpty()){
   
          }else {
-             end = (end + 1) % arr.length;
+             end = (end + 1) % arr.length;//这里就不能堆size取余，走到者size就不等于arr.length，而且无论如何都不能用size取模
          }
   
           arr[end] = t;
@@ -12154,18 +12154,18 @@ public class MyStackLinked<T> {
       }
       private void grow(int newLen) {
           Object[] objects = new Object[newLen];
-  
+  		//这时size还==arr.length
           // 把旧数组元素中的内容转移到新数组
           for (int i = 0; i < arr.length; i++) {
               int index = (head + i) % arr.length;
               objects[i] = arr[index];
           }
           //TODO: 除了把新数组, 赋值给arr, 还要转移头和尾的标记
-          arr = objects;
+          arr = objects;//这之后size != arr.length
           head = 0;
           end = size - 1;
       }
-      private int getLen() {
+      private int getLen() {//这时size == arr.length
           // 获取旧长度
           int oldLen = arr.length;
           //  获取一个新长度
