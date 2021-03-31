@@ -12733,16 +12733,19 @@ public int[] sort(int[] arr) {
         return arr;
     }
 
-//我自己写的冒泡排序,对比下是我想的太少了，参考写法加了有序标记之后，会在已经有序的情况下跳出
+//我自己写的冒泡排序,对比下是我想的太少了，参考写法加了有序标记之后，会在已经有序的情况下跳出，备注改进
     public static void bubbleSort(int[] arr) {
         for (int i = arr.length - 1; i > 0; i--) {
+            //在这设flag,假设初始有序，即最好的情况式进来遍历1遍就直接跳出循环
             for (int j = 0; j < i; j++) {
                 if(arr[j] > arr[j + 1]) {
                     int temp = arr[j];
                     arr[j] = arr[j + 1];
                     arr[j + 1] = temp;
+                    //调整一次就设置无序，即使调整一次就完成，但计算机看不出来，它要第二次遍历进不来才能确认。
                 }
             }
+            //确认有序break终止
         }
     }
 ```
