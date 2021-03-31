@@ -12709,12 +12709,12 @@ eg:
 ![image-20210331151905694](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210331151905694.png)
 
 ```java
+//参考写法
 public int[] sort(int[] arr) {
         
         for (int i = 1; i < arr.length; i++) {
             // 标记全部有序。
             boolean flag = true;
-
             // 每一趟遍历都从0开始 遍历到arr.length - i
             // (每一趟也都会产生一个最大值在尾部有序)
             for (int j = 0; j < arr.length - i; j++) {
@@ -12727,11 +12727,23 @@ public int[] sort(int[] arr) {
                     flag = false;
                 }
             }
-
             // 已经全部有序, 跳出
             if (flag) break;
         }
         return arr;
+    }
+
+//我自己写的冒泡排序,对比下是我想的太少了，参考写法加了有序标记之后，会在已经有序的情况下跳出
+    public static void bubbleSort(int[] arr) {
+        for (int i = arr.length - 1; i > 0; i--) {
+            for (int j = 0; j < i; j++) {
+                if(arr[j] > arr[j + 1]) {
+                    int temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            }
+        }
     }
 ```
 
