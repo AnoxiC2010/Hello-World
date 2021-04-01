@@ -12870,7 +12870,7 @@ class MyBSTree<T extends Comparable<T>> {
     // 中序:  -150  -100  -50  -10  1  50  100  150  170  200
     // 后序:  -150  -50  -10  -100  50  170  200  150  100  1
     //根据中序和后序建树
-    public Node buildTree(List<T> inOrder, List<T> postOrder) {
+    public void buildTree(List<T> inOrder, List<T> postOrder) {
         root = recursionBuildTree(inOrder, postOrder);//递归建树
         size = inOrder.size();
     }
