@@ -12584,275 +12584,211 @@ Q2:如果我们只知道前序，中序，后序中的某两种，能否构建�
 ### 代码实现二叉树
 
 ```java
-import com.cskaoyan.www.day3.list.MyListArray;
-import com.cskaoyan.www.day3.queue.MyQueueArray;
-import com.cskaoyan.www.day3.stack.MyStackLinked;
-import java.util.List;
-
-/**
- *   实现一个二叉搜索树: left 小, right 大
- *
- *   链表:
- *
- *   二叉搜索树:
- *
- *   集合类:
- *
- *
- * @param <T>:  要求存储的元素实现自然顺序, 因为存储的元素要比较大小
+import java.util.*;
+/**实现一个二叉搜索树: left 小, right 大
+ * 链表:
+ * 二叉搜索树:
+ * 集合类:
+ * 要求存储的元素实现自然顺序, 因为存储的元素要比较大小
  */
-public class MyBST<T extends Comparable<T>> {
-
-    Node root;
-    int size;
-
-    public boolean add(T t){
-        // 不能存储null, 因为null没有办法比较大小
-        if (t == null)throw  new IllegalArgumentException("parame is null");
-
-        // 判断这个树是不是空树
-        if (size == 0 || root == null){
-            // 是空树
+public class BSTdemo {
+    public static void main(String[] args) {
+        MyBSTree<Integer> bst = new MyBSTree<>();
+        bst.add(1);
+        bst.add(100);
+        bst.add(-100);
+        bst.add(50);
+        bst.add(-10);
+        bst.add(-50);
+        bst.add(-150);
+        bst.add(150);
+        bst.add(200);
+        bst.add(170);
+        //1, -100, -150, -10, -50, 100, 50, 150, 200, 170
+        List<Integer> listPreOrder = bst.preOrderStack();
+        System.out.println(listPreOrder);
+        //-150, -100, -50, -10, 1, 50, 100, 150, 170, 200
+        List<Integer> listInOrder = bst.inOrderRecursion();//中根 递归
+        System.out.println(listInOrder);
+        //-150, -50, -10, -100, 50, 170, 200, 150, 100, 1
+        List<Integer> listPostOrder = bst.postOrderStack();//后根 栈
+        System.out.println(listPostOrder);
+        //-150, -50, -10, -100, 50, 170, 200, 150, 100, 1
+        List<Integer> listGoodPostOrder = bst.goodPostOrderStack();
+        System.out.println(listGoodPostOrder);
+        //1, -100, 100, -150, -10, 50, 150, -50, 200, 170
+        List<Integer> levelOrder = bst.levelOrderQueue();//层级遍历
+        System.out.println(levelOrder);
+    }
+}
+class MyBSTree<T extends Comparable<T>> {
+    private Node root;
+    private int size;
+    //添加结点
+    public boolean add(T t) {
+        if(t == null) throw new IllegalArgumentException("Illegal args : null");//不存null，没法比较大小
+        if(isEmpty()) {//空树情况
             root = new Node(t, null, null);
             size++;
             return true;
         }
-
-        // 代码到这, 一定不是空树.
+        //到这里一定不是空树
         Node mid = root;// 用来标记要查找的位置
-        Node midF = null; // 遍历结点的父节点
-        int com = 0;
-
-        while (mid != null){
-
-            // 让存储的值, 和当前遍历的位置的值, 比较大小
-            // 如果t结果大, t在mid 的 right
-            // 如果t的结果小, t在mid的left
-           com =  t.compareTo(mid.value);
-           if (com > 0){
-               // t大
-               midF = mid;
-               mid = mid.right;
-           }else  if (com < 0){
-               // t小
-               midF = mid;
-               mid = mid.left;
-           }else {
-               // t = mid.value
-               // 相等怎么处理
-               // 理论:
-               //    1, 拉链法:
-               //    2, 计数法
-               //    3, 修整的BST: 如果又添加了一个重复元素, 直接添加到left 或者right子树上
-
-               // 实际操作: 不能存储重复值: (重复, 自然顺序一样)
-               return false;
-           }
+        Node midFa = null;// 遍历结点的父节点
+        int compare = 0;
+        // 让存储的值, 和当前遍历的位置的值, 比较大小
+        // 如果t结果大, t在mid 的 right
+        // 如果t的结果小, t在mid的left
+        while (mid != null) {
+            compare = t.compareTo(mid.value);
+            if (compare > 0) {
+                midFa = mid;
+                mid = mid.right;
+            } else if (compare < 0) {
+                midFa = mid;
+                mid = mid.left;
+            } else {
+                // t = mid.value
+                // 相等怎么处理
+                // 理论:
+                // 1, 拉链法:该节点成为一串飘起的链子
+                // 2, 计数法：该节点多了个计数属性表示重复的数量
+                // 3, 修整的BST: 如果又添加了一个重复元素, 直接添加到left 或者right子树上
+                // 实际操作: 不能存储重复值: (重复, 自然顺序一样)
+                return false;
+            }
         }
-
-
-        // mid == null: 错误写法
-//        mid = new Node(t, null, null);
-
-        // midF 就是添加位置父节点
-        if (com > 0){
-            midF.right = new Node(t, null, null);
-        }else {
-            midF.left = new Node(t, null, null);
+        //找到了，midFa为添加节点的父结点
+        Node newNode = new Node(t, null, null);
+        if (compare > 0) {
+            midFa.right = newNode;
+        } else {
+            midFa.left = newNode;
         }
         size++;
-
         return true;
     }
-
-//    myBSTt.remove();
-    public boolean remove(T t){
-        // 不能删除null, 二叉搜索树不存储null
-        if (t == null)throw  new IllegalArgumentException("parame is null");
-
-        // 判断树是否为空
-        if (isEmpty()) throw new RuntimeException("tree is empty");
-
+    public boolean remove(T t) {
+        if (t == null) throw new IllegalArgumentException("Illegal args : null");//bst不存null
+        if (isEmpty()) throw new RuntimeException("BSTree is empty");//空树警告
         // 流程
         // 1, 先找到要删除的结点
         // 2, 判断这个要删除的结点是不是双分支结点
         //       如果是双分支结点, 转化为(替换再删除) 删除叶子或者单分支
         // 3, 删除叶子或者单分支
-        //    (要么本来删除的元素就是叶子或者单分支,  要么是经过的叶子或者单分支)
-
+        //    (要么本来删除的元素就是叶子或者单分支,  要么是经过转化的叶子或者单分支)
 
         // 找到这个要删除的结点
-        Node mid = root; // 记录遍历结点(最终标记道要删除的结点)
-        Node midF = null; // (最终要标记到要删除结点的父结点)
-
-        while (mid != null){
-
-            int com = t.compareTo(mid.value);
-            if (com > 0){
-                // t在mid的right上
-                midF = mid;
-                mid = mid.right;
-            } else if (com < 0){
-                // t在mid的left上
-                midF = mid;
-                mid = mid.left;
+        Node mid = root;//记录遍历结点(最终标记道要删除的结点)
+        Node midFa = null;// (最终要标记到要删除结点的父结点)
+        while (mid != null) {
+            int compare = t.compareTo(mid.value);
+            if (compare > 0) {
+                midFa = mid;
+                mid = midFa.right;// t在mid的right上
+            } else if (compare < 0) {
+                midFa = mid;
+                mid = mid.left;// t在mid的left上
             } else {
-                // 找到了
-                break;
+                break;//找到
             }
         }
-
         // 上述循环有两个条件可以跳出: 找到和没找到
-        if (mid == null){
-            // 这个树中就没有这个要删除的元素(没找到)
-            return false;
-        }
-
+        if (mid == null) return false; // 这个树中就没有这个要删除的元素(没找到)
         // 找到了
         // mid 要删除的结点
         // midF 要删除结点的父结点
 
         // 判断要删除的结点是不是双分支结点(如果是, 要替换)
-        if (mid.left != null && mid.right != null){
-            // 双分支
-            // 替换: 找right子树的最小值替换
+        if (mid.hasLeft() & mid.hasRight()) {
             Node min = mid.right;
-            Node minF = mid;
-
-            // 找到right子树的嘴left一个结点:最小值替换
-            while (min.left != null){
-                minF = min;
+            Node minFa = mid;
+            while (min.hasLeft()) {
+                minFa = min;
                 min = min.left;
             }
-
-            // 替换
-            mid.value = min.value;
-
-            // 重新标记要删除的结点
-            midF = minF;
-            mid = min;
+            mid.value = min.value;//被删出结点被右子树最小值替换
+            mid = min; // 重新标记要删除的结点
+            midFa = minFa;
         }
-
-
         // 删除叶子 or 单分支
         // 获得叶子或者单分支的子节点
-        Node ch = mid.left != null? mid.left: mid.right;
-
-        // 如果删除的情况: 是根节点, 并且这个根节点是个单分支结点
-        //  midF 是个null
-        if (midF == null){
+        Node ch = (mid.hasLeft()) ? mid.left : mid.right;//替代品
+        //特殊情况：如果删除的是根 且是单分支
+        if (midFa == null) {
             root = ch;
             size--;
             return true;
         }
-
         // 查看删除的结点是其父节点的那个子结点
-        if (midF.left == mid){// 是父结点的left
-            midF.left = ch;
-        } else {// 是父结点的right
-            midF.right = ch;
+        if (mid == midFa.left) {
+            midFa.left = ch;
+        } else {
+            midFa.right = ch;
         }
         size--;
-
         return true;
     }
-
-
-    public boolean contains(T t){
-        // 保证查找的值不是null, 树不空
-        if (t == null) throw new IllegalArgumentException("parame is null");
-        if (isEmpty()) throw new RuntimeException("tree is empty");
-
-
+    public boolean contains(T t) {
+        if (t == null) throw new IllegalArgumentException("Illegal args : null");
+        if (isEmpty()) throw new RuntimeException("BSTree is empty");
         // 查找
         Node mid = root;
-        while (mid != null){
-            int com = t.compareTo(mid.value);
-            if (com > 0){
-                // t的值大
+        if (mid != null) {
+            int compare = t.compareTo(mid.value);
+            if (compare > 0) {
                 mid = mid.right;
-            }else if (com < 0){
-                // t 的值小
+            } else if (compare < 0) {
                 mid = mid.left;
-            }else {
-                // 相等
-                return true;
+            } else {
+                return true;//相等 包含
             }
         }
-
         // 到这一步: mid = null --> 没找到
-
         return false;
     }
-
-// -------------------------------------------------------------------
-    // 先序 1
-    // 中序 栈
-    // 后序 递归
-    // 层级 3
-    // 建树: 前中,  中后 4
-
-
     // 用栈实现先序遍历
-    public MyListArray<T> preOrder(){
-        MyListArray<T> list = new MyListArray<>();
-        MyStackLinked<Node> stack = new MyStackLinked<>();
-
+    public List<T> preOrderStack() {
+        ArrayList<T> list = new ArrayList<>();
+        Stack<Node> stack = new Stack<>();
         // 1, 根节点先入栈
         stack.push(root);
-
         // 2, 循环
-        while (!stack.isEmpty()){
-            // 出栈一个元素, 遍历
-            Node pop = stack.pop();
+        while (!stack.isEmpty()) {
+            Node pop = stack.pop();//先弹出先添加到列表
             list.add(pop.value);
-
-            // 把出栈元素的右左子树入栈
-            if (pop.right != null) stack.push(pop.right);
-            if (pop.left != null) stack.push(pop.left);
+            // 出栈一个元素, 遍历
+            if(pop.hasRight()) stack.push(pop.right);//先右进栈底部
+            if(pop.hasLeft()) stack.push(pop.left);//再左进栈顶部，因为左要先输出
         }
-
         return list;
     }
-
     // 用递归实现先序遍历: 根, 左子树,  右子树
-    public MyListArray<T> preOrder2(){
-        MyListArray<T> list = new MyListArray<>();
-
-        preOrder2(root, list);
-
+    public List<T> preOrderRecursion() {
+        ArrayList<T> list = new ArrayList<>();
+        preOrderRecursion(root, list);
         return list;
     }
-
-    private void preOrder2(Node root, MyListArray<T> list){
+    private void preOrderRecursion(Node root, List<T> list) {
         if (root == null) return;
-
-        // 遍历根
-        list.add(root.value);
-        // 遍历左子树
-        preOrder2(root.left, list);
-        // 遍历右子树
-        preOrder2(root.right, list);
-    };
-
-
+        list.add(root.value);// 遍历根
+        preOrderRecursion(root.left, list);// 遍历左子树
+        preOrderRecursion(root.right, list);// 遍历右子树
+    }
     // 中序遍历: 栈
-    public MyListArray<T> inOrder(){
-        MyListArray<T> list = new MyListArray<>();
-        MyStackLinked<Node> stack = new MyStackLinked<>();
-
+    public List<T> inOrderStack() {
+        ArrayList<T> list = new ArrayList<>();
+        Stack<Node> stack = new Stack<>();
         // 1, 定一个中间结点, 赋值根节点
         Node mid = root;
-
         // 栈中元素 :
         // mid标记:
 
         // -150  -100  -50  -10 1  50  100  150  170 200
-
         // 大循环
-        while (!stack.isEmpty() || mid != null){
+        while (!stack.isEmpty() || mid != null) {
             // 小循环: 入栈left序列
-            while (mid != null){
+            while (mid != null) {
                 stack.push(mid);
                 mid = mid.left;
             }
@@ -12862,70 +12798,91 @@ public class MyBST<T extends Comparable<T>> {
             // 标记转移到出栈遍历元素的right
             mid = pop.right;
         }
-
         return list;
     }
-
-
-
-
-    // 后序遍历: 栈实现, 和先序极类似(头插)
-
-    public MyListArray<T> postOrder2(){
-        MyListArray<T> list = new MyListArray<>();
-        postOrder2(root, list);
+    //中序遍历递归方法
+    public List<T> inOrderRecursion() {
+        ArrayList<T> list = new ArrayList<>();
+        inorderRecursion(this.root, list);
         return list;
     }
-    private void postOrder2(Node root, MyListArray<T> list){
-        //出口
+    private void inorderRecursion(Node root, List<T> list) {
+        if(root == null) return;
+        if(root.hasLeft()) inorderRecursion(root.left, list);
+        list.add(root.value);
+        if(root.hasRight()) inorderRecursion(root.right, list);
+    }
+    //我的愚蠢的后序栈遍历方法栈实现, 和先序极类似(头插)
+    public List<T> postOrderStack() {//弹出根留下小弟才不会导致死循环，用标记的办法死循环我破解不了
+        ArrayList<T> list = new ArrayList<>();
+        Stack<Node> stackTemp = new Stack<>();
+        Stack<Node> stack = new Stack<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            Node pop = stack.pop();//先头
+            stackTemp.push(pop);//利用栈的特性先头，再右，再左，倒叙进栈，出栈就是顺序了
+            if(pop.hasLeft()) stack.push(pop.left);//再左
+            if(pop.hasRight()) stack.push(pop.right);//再右，这样右会先弹出
+        }
+        while (!stackTemp.isEmpty()) {
+            list.add(stackTemp.pop().value);
+        }
+        return list;
+    }
+    //参考代码，优秀的后续遍历用栈实现，是我想太多
+    public List<T> goodPostOrderStack() {
+        ArrayList<T> list = new ArrayList<>();
+        Stack<Node> stack = new Stack<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            Node pop = stack.pop();//先头
+            list.add(0, pop.value);//一直从头插入，效果是到过来，没必要用两个栈了
+            if(pop.hasLeft()) stack.push(pop.left);//再左
+            if(pop.hasRight()) stack.push(pop.right);//再右，这样右会先弹出
+        }
+        return list;
+    }
+    //后续遍历，递归实现
+    public List<T> postOrderRecursion() {
+        ArrayList<T> list = new ArrayList<>();
+        postOrderRecursion(root, list);
+        return list;
+    }
+    private void postOrderRecursion(Node root, List<T> list) {
         if (root == null) return;
-
-        // 遍历Left子树
-        postOrder2(root.left, list);
-        // 遍历right子树
-        postOrder2(root.right, list);
-        // 根节点
+        postOrderRecursion(root.left, list);
+        postOrderRecursion(root.right, list);
         list.add(root.value);
     }
-
-    //  层级遍历: 广度遍历, 广度优先搜索
-    public MyListArray<T>  levelOrder(){
-        MyListArray<T> list = new MyListArray<>();
-        MyQueueArray<Node> queue = new MyQueueArray<>();
-
-        // 1, 入队列根节点
-        queue.offer(root);
-
-        while (!queue.isEmpty()){
+    //  层级遍历: 广度遍历, 广度优先搜索Broad First Search
+    public List<T> levelOrderQueue() {
+        ArrayList<T> list = new ArrayList<>();
+        ArrayDeque<Node> queue = new ArrayDeque<>();
+        queue.offer(root);//让根先入队列
+        while (!queue.isEmpty()) {
             Node poll = queue.poll();
-            list.add(poll.value);
-            if (poll.left != null)queue.offer(poll.left);
-            if (poll.right != null)queue.offer(poll.right);
+            list.add(poll.value);//出列就赶紧把孩子节点都顺序入队列，最后的效果就是一层一层的排队了
+            if (poll.hasLeft()) queue.offer(poll.left);//先左
+            if (poll.hasRight()) queue.offer(poll.right);//后右进队列
         }
-
         return list;
     }
-
-    public void buildTree(List<T> inOrder, List<T> postOrder){
-
-        Node node = buildNode(inOrder, postOrder);
-        root = node;
-        size = inOrder.size();
-    }
-
     // 中序:  -150  -100  -50  -10  1  50  100  150  170  200
     // 后序:  -150  -50  -10  -100  50  170  200  150  100  1
-    // 建树操作 : 中后
-    private Node buildNode(List<T> inOrder, List<T> postOrder){
+    //根据中序和后序建树
+    public Node buildTree(List<T> inOrder, List<T> postOrder) {
+        root = recursionBuildTree(inOrder, postOrder);//递归建树
+        size = inOrder.size();
+    }
+    //递归，根据中序和后序建树
+    private Node recursionBuildTree(List<T> inOrder, List<T> postOrder) {
         // 出口
-        if (inOrder.size() == 0)return null;
-        if (inOrder.size() == 1)return new Node(inOrder.get(0), null, null);
-
+        if (inOrder.size() == 0) return null;
+        if (inOrder.size() == 1) return new Node(inOrder.get(0), null, null);
         // 在后序中找到根节点
         T rootValue = postOrder.get(postOrder.size() - 1);
         // 根节点在中序的下标
-        int index = inOrder.indexOf(rootValue);
-
+        int rootIndex = inOrder.indexOf(rootValue);
         // 根据根节点在中序进行左右子树划分
 
         // 左子树中序:  0 ~ index -1
@@ -12934,47 +12891,50 @@ public class MyBST<T extends Comparable<T>> {
         // 右子树的后序: index ~ size -2
 
         // subList切割方法: 包左不包右
-        List<T> leftInOrder = inOrder.subList(0, index);
-        List<T> leftPostOrder = postOrder.subList(0, index);
+        List<T> leftInOrder = inOrder.subList(0, rootIndex);
+        List<T> leftPostOrder = postOrder.subList(0, rootIndex);
 
-        List<T> rightInOrder = inOrder.subList(index + 1, inOrder.size());
-        List<T> rightPostOrder = postOrder.subList( index, postOrder.size() -1);
+        List<T> rightInOrder = inOrder.subList(rootIndex + 1, inOrder.size());
+        List<T> rightPostOrder = postOrder.subList(rootIndex, postOrder.size() - 1);
 
-        Node node = new Node(rootValue, null, null);
-        node.left = buildNode(leftInOrder, leftPostOrder);
-        node.right = buildNode(rightInOrder, rightPostOrder);
-
-        return node;
+        Node rootNode = new Node(rootValue, null, null);
+        rootNode.left = recursionBuildTree(leftInOrder, leftPostOrder);
+        rootNode.right = recursionBuildTree(rightInOrder, rightPostOrder);
+        return rootNode;
     }
     // 求一个二叉树的高度
-    public int getHeight(){
-        //TODO:  注意参数检查
-
-        int height = getHeight(root);
-        return height;
+    public int getHeight() {
+        //参数检查
+        if (isEmpty()) return -1;
+        return  getHeight(root);
     }
-    //递归获取树的高度 每层高度 = 1 + 孩子的最大高度
-    private int getHeight(Node node){
-        if (node == null) return -1;
-        //
-        int left = getHeight(node.left);
-        int right = getHeight(node.right);
-
-        int max = left > right ? left: right;
-
-        return max+1;
+    private int getHeight(Node node) {
+        if (node == null) return -1;//递归到空已经在叶子结点以下-1层了，返回-1；叶子结点是0
+        int leftHeight = getHeight(node.left);
+        int rightHeight = getHeight(node.right);
+        int maxChildHeight = (leftHeight > rightHeight) ? leftHeight : rightHeight;
+        return maxChildHeight + 1;//当前结点高度是最大孩子高度+1
     }
-    public boolean isEmpty(){
+    public int size() {
+        return size;
+    }
+    public boolean isEmpty() {
         return size == 0;
     }
-    class Node{
-        T value; // 结点值域
-        Node left; // 左子树根节点
-        Node right; // 右子树根节点
+    class Node {
+        private  T value;
+        private  Node left;
+        private Node right;
         public Node(T value, Node left, Node right) {
             this.value = value;
             this.left = left;
             this.right = right;
+        }
+        public boolean hasLeft() {
+            return left != null;
+        }
+        public boolean hasRight() {
+            return right != null;
         }
     }
 }
