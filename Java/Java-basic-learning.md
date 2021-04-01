@@ -13003,6 +13003,197 @@ class MyBSTree<T extends Comparable<T>> {
 
 
 
+# 2-3-4树
+
+在普通的二叉查找树上进行了扩展，它允许有多个键(1~3个)
+树保持完美平衡
+
+完美平衡？根到每个叶子结点的路径都是一样长。
+
+![image-20210401230308012](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401230308012.png)
+
+学红黑树之前，先谈谈2-3-4树
+
+
+
+结点类型
+
+每个结点可以拥有1, 2, 或者3个键。
+
+- 2-node：1个键，两个孩子
+- 3-node：2个键，三个孩子
+- 4-node：3个键，四个孩子
+
+![image-20210401230642061](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401230642061.png)
+
+特点：动态地添加和删除元素时，能保持树的完美平衡
+
+
+
+2-3-4树 —— 查找
+
+查找
+
+- 和当前结点的所有的键进行比较
+- 如果当前结点中没有，就找到对应的区间
+- 依据链接找到下一个结点 (递归)
+
+![image-20210401230749010](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401230749010.png)
+
+
+
+2-3-4树 —— 插入
+
+插入
+
+- 查找键应该插入的位置 (树底)
+
+![image-20210401230925158](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401230925158.png)
+
+
+
+插入
+
+- 查找键应该插入的位置 (树底)
+- 2-node：转换成3-node
+
+![image-20210401230958532](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401230958532.png)
+
+插入
+
+- 查找键应该插入的位置 (树底)
+- 2-node：转换成3-node
+- 3-node：转换成4-node
+
+![image-20210401231023339](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231023339.png)
+
+插入
+
+- 查找键应该插入的位置 (树底)
+- 2-node：转换成3-node
+- 3-node：转换成4-node
+- 4-node：咋办呢？
+
+![image-20210401231045058](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231045058.png)
+
+
+
+2-3-4树 —— 4结点分裂
+
+我们需要分裂4结点，为新插入的结点腾出空间。
+
+![image-20210401231217041](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231217041.png)
+
+小问题：
+
+如果父节点也是4-node，又该怎么办呢？
+
+- 两种解决方案：
+  Bottom-up 自底向上
+  Top-down  自顶向下
+
+
+
+Top-down: 
+确保当前结点不是 4-node，预留空间给新元素。
+
+沿着查找路径向下分裂4-node
+在底部插入元素
+
+Case 1: 根结点是 4-node
+
+![image-20210401231312175](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231312175.png)
+
+Case 2: 父节点是2-node
+
+![image-20210401231329518](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231329518.png)
+
+Case 3: 父节点是3-node
+
+![image-20210401231344080](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231344080.png)
+
+不变式：当前结点不是4-node
+
+结果：
+     1. 4-node 的父亲不是 4-node。
+          2. 到达的叶子结点要么是2-node，要么是3-node。
+
+
+
+Note：这些变换都是局部变换，不会影响到无关的其他结点。
+
+
+
+局部变换只会影响局部的一些结点。
+
+![image-20210401231425409](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231425409.png)
+
+![image-20210401231429613](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231429613.png)
+
+
+
+举个例子
+
+![image-20210401231455379](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231455379.png)
+
+![image-20210401231510568](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231510568.png)
+
+
+
+2-3-4树——性能分析
+
+主要性质：2-3-4树是一棵完美平衡的树。
+
+![image-20210401231531308](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210401231531308.png)
+
+树的高度
+
+- 最坏情况: lg N  [全部是2-node]
+- 最好情况: log4N = ½ lg N	[全部是4-node]
+- 100万个结点高度在[10, 20]
+- 10亿个结点高度在[15, 30]
+
+2-3-4树保证了树的高度为 O(lgN) !
+
+
+
+2-3-4树——实现
+
+直接实现？
+
+- 为2-node, 3-node, 4-node 编写不同的结点类
+- 不同的结点类之间需要相互转换
+- 不好统一不同的case
+
+```java
+private void insert(Key key, Val val)
+{
+    Node x = root;
+    while (x.getTheCorrectChild(key) != null)
+    {
+        x = x.getTheCorrectChild(key);
+        if (x.is4Node()) x.split();
+    }
+    if (x.is2Node()) x.make3Node(key, val);
+    else if (x.is3Node()) x.make4Node(key, val);
+    return x;
+}
+```
+
+可以实现，但是代码复杂度太高，我们期待更简单的实现！
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 常见的排序算法
