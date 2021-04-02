@@ -12685,6 +12685,62 @@ public class BSTdemo {
 class MyBSTree<T extends Comparable<T>> {
     private Node root;
     private int size;
+    // 递归实现添加方法
+    public boolean addByRecursion(T t) {
+        if (t == null) throw new IllegalArgumentException("Illegal args : null");
+        int oldSize = size;
+        root = addByRecursion(root, t);// 递归添加
+        return oldSize < size;
+    }
+    private Node addByRecursion(Node root, T t) {
+        if (root == null) {// 出口
+            size++;
+            return new Node(t, null, null);
+        }
+        // root不是null , 比较t 和 root 存储的值是否相等
+        int compare = t.compareTo(root.value);
+        if (compare > 0) {// t 大 交给root的right子树处理(添加)
+            addByRecursion(root.right, t);
+        } else if (compare < 0) {// t 小 交给root的left子树处理(添加)
+            addByRecursion(root.left, t);
+        } else {
+            return root;// 相等, 重复值
+        }
+        return root;
+    }
+    // 递归实现删除方法
+    public boolean removeByRecursion(T t) {
+        if (t == null) throw new IllegalArgumentException("Illegal args : null");//bst不存null
+        if (isEmpty()) throw new RuntimeException("BSTree is empty");//空树警告
+        int oldSize = size;
+        root = removeByRecursion(root, t);
+        return oldSize > size;
+    }
+    private Node removeByRecursion(Node root, T t) {
+        if (root == null) return null;//出口之一，不存在要删除的元素。
+
+        int compare = t.compareTo(root.value);
+        if (compare > 0) {
+            root.right = removeByRecursion(root.right, t);
+        } else if (compare < 0) {
+            root.left = removeByRecursion(root.left, t);
+        } else {
+            // 相等 , 删除的就是这个root
+            if (root.hasLeft() && root.hasRight()) {//root是双分支结点 先替换再删除
+                Node mid = root.right;
+                while (mid != null) {
+                    mid = mid.left;
+                }
+                root.value = mid.value;
+                root.right = removeByRecursion(root.right, mid.value);
+            } else {// root是单分支或者叶子结点
+                Node ch = root.hasLeft() ? root.left : root.right;
+                size--;
+                return ch;
+            }
+        }
+        return root;
+    }
     //添加结点
     public boolean add(T t) {
         if(t == null) throw new IllegalArgumentException("Illegal args : null");//不存null，没法比较大小
