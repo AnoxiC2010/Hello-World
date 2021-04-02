@@ -10101,6 +10101,117 @@ public static Object goodCopyOf(Object a, int newLength){
 >
 >   返回一个具有给定类型、给定维数的新数组。
 
+## 我在使用泛型不良是的启示
+
+### 泛型方法和泛型类泛型命名相同的机制以及返回泛型数组的疑问
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        MyGeneric<String> sss = new MyGeneric<String>("hello");
+        Object test = sss.test();
+        System.out.println(test);
+    }
+}
+class MyGeneric<T> {//这个叫<T>1
+    T value;
+    public MyGeneric(T value) {
+        this.value = value;
+    }
+    //这个叫<T>2
+    public <T> T test(/*T t*/) {
+        return (T) value;
+    }
+}
+/*总结：
+<T>2在所定义的方法中优先级高于定义在类中的<T>1，
+如果不在泛型方法的参数列表中传入指定的泛型，定义在方法上的泛型<T>2实际上是Object类型，如上所示，在main方法中返回的实际是被强转为Object类型的返回值，如果传入参数的话，按参数对应类型强转。<T>2定义了的情况下如果返回value，由于覆盖问题，必须强转，否则报错，当然只不过转为了Object类型，因为<T>2根本没接收参数。<T>2不定义的情况下就不用加强转符号也不报错了，方法体内使用类所定义的泛型类型。
+*/
+//至于我为什么会遇到这么蛋疼的问题，是因为我实现线性表想返回个泛型数组时发现的问题。如下：
+class MyDBLinkedList<T> {
+    private Node head;
+    private Node end;
+    private int size;
+    //尾部添加元素
+    public boolean add(T t) {
+        if (t == null) return false;//拒绝存null
+        if (isEmpty()) {//链表为空内容
+            head = end = new Node(null, t, null);
+            size++;
+            return true;
+        }
+        //链表内容不空，尾插
+        end.next = new Node(end, t, null);
+        end = end.next;
+        size++;
+        return true;
+    }
+    /**
+    1.
+    当我在这个方法上定义了<T>时，ts[index] = mid.value报错，我不解，我以为泛型方法上定义的<T>和类上定义的<T>是一个T，实际上不是的，我这多此一举的写法当值方法体内必须要求我把T强转为T，很懵逼，写了小测试发现定义在泛型方法上的T确实和类上的T不是一样的，这是在这里我没有给方法传入指定的T类型。
+    2.
+    当然我是想返回泛型数组，在不判空的情况下直接用了链表元素的通过反射创建数组，这是个Object类型的，但由于是我反射的，我直接强转为对应的T类型，最后在外面调用方法也的确能返回给我对应的类型。我觉得很好用，但大佬说不要这样用..不解中。
+    **/
+    //Object[] toArray() // 把一个线性表存储的内容以数组返回
+    public  T[] toArray() {
+        Class aClass = head.value.getClass();
+        T[] ts = (T[]) Array.newInstance(aClass, size);//我测试了下返回泛型数组，可以，但是天明大佬不建议，一般是用于泛型方法，传入一个泛型
+
+        Object[] arr = new Object[size];//题目要求是返回个object数组,这个当然没问题，但是我想返回泛型数组
+        int index = 0;
+        Node mid = head;
+        while (mid != null) {
+            ts[index] = mid.value;
+            arr[index] = mid.value;
+            mid = mid.next;
+            index++;
+        }
+        return ts;
+    }
+    public int size() {
+        return size;
+    }
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "head=" + head +
+                ", size=" + size +
+                '}';
+    }
+
+    class Node {
+        Node pre;
+        T value;
+        Node next;
+        public Node(Node pre, T value, Node next) {
+            this.pre = pre;
+            this.value = value;
+            this.next = next;
+        }
+        public boolean hasPre() {
+            return pre != null;
+        }
+        public boolean hasNext() {
+            return next != null;
+        }
+        @Override
+        public String toString() {
+            return "{" +
+                    "v=" + value +
+                    ", next=" + next +
+                    '}';
+        }
+    }
+}
+
+```
+
+
+
 ## 关于反射调用方法
 
 > invoke的参数和返回值必须是Object类型。意味着必须进行多次转换。会使编译器错过检查代码的机会，而且是用反射获得方法指针的代码要比仅仅直接调用方法明显慢一些。鉴于此，建议尽在必要的时候才使用Method对象，而最好使用接口以及Java SE 8中的lambda表达式。建议Java开发者不要使用Method对象的回调功能。使用接口进行回调会使得代码的执行速度更快，更易于维护。
