@@ -13407,25 +13407,129 @@ LLRB —— 删除最大值
 
 
 
+回想一下插入算法是怎么做的。
+
+插入算法为了保证不在4-node中插入新结点，会自顶向下分解4-node，确保当前结点不是4-node, 为新结点预留空间。
+
+同样的，删除最大值算法思路：确保当前结点不是2-node。
 
 
 
+当前结点不是根结点
+
+![image-20210402183638693](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183638693.png)
 
 
 
+我们再来看看根结点的情况：
+
+1. 根节点不是2-node。与前面分析的一样。
+2. 根结点是2-node。
+
+![image-20210402183702464](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183702464.png)
 
 
 
+对于 2-3 树而言，删除最大值的策略。
+
+- 不变式: 保证当前结点不是2-node。
+- 必要的时候，我们可以引入4-node
+- 在最底端删除最大值
+- 沿查找路径自底向上fixUp()。
+
+实现：
+
+- 遇到左倾的红色链接，右旋
+- 不变式：当前结点不是2-node
+- 在最底端删除
+
+![image-20210402183739299](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183739299.png)
 
 
 
+1. 右旋红色链接
+
+   ![image-20210402183837645](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183837645.png)
+
+2. 如果右孩子是2-node, 我们需要从它的兄弟结借结点。这有两种情况。
+
+   右孩子是 2-node：h.right AND h.right.left both BLACK 
+
+   Case 1: 左孩子是 2-node (h.left.left is BLACK)
+
+   ![image-20210402183914180](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183914180.png)
+
+   Case 2: 左孩子是 3-node (h.left.left is RED)
+
+   ![image-20210402183950230](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183950230.png)
+
+   `// if(!isRed(h.right) && !isRed(h.right.left)) `
+
+![image-20210402184039443](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184039443.png)
 
 
 
+LLRB —— 删除最小值
+
+删除最小值的策略和删除最大值的策略是一致的，只是有些许不同。
+
+- 不变式: 保证当前结点不是2-node。
+- 必要的时候，我们可以引入4-node
+- 在最底端删除最小值
+- 沿查找路径自底向上fixUp()。
+
+实现：
+
+- 不变式：当前结点不是2-node
+
+- 在最底端删除
+
+  ![image-20210402184134147](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184134147.png)
 
 
 
+我们讨论的是 2-3 树模型，因此是没有红色的右链接的，故不需要左旋。
 
+如果左孩子是2-node (!h.left.isRed() && !h.left.left.isRed())，
+我们需要从兄弟中借结点，这分两种情况。
+
+Case 1: 右孩子是 2-node (h.right.left is BLACK)
+
+![image-20210402184203682](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184203682.png)
+
+Case 2: 右孩子是 3-node (h.right.left is RED)
+
+![image-20210402184208090](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184208090.png)
+
+![image-20210402184222527](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184222527.png)
+
+
+
+LLRB —— 删除
+
+我们先试试用删除最大最小值的思路去删除任意结点。
+
+- 查找要删除的结点
+- 如果要删除的结点是3-node或者是4-node，那么直接删除不会影黑高平衡？
+- 如果是2-node
+  - 自顶向下变换树
+  - 保证当前结点不是2-node
+
+问题：如果待删不是叶子结点，是不能直接删除的！
+             有太多种情况需要考虑！
+
+像BST一样，其实我们可以将问题转换成deleteMin().
+
+![image-20210402184332024](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184332024.png)
+
+
+
+删除算法的要点：当前结点或者它的孩子结点中的某一个是 RED.
+
+- 查询路径往左: 左孩子不是2-node，moveRedLeft()
+- 查询路径往右: 右孩子不是2-node，moveRedRight()
+- 在底端删除结点
+- fixup()
 
 
 
