@@ -13323,6 +13323,108 @@ b. 保证黑高平衡
 
 
 
+LLRB —— 插入
+
+回顾下 2-3-4 树的插入
+
+- 沿着查找路径，自顶向下分解 4-node，确保当前结点不是 4-node
+- 在底部插入新结点
+
+Note: 分解 4-node 的操作都是局部变换。
+
+
+
+LLRB 与 2-3-4 树是 1-1 对应的，所以它插入的思路也是一样的。
+
+
+
+分裂 4-node，可以通过一个简单的颜色反转来实现。
+
+```java
+private Node colorFlip(Node h)
+{
+    x.color = !x.color;
+    x.left.color = !x.left.color;
+    x.right.color = !x.right.color;
+    return x;
+}
+```
+
+![image-20210402183136265](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183136265.png)
+
+Note:
+
+- 这也是一个局部变换
+- 保持了黑高的平衡
+- 将红色链接传递给了父结点
+- 相当于在父结点中插入一个新的结点
+- 在父结点中插入新结点的情形和在底部插入新结点的情形是一模一样的
+
+
+
+我们先来考察在底部插入新结点的情形。
+
+父节点要么是 2-node, 要么是 3-node，总共有 2 + 3 = 5 种情况。
+
+![image-20210402183254768](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183254768.png)
+
+插入新结点，会造成右倾的3-node，和连续的红链接 (不规范的4-node)。我们需要通过旋转操作来更正这些链接。
+
+
+
+我们再捋一捋LLRB的插入过程：
+
+- 自顶向下，沿查找路径分解4-node
+- 在底端添加新结点
+- 自底向上，通过旋转操作来更正非法的 3-node 和 4-node (分解4-node 和添加新结点都可能产生)。
+
+更正非法的 3-node 和 4-node 有三种情况，我们统一成两个步骤。
+
+1. 左旋任意的红色右链接。
+
+   ![image-20210402183411501](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183411501.png)
+
+2. 如果有两条连续的左倾红色链接，右旋上面的红色链接
+
+   ![image-20210402183416634](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183416634.png)
+
+
+
+
+
+LLRB —— 删除最大值
+
+在讲一般的删除之前，我们讲讲删除的一种简单情况，删除最大值。
+
+思路：
+
+- 沿着最右边的分支向下查找
+- 如果最大结点是3-node, 或者4-node——直接删除 (不影响2-3-4树的完美平衡)
+
+![image-20210402183515892](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183515892.png)
+
+- 如果最大结点是2-node —— 怎么办？
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
