@@ -13240,6 +13240,97 @@ private void insert(Key key, Val val)
 
 
 
+# LLRB Trees
+
+Red-black trees
+
+1. 用 BST 来表现 2-3-4 树
+2. 用”内部的”红色边来表示 3-node 和 4-node
+
+![image-20210402165516540](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402165516540.png)
+
+2-3-4 树能够被表示成 BST，它们之间有一种对应关系！但是它们这种对应不是1-1的。
+
+![image-20210402165531722](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402165531722.png)
+
+> 算法导论中关于红黑树的定义：
+>
+> 一棵红黑树是满足下面红黑性质的二叉搜索树：
+>
+> 1.每个结点或者是红色的，或者是黑色的
+>
+> 2.根结点是黑色的
+>
+> 3.叶结点 (Nil) 是黑色的
+>
+> 4.如果一个结点是红色的，则它的两个子结点都是黑色的 （4-node 只有一种编码方式）
+>
+> 5.对每个结点，从该结点到其所有后代叶结点的简单路径上，均包含相同数目的黑色结点。(黑高平衡， 2-3-4树是一个完美平衡的树)
+
+
+
+Left-leaning red-black trees
+
+1. 用 BST 来表现 2-3-4 树
+2. 用”内部的”红色边来表示 3-node 和 4-node
+3. 3-node 的红色边是左倾的
+
+![image-20210402165644342](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402165644342.png)
+
+2-3-4 树能够被表示成 BST，它们之间有一种对应关系！它们这种对应是1-1的！
+
+![image-20210402165655572](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402165655572.png)
+
+
+
+LLRB—— 查找
+
+查找
+
+和基本的BST查找代码一模一样。
+
+```java
+public Value geti(Key key)
+{
+    Node x = root;
+    while (x != null)
+    {
+        int cmp = key.compartTo(x.key);
+        if (cmp ==0) return x.val;
+        else if (cmp < 0) x = x.left;
+        else if (cmp > 0) x = x.right;
+    }
+    return null;
+}
+```
+
+![image-20210402165730692](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402165730692.png)
+
+
+
+Rotations
+
+不过在讲插入之前，我们来看下基本的树的局部变换——旋转。
+
+![image-20210402170115107](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402170115107.png)
+
+在LLRB中，我们需要通过左旋和右旋操作来保证LLRB的性质！
+
+回顾下LLRB的性质
+
+a. 满足查找树的性质
+b. 保证黑高平衡
+
+
+
+
+
+
+
+
+
+
+
 
 
 
