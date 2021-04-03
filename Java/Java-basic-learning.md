@@ -13626,7 +13626,8 @@ LLRB —— 删除最大值
 ![image-20210402184039443](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184039443.png)
 
 ```
-> 我理解的为什么h.right AND h.right.left both BLACK就确定h.right是2-node，因为这是左倾红黑树，对应的234树3-node红边是左倾的，意味某一个根节点到其子节点如果只有一条红边那么就一定是左倾的，所以左孩子为红则对应234树为2-node，再能推断出右孩子为红对应到234树为3-node。
+> 我理解的为什么h.right AND h.right.left both BLACK就确定h.right是2-node，因为这是左倾红黑树，对应的234树3-node红边是左倾的，意味某一个根节点到其子节点如果只有一条红边那么就一定是左倾的，所以左孩子为黑则对应234树为2-node，再能推断出右孩子为红对应到234树的这个根为4-node，左孩子红有孩子黑对应234树这个根为3-node点。
+> 上图来看，最大值反正会在最右边，遇到左倾红链接右旋保证了最大值被删掉不影响黑高平衡。
 ```
 
 LLRB —— 删除最小值
