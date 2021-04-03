@@ -13681,11 +13681,17 @@ LLRB —— 删除
 
 像BST一样，其实我们可以将问题转换成deleteMin().
 
+```java
+h.key = min(h.right);
+h.value = get(h.right, h.key);
+h.right = deleteMin(h.right);
+```
+
 ![image-20210402184332024](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184332024.png)
 
 
 
-删除算法的要点：当前结点或者它的孩子结点中的某一个是 RED.
+**删除算法的要点：当前结点或者它的孩子结点中的某一个是 RED.**
 
 - 查询路径往左: 左孩子不是2-node，moveRedLeft()
 - 查询路径往右: 右孩子不是2-node，moveRedRight()
@@ -13726,7 +13732,7 @@ B树，又称多路平衡查找树，B树中所有结点的孩子结点数的最
 有发现什么吗？
 2-3树就是3阶B树，2-3-4树就是4阶B树！[2, 4]
 
-这意味着红黑树其实就是一棵特殊的3阶或者4阶B树!
+**这意味着红黑树其实就是一棵特殊的3阶或者4阶B树!**
 
 
 
