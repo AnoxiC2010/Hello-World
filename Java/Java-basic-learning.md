@@ -13438,6 +13438,33 @@ Rotations
 
 不过在讲插入之前，我们来看下基本的树的局部变换——旋转。
 
+```java
+private Node rotateLeft(Node h)
+{
+    Node x = h.right;
+    h.right = x.left;
+    x.left = h;
+    x.color = x.left.color;
+    x.left.color = RED;//直接变红的思考见下面
+    return x;
+}
+//这里之所以直接变红而不是先用引用保存原x的颜色再交换，画图想了下是应该不管x原来是什么旋转之后的h都需要直接变红才能保证黑高平衡，因为旋转之后，根到x右子树nil的黑节点数不变，但是根到旋转后的h的nil的路径已经凭空多了一条边，需要让h旋转后无条件变红
+```
+
+```java
+private Node rotateRight(Node h)
+{
+    Node x = h.left;
+    h.left = x.right;
+    x.right = h;
+    x.color = x.right.color;
+    x.right.color = RED;//这里直接变红的原因我理解的同上左旋一样
+    return x;
+}
+```
+
+
+
 ![image-20210402170115107](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402170115107.png)
 
 在LLRB中，我们需要通过左旋和右旋操作来保证LLRB的性质！
