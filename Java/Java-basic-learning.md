@@ -13625,7 +13625,9 @@ LLRB —— 删除最大值
 
 ![image-20210402184039443](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184039443.png)
 
-
+```
+> 我理解的为什么h.right AND h.right.left both BLACK就确定h.right是2-node，因为这是左倾红黑树，对应的234树3-node红边是左倾的，意味某一个根节点到其子节点如果只有一条红边那么就一定是左倾的，所以左孩子为红则对应234树为2-node，再能推断出右孩子为红对应到234树为3-node。
+```
 
 LLRB —— 删除最小值
 
