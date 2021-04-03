@@ -13496,10 +13496,10 @@ LLRB 与 2-3-4 树是 1-1 对应的，所以它插入的思路也是一样的。
 ```java
 private Node colorFlip(Node h)
 {
-    x.color = !x.color;
-    x.left.color = !x.left.color;
-    x.right.color = !x.right.color;
-    return x;
+    h.color = !h.color;
+    h.left.color = !h.left.color;
+    h.right.color = !h.right.color;
+    return h;
 }
 ```
 
