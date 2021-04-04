@@ -13735,6 +13735,64 @@ LLRB —— 删除最大值
    ![image-20210402183950230](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183950230.png)
 
    `// if(!isRed(h.right) && !isRed(h.right.left)) `
+   
+   ```java
+   //右孩子是二节点的转化
+   private Node moveRedRight(Node h)
+   {
+       colorFlip(h);
+       if (isRed(h.left.left))
+       {
+           h = rotateRight(h);
+           colorFlip(h);
+       }      
+       return h;
+   }
+   ```
+   
+   ```java
+   //删除后自底向上修复
+   private Node fixUp(Node h)
+   {
+       //rotate-left right-leaning reds
+       if (isRed(h.right))
+           h = rotateLeft(h);
+       //rotate-right red-red pairs
+       if (isRed(h.left) isRed(h.left.left))
+           h = rotateRight(h);
+       //split 4-nodes
+       if (isRed(h.left) && isRed(h.right))
+           colorFlip(h);
+       return h;
+   }
+   ```
+   
+   ```java
+   //删除最大值
+   public void deleteMax()
+   {
+       root = deleteMax(root);
+       root.color = BLACK;
+   }
+   private Node deleteMax(Node h)
+   {
+       //lean 3-nodes to the right
+       if (isRed(h.left))
+           h = rotateRight(h);
+       //remove node on bottom level (h must be RED by invariant)
+       if (h.right == null)
+           return null;
+       //borrow from sibling if neccessary
+       if (!isRed(h.right) && !isRed(h.right.left))
+           h = moveRedRight(h);
+       //move down one level
+       h.right = deleteMax(h.right);
+       //fix right-leaning red links and eliminate 4-nodes on the way up
+       return fixUp(h);
+   }
+   ```
+   
+   
 
 ![image-20210402184039443](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184039443.png)
 
