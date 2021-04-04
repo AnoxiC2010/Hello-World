@@ -13590,6 +13590,33 @@ Note:
 > 自下而上，每发现一条链接有问题就单独修复，即使是连续的红链接，但都是一条一条执行更正，遇到一个解决一个，相当于身处问题链中不知，却的确分解蚕食了整个问题。
 ```
 
+```java
+private Node insert(Node h, Key key, Value val)
+{
+    if (h == null)//insert at the bottom
+        return new Node(key, val, RED);
+    if (isRed(h.left) && isRed(h.red))
+        colorFlip(h);//split 4-nodes on the way down
+    //standard BST insert code
+    int cmp = key.compareTo(h.key);
+    if (cmp == 0) h.val = val;
+    else if (cmp < 0)
+        h.left = insert(h.left, key, val);
+    else
+        h.right = insert(h.right, key, val);
+    //fix right-leaning reds on the way up
+    if (isRed(h.right))
+        h = rotateLeft(h);
+    //fix two reds in a row on teh way up
+    if (isRed(h.left) && isRed(h.left.left))
+        h = rotateRight(h);
+    
+    return h;
+}
+```
+
+
+
 LLRB —— 删除最大值
 
 在讲一般的删除之前，我们讲讲删除的一种简单情况，删除最大值。
