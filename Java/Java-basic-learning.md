@@ -13408,6 +13408,45 @@ Left-leaning red-black trees
 
 ![image-20210402165655572](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402165655572.png)
 
+在普通的BST结点类中添加表示颜色的属性color。
+
+```java
+public class BST<Key extends Comparable<Key>, Value>
+{
+    private static final boolean RED = true;//constant
+    private static final boolean BLACK = false;//constant
+    private Node root;
+    private class Node
+    {
+        Key key;
+        Value val;
+      	Node left, right;
+        boolean color;//color of incomming link
+        Node(Key key, Value val, boolean color)
+        {
+            this.key = key;
+            this.val = val;
+            this.color = color;
+               
+        }
+    }
+    public Value get(Key key)
+    {
+        //Search method.
+    }
+    public void put(Key key, Value val)
+    {
+        //Insert method.
+    }
+    //helper method to test node color
+    private boolean isRed(Node x)
+    {
+        if (x == null) return false;
+        return x.color == Red;
+    }
+}
+```
+
 
 
 LLRB—— 查找
