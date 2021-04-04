@@ -13854,6 +13854,28 @@ private Node moveRedLeft(Node h)
 
 ![image-20210402184222527](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184222527.png)
 
+```java
+//删除最小值
+public void deleteMin()
+{
+    root = deleteMin(root);
+    root.color = BLACK;
+}
+private Node deleteMin(Node h)
+{
+    //remove node on bottom level (h must be RED by invariant),左为null一定是最左且最小的红结点，因为要么左红要么左黑但左左红，否则递归是不会放行的，左黑左左黑会被转化后放行，走到左为null就是走到头了。不要想左为null能确定是最小的但右边有可能有黑，该黑可能还有子树，放弃吧，想想黑高平衡，这一顿瞎想左边的Nil和右边如果有黑的话其之下的Nil相差都多少了。
+    if (h.left == null)
+        return null;
+    //push red link down if necessary
+    if (!isRed(h.left) && !isRed(h.left.left))
+        h = moveRedLeft(h);
+    //move down one level
+    h.left = deleteMin(h.left);
+    //fix right-leaning red links and eliminate 4-nades on teh way up
+    return fixUp(h);
+}
+```
+
 
 
 LLRB —— 删除
@@ -13887,6 +13909,49 @@ h.right = deleteMin(h.right);
 - 查询路径往右: 右孩子不是2-node，moveRedRight()
 - 在底端删除结点
 - fixup()
+
+## TODO 删除存疑：不存在key的出口和连点空指针异常
+
+```java
+//删除算法
+private Node delete(Node h, Key key)
+{
+    int cmp = key.compartTo(h.key);
+    //LEFT
+    if (cmp < 0)
+    { //push red left if necessary
+        if (!isRed(h.left) && !isRed(h.left.left))
+            h = moveRedLeft(h);
+        //move down (left)
+        h.left = delete(h.left, key);
+    }
+    else//RIGTH or EQUAL
+    {
+        //ortate to push red right
+        if (isRed(h.left)) = leanRight(h);
+        //EQUAL (at bottom) delete node,只有这种情况不会下走了所以判断要加cmp==0，因为完全有可能不存在要删除的即右为null但cmp不为0,这有点问题我没明白，无论是cmp<0还是cmp>=0都没发现不存在可删除元素的出口。h.left.left这种不会空指针异常吗，比如就一个根结点。
+        /**但这是LLBR，到这步右边如果为null了那么左边一定是null，我还是没看出来这里有不存在可删除key的出口
+        */
+        if (cmp == 0 && (h.right == null))
+            return null;
+        //push red right if necessary
+        if (!isRed(h.right) && !isRed(h.right.left))
+            h = moveRedRight(h);
+        //EQUAL (not at botom)
+        if (cmp == 0)
+        {
+            //replace current node with successor key, value
+            h.key = min(h.right);
+            h.value = get(h.right, h.key);
+            //delete successor
+            h.right = deleteMin(h.right);
+        }
+        else h.right = delete(h.right, key);//move down (right)
+    }
+    //fix fight-leaning red links and eliminate 4-nodes on the way up
+    return fixUp(h);
+}
+```
 
 
 
