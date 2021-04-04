@@ -13726,6 +13726,8 @@ LLRB —— 删除最大值
 
    右孩子是 2-node：h.right AND h.right.left both BLACK 
 
+   `// if(!isRed(h.right) && !isRed(h.right.left)) `
+
    Case 1: 左孩子是 2-node (h.left.left is BLACK)
 
    ![image-20210402183914180](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183914180.png)
@@ -13733,15 +13735,15 @@ LLRB —— 删除最大值
    Case 2: 左孩子是 3-node (h.left.left is RED)
 
    ![image-20210402183950230](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402183950230.png)
-
-   `// if(!isRed(h.right) && !isRed(h.right.left)) `
+   
+   
    
    ```java
    //右孩子是二节点的转化
    private Node moveRedRight(Node h)
    {
-       colorFlip(h);
-       if (isRed(h.left.left))
+       colorFlip(h);//case1
+       if (isRed(h.left.left//case2
        {
            h = rotateRight(h);
            colorFlip(h);
@@ -13779,10 +13781,10 @@ LLRB —— 删除最大值
        //lean 3-nodes to the right
        if (isRed(h.left))
            h = rotateRight(h);
-       //remove node on bottom level (h must be RED by invariant)
+       //remove node on bottom level (h must be RED by invariant)此处h右结点为null只有一个情况，h左结点也为null，h左结点为红上一步就转成功了，这步就肯定不是null了，h左结点为黑就不平衡了，当h是根节点容易理解，就算不是根节点坠入了这个递归h肯定是个红结点，h下面右一个为null说明已经跌落到底了，左边还有黑结点nil高度差就超过1了
        if (h.right == null)
            return null;
-       //borrow from sibling if neccessary
+       //borrow from sibling if neccessary,h.right为2-nades，h.left不一定，moveRedRight(h)方法里会分两种情况处理
        if (!isRed(h.right) && !isRed(h.right.left))
            h = moveRedRight(h);
        //move down one level
@@ -13832,6 +13834,23 @@ Case 1: 右孩子是 2-node (h.right.left is BLACK)
 Case 2: 右孩子是 3-node (h.right.left is RED)
 
 ![image-20210402184208090](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184208090.png)
+
+```java
+//左孩子是二节点的转化
+private Node moveRedLeft(Node h)
+{
+    colorFlip(h);//case1
+    if (isRed(h.right.left))//case2
+    {
+        h.right = rotateRight(h.right);
+        h = rotateLeft(h);
+        colorFlip(h);
+    }
+    return h;
+}
+```
+
+
 
 ![image-20210402184222527](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210402184222527.png)
 
