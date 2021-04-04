@@ -13441,7 +13441,7 @@ public class BST<Key extends Comparable<Key>, Value>
     //helper method to test node color
     private boolean isRed(Node x)
     {
-        if (x == null) return false;
+        if (x == null) return false;//Nil和根视为黑，这里null则是nil
         return x.color == Red;
     }
 }
@@ -13456,7 +13456,7 @@ LLRB—— 查找
 和基本的BST查找代码一模一样。
 
 ```java
-public Value geti(Key key)
+public Value get(Key key)
 {
     Node x = root;
     while (x != null)
@@ -13591,12 +13591,14 @@ Note:
 ```
 
 ```java
+//版本1
 private Node insert(Node h, Key key, Value val)
 {
     if (h == null)//insert at the bottom
         return new Node(key, val, RED);
+    //split 4-nodes on the way down
     if (isRed(h.left) && isRed(h.red))
-        colorFlip(h);//split 4-nodes on the way down
+        colorFlip(h);
     //standard BST insert code
     int cmp = key.compareTo(h.key);
     if (cmp == 0) h.val = val;
@@ -13613,9 +13615,46 @@ private Node insert(Node h, Key key, Value val)
     
     return h;
 }
+/*这版本自上而下遇到4结点就分裂，保证向下递归到目标点时路径上没有4结点，但是插入之后，一边回归一边修复，做了两件事：1是左旋右倾红链接，右旋两条连续左倾红链接的上部。
+这并没有什么问题，就算出现两条连续左倾红链接，右旋上半部分，修复之后，不过是出现了4结点，即左右两个红链接，然后在回归上一层。相当于每次插入只有底层插入出有可能出现4结点，但是并不影响目前对红黑树的定义，没说不能有4结点。
+当然其实在修复连续左倾红链接之后再把分裂4结点的变色操作执行一遍更好，这样就连底层也没有了4结点，回归的时候如果由于下层变色影响了上层也会再回归的时候修复。逻辑没问题，但同样的代码写两遍，冗余。
+其实效果上就是把这个本来对应234树的红黑树变成了23树，因为按照这个逻辑，这棵树上是不会再有4节点了，相应的每次插入向下递归的同时也根本遇不到4结点，则对于4结点分裂的代码就没有必要放到最上面了，而是插入之后修复的最后一种情况来检查修复可能出现的4结点，并一直回归检查。
+*/
+/*
+判断是不是23树条件：
+1.右子树不能红，应该分裂
+2.左不能连续红
+对照上面自下而上修复4结点，实际上就是让这棵树成为了23数。（右红和左连续红都是4结点的显示）
+*/
 ```
 
-
+```java
+//版本2
+private Node insert(Node h, Key key, Value val)
+{
+    if (h == null)//insert at the bottom
+        return new Node(key, val, RED);
+   
+    //standard BST insert code
+    int cmp = key.compareTo(h.key);
+    if (cmp == 0) h.val = val;
+    else if (cmp < 0)
+        h.left = insert(h.left, key, val);
+    else
+        h.right = insert(h.right, key, val);
+    //fix right-leaning reds on the way up
+    if (isRed(h.right))
+        h = rotateLeft(h);
+    //fix two reds in a row on teh way up
+    if (isRed(h.left) && isRed(h.left.left))
+        h = rotateRight(h);
+    //split 4-nodes on the way up
+     if (isRed(h.left) && isRed(h.red))
+        colorFlip(h);
+    
+    return h;
+}
+```
 
 LLRB —— 删除最大值
 
