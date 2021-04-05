@@ -14367,6 +14367,8 @@ public class LLRBDemo {
 }
 ```
 
+## TODO 检查check()的必要性
+
 
 
 # B树
