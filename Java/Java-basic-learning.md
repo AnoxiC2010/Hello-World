@@ -13642,7 +13642,7 @@ private Node insert(Node h, Key key, Value val)
    
     //standard BST insert code
     int cmp = key.compareTo(h.key);
-    if (cmp == 0) h.val = val;
+    if (cmp == 0) h.val = val;//这里的操作我想拒绝，因为外层调用这个递归后是用root.size判断是否添加成功，这里如果做修改动作，是不会改变总size，这是算成功插入了还是没有成功插入呢，就很尴尬，除非在外围类在维护一个标记用于这种情况，这样即使对外提供个replace的方法也能复用这块的代码
     else if (cmp < 0)
         h.left = insert(h.left, key, val);
     else
