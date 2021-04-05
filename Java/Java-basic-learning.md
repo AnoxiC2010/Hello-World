@@ -13953,6 +13953,420 @@ private Node delete(Node h, Key key)
 }
 ```
 
+## 代码实现左倾红黑树
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+//我的左倾红黑树实现
+public class MyLLRBTree<Key extends Comparable<Key>, Value> {
+    private static final boolean RED = true;
+    private static final boolean BLACK = false;
+    private Node root;
+//  由于结点都维护了size所以外围类不应该在维护size
+    //增
+    public boolean put(Key key, Value val) {
+        if (key == null) throw new IllegalArgumentException("Illegal args, key = null");
+        if (val == null) throw new IllegalArgumentException("Illegal args, val = null");
+        int oldSize = size();
+        root = insert(root, key, val);
+        //TODO: 检查 23树 黑高平衡 ？->要是逻辑都没问题就应该查不出问题，有必要检查吗，这会降低效率。话说真就逻辑出错查出来不平衡里面数据就坏掉了
+        check();//检查 23树身份认证 黑高平衡认证
+//        root.color = BLACK; //这样完全有可能空指针，黑化树根应抽取为方法
+        blackenRoot();//把根黑化，如果能够的话。添加也是需要黑化的，有可能原来size为0，有可能修复回归时把根部变红了
+        return oldSize < size();
+    }
+    private Node insert(Node root,Key key,Value val) {
+        if (root == null) {//递归出口
+            /*size++; 修复会更新结点size值直到根*/
+            return new Node(key, val, null, null, RED, 1);
+        }
+        int compare = key.compareTo(root.key);
+        if (compare > 0) {
+            root.right = insert(root.right, key, val);
+        } else if (compare < 0) {
+            root.left = insert(root.left, key, val);
+        } else {
+            //相等不允许，因为如果给与修改val值的话size也不会变，不能用size判断是否添加成功了。
+            //且对于修改应该是单独的方法提供，不符合add的身份
+        }
+        return fixUp(root);//边修复边回归
+    }
+    //删最大，其实删最大和山最小应该不暴露给外界，但是对内部操作很有用
+    public void removeMax() {
+        checkEmpty();
+        root = removeMax(root);
+        blackenRoot();//无论如何修正根颜色
+    }
+
+    private Node removeMax(Node h) {
+        if (isRed(h.left)) {//有的话把做左红链右旋
+            h = rotateRight(h);
+        }
+        if (h.right == null) {//这里不用size--因为修复会更新每个结点的size值直到根
+            return null;//一定是最大值，对应h.left必为nil，为黑则黑高不平衡
+        }
+        if (!isRed(h.right) && !isRed(h.right.left)) {//如果右结点为2-nodes。不要担心h.right.left会报空指针，见removeMin的感想，至少走到这h.right一定存在
+            h = moveRedRight(h);//借结点
+        }
+        h.right = removeMax(h.right);//能走到这经过上面的处理就可以递归下放了
+        return fixUp(h);//修复回归，应该是最后一步
+    }
+    //删最小
+    public void removeMin() {
+        checkEmpty();
+        root = removeMin(root);
+        blackenRoot();//黑化根部
+    }
+    private Node removeMin(Node h) {//调用前查了空，至少第一次进来不会是Null
+        //不用想当然的左旋右红链接，因为这是左倾红黑树，初次进来是不会有右红链接的
+        if (h.left == null) {
+            //这里不用size--因为修复会更新每个结点的size值直到根
+            return null;//一定为最小值，对应的h.right必为nil，为黑则黑高不平衡，为红同上不可能
+        }
+        if (!isRed(h.left) && !isRed(h.left.left)) {//单独判断h.left为2-nodes的情况
+            h = moveRedLeft(h);//左边为黑2-nodes就借结点，什么你在想h.left.left可能是null,nil也是黑的呀，至少到这里h.left肯定有。到这里我也才悟了为什么要用个isRed方法判断红黑，就是h.left.left完全可能就是Nil，用h.left.left就会空指针异常
+        }
+        h.left = removeMin(h.left);//到这里可以放心交给下层，走到这要么h红，要么h.left红
+        return fixUp(h);
+    }
+    //删除 按Key
+    public boolean remove(Key key) {
+        if (key == null) throw new IllegalArgumentException("Illegal args, key = null");
+        checkEmpty();
+        int oldSize = size();
+        root = remove(root, key);
+        blackenRoot();//黑化根部
+        return oldSize > size();
+    }
+    //TODO:参考代码感觉默认为传入的key是已存在的
+    private Node remove(Node h, Key key) {//调用处判空了，第一次绝对不是Null
+        //想过把找不到情况的Null出口放在这，不在>0或<0的下一行出，但是借结点的判断走到底层就会空指针了，我选择放弃。
+        int compare = key.compareTo(h.key);
+        if (compare < 0) {
+            if (h.left == null) return h;//出口1，即使不存在，就原样返回。TODO:问老师，参考代码找不到绝对出口，找不到的话下一行h.left.left会报空指针
+            if (!isRed(h.left) && !isRed(h.left.left)) {//左为2-nodes就给借结点
+                h = moveRedLeft(h);
+            }
+            //这里不需要判断如果借结点成功后新的h.key和key再做比较的结果，借成功意味着h要么只是跌落融合的本来的h,要么是原h.right.left,只会更大，不会变小
+            h.left = remove(h.left, key);
+        } else {//等于0的情况确实要和小于0或者大于0合并解决，因为如果有不能直接删，要转化为删除最大值或最小值不影响黑高
+            //这个代码块中有两个可能的旋转，
+            if (isRed(h.left)) {//1号旋转
+                h = rotateRight(h);//这里如果有把左红链接右旋，下面h.right不会为null
+            }
+            //if (key.compareTo(h.key) == 0 && h.right == null) return null; //这么判断有问题，没有了key根本不存在的出口，会导致后面的代码空指针比如h.right.left的判断,如果不存在的key最大，且总会走到h.right==null。参考代码这么写一方面是因为上面有可能旋转了才再次重新比较，但是老实说如果旋转成功，成功后的h只会比原本的h小。
+            //按上下两条分析，这里不用重新比较，只有原compare为0且1号旋转不了新的key.compareTo(h.key)才为0
+            if (h.right == null) {//找不到应该不改结构原样返回，这是尝试过1号旋转后判定h.right为nil，此时h.left铁定为nil，到头了，compare不相等也没机会了，也要给出口了，而且这个次如果重新比用key.compareTo(h.key) == 0,应该只有等（压根1号旋转没执行）和>0（1号旋转成功，h变为h.left，当前key相应变小了
+                //而且如果h.right为nil，说明1号旋转没执行，compare值不变，当前h是终点
+                return compare == 0 ? null : h;//出口2，TODO:问老师，参考代码应该是只有找到才能出去，找不到下一行也该是空指针
+            }
+            if (!isRed(h.right) && !isRed(h.right.left)) {//2号旋转（可能），右为2-nodes就给借结点
+                h = moveRedRight(h);
+            }
+            //如果借成功，h可能是跌落融合的本来的h，也可能是原h.left（h.left.left为红就会上浮顶落原h）。
+            //能走到这里两个旋转操作肯定执行了1个，这里就要再重新比较了，上面不重新比较有解释，其实都重新比较也可以。这里compare为0只有一种情况，1不转2仅反转颜色但不转，这种情况老compare和新compare是一样的，但是为了排除转了的情况这里要重新比较，单独处理这种转不动了,不会往下走而是开始替换右子树最小值的情况
+            if (key.compareTo(h.key) == 0) {//其实老compare为0没有意义，上面实在h.right=null找到绝对出口的情况下不用多余判断了，这里即使老compare为0也该交给下级递归，其实只要新compare为0老compare是必定为0的，1号和2号都没有转，只是把新compare为0走不下去了就该特殊处理了
+                Node successor = min(h.right);
+                h.key = successor.key;
+                h.val = successor.val;
+                h.right = removeMin(h.right);
+            } else {
+                h.right = remove(h.right, key);
+            }
+        }
+        return fixUp(h);
+    }
+    //参考思路
+    /*private Node remove(Node h, Key key) {
+        int compare = key.compareTo(h.key);
+        if (compare < 0) {
+            if (!isRed(h.left) && !isRed(h.left.left)) {//如上猜想报了空指针，用了小于最小key测试
+                h = moveRedLeft(h);
+            }
+            h.left = remove(h.left, key);
+        } else {
+            if (isRed(h.left)) {
+                h = rotateRight(h);
+            }
+            if (key.compareTo(h.key) == 0 && h.right == null) {
+                return null;
+            }
+            if (!isRed(h.right) && !isRed(h.right.left)) {//如上猜想报了空指针：用了超过最大key测试
+                h = moveRedRight(h);
+            }
+            if (key.compareTo(h.key) == 0) {
+                Node successor = min(h.right);
+                h.key = successor.key;
+                h.val = successor.val;
+                h.right = removeMin(h.right);
+            } else {
+                h.right = remove(h.right, key);
+            }
+        }
+        return fixUp(h);
+    }*/
+    //查找 按key
+    public Value get(Key key) {
+        if (key == null) throw new IllegalArgumentException("Illegal args, key = null");
+        checkEmpty();
+        Node mid = root;
+        while (mid != null) {
+            int compare = key.compareTo(mid.key);
+            if (compare > 0) {
+                mid = mid.right;
+            } else if (compare < 0) {
+                mid = mid.left;
+            } else {
+                return mid.val;
+            }
+        }
+        return null;//没有就返回Null
+    }
+    //查找 按value 不应该有这种方法，不符合树的身份
+    private Key get(Value val) {
+        if (val == null) throw new IllegalArgumentException("Illegal args, val = null");
+        checkEmpty();
+        Key k = get(root, val);
+        return k;
+    }
+    private Key get(Node root, Value val){
+        if (root == null) return null;
+        if (val.equals(root.val)) return root.key;
+        Key lk = get(root.left, val);
+        if (lk != null) return lk;
+        return get(root.right, val);
+    }
+    //查找 子树最小结点
+    private Node min(Node h) {
+        while (h.hasLeft()) {
+            h = h.left;
+        }
+        return h;
+    }
+    //右倾红边左旋
+    private Node rotateLeft(Node h) {
+        Node x = h.right;
+        h.right = x.left;
+        x.left = h;
+        return updateColorAndSizeAfterRotate((Node) h, (Node) x);
+    }
+    //左倾红边右旋
+    private Node rotateRight(Node h) {
+        Node x = h.left;
+        h.left = x.right;
+        x.right = h;
+        return updateColorAndSizeAfterRotate(h, x);
+    }
+    private Node updateColorAndSizeAfterRotate(Node h, Node x) {
+        x.color = h.color;//别忘了要变色
+        h.color = RED;
+        x.size = h.size;//别忘了要修改结点x的size
+        updateSize(h);//别忘了要修改结点h的size
+        return x;
+    }
+    //三色反转 (浮上分裂或跌落融合)
+    private Node colorFlip(Node h) {
+        h.color = !h.color;
+        h.left.color = !h.left.color;
+        h.right.color = !h.right.color;
+        return h;
+    }
+    private Node moveRedRight(Node h) {//给右2-nodes借结点
+        colorFlip(h);
+        if (isRed(h.left.left)) {//如果原来左左是红要多右旋一次
+            h = rotateRight(h);
+            colorFlip(h);
+        }
+        return h;
+    }
+    private Node moveRedLeft(Node h) {
+        colorFlip(h);
+        if (isRed(h.right.left)) {//如果原来右左是红要先右旋一次h.right再左旋h
+            h.right = rotateRight(h.right);
+            h = rotateLeft(h);
+            colorFlip(h);//反转后没有右倾红链，相当于把原来的右左上浮，原来的h跌落左下融合
+        }
+        return h;
+    }
+    //回归修复
+    private Node fixUp(Node h) {
+        //发现右红边左旋
+        if (isRed(h.right)) {
+            h = rotateLeft(h);
+        }
+        //发现连续做红边，先右旋上红边再三色反转
+        if (isRed(h.left) && isRed(h.left.left)) {
+            h = rotateRight(h);
+//            h = colorFlip(h);//逻辑上是要有这一步，但单独放到下面更好
+        }
+        if (isRed(h.left) && isRed(h.right)) {//分裂放到这里最后检查即可
+            h = colorFlip(h);
+        }
+        h = updateSize(h);//size更新一下
+        return h;
+    }
+    //检查当前树是否为标准LLRB
+    private void check() {
+        if (isEmpty()) return;//空树不检查
+        boolean is23 = is23Tree(root);//判断该树是不是23树(条件: 1,右子不能红:应该分裂 2:左能连续红)
+        boolean isBalance = isBalance();//判断该树是不是平衡(获得某一黑叶子节点高, 判断其它叶子是否和这个高相等:通过减减操作)
+        if (!is23 || !isBalance) throw new RuntimeException("The current tree is not LLRB tree.");
+    }
+    private boolean is23Tree(Node h) {//23树认证
+        if (h == null) return true;
+        if (isRed(h.right)) return false;//过滤了null这里一定不会空指针
+        if (isRed(h.left) && isRed(h.left.left)) return false;//这里h.left.left不会空指针，h.left为红一定有left子树,虽然h.left为黑有可能是nil，但不要仅过不了isRed(h.left)这一关的
+        boolean leftIs23Tree = is23Tree(h.left);
+        boolean rightIs23Tree = is23Tree(h.right);
+        return leftIs23Tree && rightIs23Tree;
+    }
+    private boolean isBalance() {//黑高平衡认证//调用处已经判断了根是否为Null
+        //计算根节点的高度
+        Node x = root;
+        int height = 0;
+        while (x != null) {
+            if (!isRed(x)) {
+                height++;
+            }
+            x = x.left;
+        }
+        return isBalance(root, height);
+    }
+
+    private boolean isBalance(Node h, int height) {//黑高平衡检查
+        if (h == null) return height == 0;//由调用处的计算高度，跌落到这nil是高度为0的
+        if (!isRed(h)) {
+            height--;
+        }
+        boolean leftIsBalance = isBalance(h.left, height);//过滤了Null这里以下一定不会空指针
+        boolean rightIsBalance = isBalance(h.right, height);
+        return leftIsBalance && rightIsBalance;
+    }
+    public int size() {//因为结点维护了size值，所以不应该在外围类在维护一个size
+        return isEmpty() ? 0 : root.size;
+    }
+    private int sizeOf(Node h) {//因为修复h.size = h.left.size + h.right.size + 1;完全可能空指针
+        return h == null ? 0 : h.size;
+    }
+    public boolean isEmpty() {//外围类没有维护size所以通过root的状况判断
+        return root == null;
+    }
+    private boolean isRed(Node h) {
+        if (h == null) return false;//nil默认为黑
+        return h.isRed();
+    }
+    private Node updateSize(Node h) {//h.size = h.left.size + h.right.size + 1;完全可能空指针
+        h.size = sizeOf(h.left) + sizeOf(h.right) + 1;//size修正，按目前的逻辑h不会是null，h==null都提前返回了，执行不到修正size
+        return h;
+    }
+    private void checkEmpty() {
+        if (isEmpty()) throw new RuntimeException("LLRBTree is empty");
+    }
+    private void blackenRoot() {//把根黑化，如果能够的话
+        if (!isEmpty()) {
+            root.color = BLACK;
+        }
+    }
+    public List<Key> preOrder() {//前序遍历
+        ArrayList<Key> list = new ArrayList<>();
+        preOrder(root, list);
+        return list;
+    }
+    private void preOrder(Node h, List<Key> list) {
+        if (h == null) return;
+        list.add(h.key);
+        preOrder(h.left, list);
+        preOrder(h.right, list);
+    }
+    public List<Key> inOrder() {//中遍历
+        ArrayList<Key> list = new ArrayList<>();
+        inOrder(root, list);
+        return list;
+    }
+    private void inOrder(Node h, List<Key> list) {
+        if (h == null) return;
+        preOrder(h.left, list);
+        list.add(h.key);
+        preOrder(h.right, list);
+    }
+    private class Node {
+        private Key key;
+        private Value val;
+        private Node left;
+        private Node right;
+        private boolean color;
+        private int size;
+        public Node(Key key, Value val, Node left, Node right, boolean color, int size) {
+            this.key = key;
+            this.val = val;
+            this.left = left;
+            this.right = right;
+            this.color = color;
+            this.size = size;
+        }
+        private int size(){
+            return size;
+        }
+        private boolean hasLeft() {
+            return left != null;
+        }
+        private boolean hasRight() {
+            return right != null;
+        }
+        private boolean isRed(){//这个方法多余了，因为外围类中有时候需要判断的结点完全可能是nil结点，所以外围类中给出了不会空指针异常的判断方法
+            return color;
+        }
+    }
+}
+```
+
+测试
+
+```java
+import java.util.HashMap;
+import java.util.List;
+
+public class LLRBDemo {
+    public static void main(String[] args) {
+        //话说hashmap底层是链表为什么搞了那么多容量相关的设置
+        HashMap<Integer, String> map = new HashMap<>();
+        MyLLRBTree<Integer, String> llrb = new MyLLRBTree<>();
+        llrb.put(1, "1啦");
+        llrb.put(100, "100啦");
+        llrb.put(-100, "-100啦");
+        llrb.put(50, "50啦");
+        llrb.put(-10, "-10啦");
+        llrb.put(-50, "-50啦");
+        llrb.put(-150, "-150啦");
+        llrb.put(150, "150啦");
+        llrb.put(200, "200啦");
+        llrb.put(170, "170啦");
+
+        System.out.println(llrb.get(300));
+        System.out.println("size = " + llrb.size());
+        showLLBR(llrb);
+
+//        llrb.removeMax();
+//        llrb.removeMin();
+        llrb.remove(1);
+        System.out.println("size = " + llrb.size());
+        showLLBR(llrb);
+
+        System.out.println(llrb);//本行debug看树结构用
+
+    }
+    //方便看结构
+    private static void showLLBR(MyLLRBTree<Integer, String> llrb) {
+        List<Integer> preOrderList = llrb.preOrder();//前根
+        System.out.println("前根 ： " + preOrderList);
+        List<Integer> inOrderList = llrb.inOrder();//中根
+        System.out.println("中根 ： " + inOrderList);
+    }
+}
+```
+
 
 
 # B树
