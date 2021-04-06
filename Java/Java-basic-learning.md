@@ -14923,3 +14923,30 @@ ConcurrentModificationException
 - 注意事项
   1. 用迭代器对集合遍历的时候，不要使用集合的API对集合进行修改
     2. 使用集合对象的时候，不要使用while循环，可以使用for循环，最好使用foreach循环。
+
+
+
+# List
+
+List接口概述
+
+- 有序的 collection（也称为序列）。此接口的用户可以对列表中每个元素的插入位置进行精确地控制。用户可以根据元素的整数索引（在列表中的位置）访问元素，并搜索列表中的元素。
+
+- 与 set 不同，列表通常允许重复的元素。更确切地讲，列表通常允许满足 e1.equals(e2) 的元素对 e1 和 e2，并且如果列表本身允许 null 元素的话，通常它们允许多个 null 元素。
+
+
+
+List接口API
+
+- void add(int index,E element)
+- E remove(int index)
+- E get(int index)
+- E set(int index,E element)
+- ListIterator listIterator()
+
+
+
+ListIterator接口API
+
+- boolean hasPrevious()
+- E previous()
