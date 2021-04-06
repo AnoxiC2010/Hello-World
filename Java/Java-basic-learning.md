@@ -15058,6 +15058,42 @@ Iterator 接口原理
 
 
 
+并发修改异常分析
+
+```java
+class Collection具体实现子类{  
+    int modCount;// 记录修改次数
+    
+    add(){
+        modCount++;
+    }
+    remove(){
+         modCount++;
+    }
+    
+    iterator(){
+        new Itr();
+    }
+    
+    class Itr  (Iterator子类){
+        int expModCount = modCount;
+        
+        hasNext(){
+            // 判断: expModCount == modCount;
+        }
+        next(){
+            // 判断: expModCount == modCount;
+        }
+        remove(){
+            // 判断: expModCount == modCount;
+        }     
+    }   
+}
+
+//一个Collection对象, 被两个线程持有
+
+```
+
 ### Foreach/增强的for循环/加强的for循环:
 
 Jdk1.5
