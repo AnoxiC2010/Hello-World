@@ -14901,7 +14901,7 @@ eg:
 
 ![image-20210406091101020](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210406091101020.png)
 
-Collection 概述
+## Collection 概述
 
 Collection 层次结构中的根接口。Collection 表示一组对象，这些对象也称为 collection 的元素。一些 collection 允许有重复的元素，而另一些则不允许。一些 collection 是有序的，而另一些则是无序的。
 
@@ -14943,7 +14943,7 @@ Collection的特点
 
 
 
-**Collection接口的API**
+## **Collection接口的API**
 
 - boolean add(E e)
 
@@ -14993,7 +14993,7 @@ Collection的特点
 
 
 
-Iterator接口
+## Iterator接口
 
 - 它是对集合进行迭代的迭代器
 - 依赖于集合对象存在
@@ -15037,13 +15037,46 @@ Iterator 接口原理
 
 
 
-ConcurrentModificationException
+### ConcurrentModificationException
 
 - 现象
+
 - 原因
+
+  产生的原因: 为了避免在多线程情况下, 一个线程在使用iterator遍历Collection集合类, 而另一个线程在对这个Collection集合类进行添加或者删除操作, 导致遍历结果出现问题, 产生了并发修改异常(如果一个线程在做添加和删除, 而另一个线程在做iterator遍历, 那么iterator遍历会立马抛出一个并发修改异常)
+
+  标记改变次数
+  `Modcount`
+
+  在单线程的情况下, 如果在iterator迭代的过程中, 我们使用了源集合类的添加,删除方法, 来修改源集合类, 那么在iterator迭代的过程中`modCount != expectedModCount`
+  会不相等, 也会产生并发修改异常
+
 - 注意事项
+
   1. 用迭代器对集合遍历的时候，不要使用集合的API对集合进行修改
     2. 使用集合对象的时候，不要使用while循环，可以使用for循环，最好使用foreach循环。
+
+
+
+### Foreach/增强的for循环/加强的for循环:
+
+Jdk1.5
+
+增强for概述 简化数组和Collection集合的遍历 
+
+格式： 
+
+for(元素数据类型 变量 : 数组或者Collection集合) { 
+
+使用变量即可，该变量就是元素 
+
+}  
+
+好处：简化遍历  注意事项：增强for的目标要判断是否为null
+
+Java的for循环, 底层就是iterator迭代(也不要瞎做改变modCound的事)
+
+数组也可以使用增强的for循环, 但是数组能使用是jvm做的适配, 和iterator迭代没有关系
 
 
 
@@ -15057,7 +15090,16 @@ List接口概述
 
 
 
-List接口API
+1.  他是Collection的’线性表’子接口.(List定义了线性表的规范) (接口用来定义规范)
+2.  List有序
+3. 允许存储null
+4. 允许存储重复元素
+
+
+
+
+
+## List接口API
 
 - void add(int index,E element)
 - E remove(int index)
@@ -15065,12 +15107,71 @@ List接口API
 - E set(int index,E element)
 - ListIterator listIterator()
 
+| boolean       | add(E e)         向列表的尾部添加指定的元素（可选操作）。    |
+| ------------- | ------------------------------------------------------------ |
+| void          | add(int index, E element)         在列表的指定位置插入指定元素（可选操作）。 |
+| boolean       | addAll(Collection<? extends E> c)         添加指定  collection 中的所有元素到此列表的结尾，顺序是指定 collection 的迭代器返回这些元素的顺序（可选操作）。 |
+| boolean       | addAll(int index, Collection<? extends E> c)         将指定  collection 中的所有元素都插入到列表中的指定位置（可选操作）。 |
+| void          | clear()         从列表中移除所有元素（可选操作）。           |
+| boolean       | contains(Object o)         如果列表包含指定的元素，则返回 true。 |
+| boolean       | containsAll(Collection<?> c)         如果列表包含指定  collection 的所有元素，则返回 true。 |
+| boolean       | equals(Object o)         比较指定的对象与列表是否相等。      |
+| E             | get(int index)          返回列表中指定位置的元素。           |
+| int           | hashCode()         返回列表的哈希码值。                      |
+| int           | indexOf(Object o)         返回此列表中第一次出现的指定元素的索引；如果此列表不包含该元素，则返回 -1。 |
+| boolean       | isEmpty()         如果列表不包含元素，则返回  true。         |
+| IteratorE     | iterator()         返回按适当顺序在列表的元素上进行迭代的迭代器。 |
+| int           | lastIndexOf(Object o)         返回此列表中最后出现的指定元素的索引；如果列表不包含此元素，则返回 -1。 |
+| ListIteratorE | listIterator()         返回此列表元素的列表迭代器（按适当顺序）。 |
+| ListIteratorE | listIterator(int index)         返回列表中元素的列表迭代器（按适当顺序），从列表的指定位置开始。 |
+| E             | remove(int index)         移除列表中指定位置的元素（可选操作）。 |
+| boolean       | remove(Object o)         从此列表中移除第一次出现的指定元素（如果存在）（可选操作）。 |
+| boolean       | removeAll(Collection<?> c)         从列表中移除指定  collection 中包含的其所有元素（可选操作）。 |
+| boolean       | retainAll(Collection<?> c)         仅在列表中保留指定  collection 中所包含的元素（可选操作）。 |
+| E             | set(int index, E element)         用指定元素替换列表中指定位置的元素（可选操作）。 |
+| int           | size()         返回列表中的元素数。                          |
+| ListE         | subList(int fromIndex,  int toIndex)         返回列表中指定的  fromIndex（包括 ）和 toIndex（不包括）之间的部分视图。 |
+| Object[]      | toArray()         返回按适当顺序包含列表中的所有元素的数组（从第一个元素到最后一个元素）。 |
+| <T> T[]       | toArray(T[] a)         返回按适当顺序（从第一个元素到最后一个元素）包含列表中所有元素的数组；返回数组的运行时类型是指定数组的运行时类型。 |
 
 
-ListIterator接口API
 
-- boolean hasPrevious()
-- E previous()
+## Listiterator 类型
+
+1. 他是Iterator的一个子接口( 至少拥有 hashNext  next  remove三个方法)
+   public interface ListIterator<E> extends Iterator<E>
+2. listIterator 不仅定义了向后遍历的操作(有由于他是Iterator的子接口), 还定义了向前遍历的操作
+
+HashNext:  向后是否可以遍历
+Next:  向后遍历
+Remove: 删除刚刚遍历过的元素
+
+HasPrevious: 是否可以向前遍历
+Previous: 向前遍历
+
+Add() 添加: 添加的遍历位置(可以连续添加)
+Set: 修改方法: 修改的是刚刚遍历过的元素的位置
+
+NextIndex:  下一个元素的下标
+PreviousIndex:  前一个元素的下标
+
+| void    | add(E e)         将指定的元素插入列表（可选操作）。          |
+| ------- | ------------------------------------------------------------ |
+| boolean | hasNext()         以正向遍历列表时，如果列表迭代器有多个元素，则返回 true（换句话说，如果 next 返回一个元素而不是抛出异常，则返回 true）。 |
+| boolean | hasPrevious()         如果以逆向遍历列表，列表迭代器有多个元素，则返回 true。 |
+| E       | next()         返回列表中的下一个元素。                      |
+| int     | nextIndex()         返回对 next 的后续调用所返回元素的索引。 |
+| E       | previous()         返回列表中的前一个元素。                  |
+| int     | previousIndex()         返回对 previous 的后续调用所返回元素的索引。 |
+| void    | remove()         从列表中移除由 next 或 previous 返回的最后一个元素（可选操作）。 |
+| void    | set(E e)         用指定元素替换 next 或 previous 返回的最后一个元素（可选操作）。 |
+
+
+
+## 视图:subList
+视图 → 数据库(数据仓库)
+
+集合类的视图方法返回的数据, 还是源数据
 
 
 
