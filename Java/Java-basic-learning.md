@@ -15261,6 +15261,103 @@ PreviousIndex:  前一个元素的下标
 | <T> T[]          | toArray(T[] a)         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组；返回数组的运行时类型是指定数组的运行时类型。 |
 | void             | trimToSize()         将此 ArrayList 实例的容量调整为列表的当前大小。 |
 
+
+
+**ArrayList源码分析**
+
+```java
+        ArrayList<String> list = new ArrayList<>();
+        list.add("zs");
+        System.out.println(list);
+```
+
+```java
+class ArrayList{   
+    
+    Object[] elementData;// 底层数组
+    int size;// 标记存储元素的数量
+    
+    private static final int DEFAULT_CAPACITY = 10;
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+    
+    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+    
+    
+     public ArrayList(Collection<? extends E> c) {
+        elementData = c.toArray();
+        if ((size = elementData.length) != 0) {
+            // c.toArray might (incorrectly) not return Object[] (see 6260652)
+            if (elementData.getClass() != Object[].class)
+                elementData = Arrays.copyOf(elementData, size, Object[].class);
+        } else {
+            // replace with empty array.
+            this.elementData = EMPTY_ELEMENTDATA;
+        }
+    }
+    
+    public ArrayList() {
+        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+    }
+    
+    
+     public void add(int index, E element) {
+        rangeCheckForAdd(index);
+
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        System.arraycopy(elementData, index, elementData, index + 1,
+                         size - index);
+        elementData[index] = element;
+        size++;
+    }
+    
+   public boolean add(E e) {
+       //                       1
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        elementData[size++] = e;
+        return true;
+    }
+    
+    //                                             1
+    private void ensureCapacityInternal(int minCapacity) { 
+        //  真
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            
+            // minCapacity =  10
+            // 							10             1
+            minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
+        }
+
+        ensureExplicitCapacity(minCapacity);
+    }
+    
+    //                                       10
+    private void ensureExplicitCapacity(int minCapacity) {
+        modCount++;
+
+        //   10         -  0 > 0  真
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+    
+     private void grow(int minCapacity) {
+        // oldCapacity 旧容量 0
+        int oldCapacity = elementData.length;
+         // newCapacity 新容量  = 1.5旧容量  0
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+         
+         // 0    - 10 < 0
+        if (newCapacity - minCapacity < 0)
+            // newCapacity = 10
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+         
+        //  Arrays.copyOf : 复制数组
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+}
+```
+
 **Iterator**
 
 Iterator():  Collection
