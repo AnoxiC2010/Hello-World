@@ -15177,14 +15177,77 @@ PreviousIndex:  前一个元素的下标
 
 # List的子类
 
-ArrayList
+## ArrayList
+
+概述
+
+1. List接口一个具体子实现( 它是List接口的数组实现  描述是一个线性表)
+2. 底层结构是数组
+3.  默认初始容量 : 10(第一添加时候),  扩容机制(扩容为原来的1.5倍)
+4. 允许null
+5. 允许重复
+6. 有序
+7. 线程不安全
+
+
 
 - 底层数据结构是数组，查询快，增删慢
 - 线程不安全，效率高
 
+**构造方法**
+
+| ArrayList()         构造一个初始容量为 10 的空列表。         |
+| ------------------------------------------------------------ |
+| ArrayList(Collection<? extendsE> c)         构造一个包含指定  collection 的元素的列表，这些元素是按照该 collection 的迭代器返回它们的顺序排列的。 |
+| ArrayList(int initialCapacity)         构造一个具有指定初始容量的空列表。 |
+
+**Api**
+
+| boolean          | add(Ee)         将指定的元素添加到此列表的尾部。             |
+| ---------------- | ------------------------------------------------------------ |
+| void             | add(int index,Eelement)         将指定的元素插入此列表中的指定位置。 |
+| boolean          | addAll(Collection<? extendsE> c)         按照指定 collection  的迭代器所返回的元素顺序，将该 collection 中的所有元素添加到此列表的尾部。 |
+| boolean          | addAll(int index,Collection<? extendsE> c)         从指定的位置开始，将指定  collection 中的所有元素插入到此列表中。 |
+| void             | clear()         移除此列表中的所有元素。                     |
+| Object           | clone()         返回此 ArrayList 实例的浅表副本。            |
+| boolean          | contains(Objecto)         如果此列表中包含指定的元素，则返回 true。 |
+| void             | ensureCapacity(int minCapacity)         如有必要，增加此 ArrayList 实例的容量，以确保它至少能够容纳最小容量参数所指定的元素数。 |
+| E                | get(int index)         返回此列表中指定位置上的元素。        |
+| int              | indexOf(Objecto)         返回此列表中首次出现的指定元素的索引，或如果此列表不包含元素，则返回 -1。 |
+| boolean          | isEmpty()         如果此列表中没有元素，则返回 true          |
+| int              | lastIndexOf(Objecto)         返回此列表中最后一次出现的指定元素的索引，或如果此列表不包含索引，则返回 -1。 |
+| E                | remove(int index)         移除此列表中指定位置上的元素。     |
+| boolean          | remove(Objecto)         移除此列表中首次出现的指定元素（如果存在）。 |
+| protected   void | removeRange(int fromIndex,  int toIndex)         移除列表中索引在 fromIndex（包括）和 toIndex（不包括）之间的所有元素。 |
+| E                | set(int index,Eelement)         用指定的元素替代此列表中指定位置上的元素。 |
+| int              | size()         返回此列表中的元素数。                        |
+| Object[]         | toArray()         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组。 |
+| <T> T[]          | toArray(T[] a)         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组；返回数组的运行时类型是指定数组的运行时类型。 |
+| void             | trimToSize()         将此 ArrayList 实例的容量调整为列表的当前大小。 |
+
+**Iterator**
+
+Iterator():  Collection
+ListIterator():  List
+
+**SubList**
+
+视图方法
 
 
-Vector
+
+
+
+## Vector
+
+1. Vector是List一个数组实现(表示一个线性表)
+2.  默认初始容量 10,  扩容机制: (如果有增量, 扩增量个, 没有增量的话扩为原来的2倍)
+3. 允许null, 允许重复, 有序
+4. 线程安全
+5. (大多数集合类都是jdk1.2的时候出现的) , vector是jdk1.0出现的
+6. 增量(扩容)
+
+
 
 - 底层数据结构是数组，查询快，增删慢
 - 线程安全，效率低
@@ -15195,7 +15258,54 @@ Vector
 
 
 
-LinkedList 
+**构造方法**
+
+| Vector()         构造一个空向量，使其内部数据数组的大小为 10，其标准容量增量为零。 |
+| ------------------------------------------------------------ |
+| Vector(Collection<? extendsE> c)         构造一个包含指定  collection 中的元素的向量，这些元素按其 collection 的迭代器返回元素的顺序排列。 |
+| Vector(int initialCapacity)         使用指定的初始容量和等于零的容量增量构造一个空向量。 |
+| Vector(int initialCapacity,  int capacityIncrement)         使用指定的初始容量和容量增量构造一个空的向量。 |
+
+
+
+## Stack
+
+概述
+
+1. Stack是Vector的子类
+2. 底层复用的Vector的数组（初始容量10， 扩容机制2倍）
+3. Stack 作为一个栈存在 
+4. 有序， 允许null， 允许重复
+5. 线程安全（效率低）
+6. 不要使用从Vector继承来的方法（语法没有任何问题， 但是我们使用的时候，希望stack作为一个栈而存在， 而不是线性表）
+7.  jdk也不推荐使用Stack，如果我们需要使用栈的话， jdk推荐我们使用Deque用来充当一个栈 
+
+
+
+
+
+## LinkedList 
+
+概述
+
+1. LinkedList是List的子类, 还是Deque的子类(主要是List的子类)
+
+2.  LinkedList是List的链表实现
+
+3. 允许null, 允许重复, 有序
+
+4.  线程不安全
+
+5.  LinkedList可以作为一个线性表,  还可以作为一个队列, 作为一个双端队列, 作为栈
+
+   ```
+   Offer poll
+   Offerfirst offerlast
+   Push  pop
+   ...
+   ```
+
+   
 
 - 底层数据结构是链表，查询慢，增删快
 - 线程不安全，效率高
