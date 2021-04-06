@@ -14814,7 +14814,7 @@ eg:
 
 元素之间，通常有以下四种基本结构：
 
-集合
+- 集合
 
 - 线性结构
 
@@ -14852,13 +14852,96 @@ eg:
 
 
 
+>  java集合类角度 → 自己实现的集合类: 作为数据容器而存在
+> 底层结构  → 数组 , 链表,  数组+链表
+> 数据结构 → 表现形式
+
+
+
 # Collection
+
+![image-20210406091101020](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210406091101020.png)
 
 Collection 概述
 
 Collection 层次结构中的根接口。Collection 表示一组对象，这些对象也称为 collection 的元素。一些 collection 允许有重复的元素，而另一些则不允许。一些 collection 是有序的，而另一些则是无序的。
 
-那么它应该包含哪些 API ？
+
+
+Java集合类的分类: 两大类 : Collection集合类, Map集合类
+Collection:
+		List:
+			ArrayList (\*\*\*\*)
+			LinkedList (\*\*\*)
+			Vector → Stack
+        Queue
+			Deque (\*)
+				ArrayDeque (\*)
+				LinkedList
+			BlcokingQueue 
+				…
+		Set
+			HashSet （\*\*\*)
+			LinkedHashSet（\*\*\*)
+			TreeSet （\*\*)
+
+Map: key-value数据
+	HashMap （\*\*\*\*)
+	LinkedHashMap （\*\*\*)
+	TreeMap （\*\*)
+
+
+
+**集合类的特点**
+
+​	a. 只能存储引用数据类型 
+
+​	b. 可以自动地调整自己的大小
+
+**数组和集合类都是容器，它们有何不同**
+
+​	a. 数组可以存储基本数据类型的数据，集合类不可以。
+
+​	b. 数组的长度是固定的，集合可以自动调整自己的大小。
+
+​	c. 数组的效率高，相对来说集合效率比较低。
+
+​	d. 数组没有API，集合有丰富的API。 
+
+**Se 常问: String,  HashMap,  多线程,  流**
+
+
+
+注意1: 集合类工作每天都在用. 
+注意2: 面试基本必问集合类 . 
+注意3: 有条理的回答.  
+
+1. 这个集合类是谁的子类
+2. 这个集合类实现什么数据结构(代表什么数据结构)
+3.  底层结构是什么
+4. 如果底层结构是数组: 初始容量, 扩容机制是什么
+5.  是否允许重复元素
+6. 能不能存储null元素
+7. 是否有序
+8.  线程是否安全
+
+加锁 – 慢
+颗粒度问题:  颗粒度太细. 
+后端, java , spring  
+
+接口只是一个规范定义者: EE 三层架构
+
+
+
+Collection的特点
+
+1. Collection是Collection集合体系的顶级接口
+2.  一些 Collection的子实现 允许有重复的元素，而另一些 Collection的子实现则不允许。
+3. 一些 Collection的子实现 允许存储null，而另一些 Collection的子实现则不允许存储null。
+4. 一些 Collection的子实现 有序，而另一些 Collection的子实现无序。
+
+接口定义规范: 不负责实现.
+接口具体子类来实现
 
 
 
