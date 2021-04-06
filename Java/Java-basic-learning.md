@@ -15304,6 +15304,73 @@ ListIterator():  List
 
 
 
+**Vector源码分析**
+
+```java
+//        1,  Vector是List一个数组实现(表示一个线性表)
+//        2,  默认初始容量,  扩容机制
+//        3, 允许null, 允许重复, 有序
+//        4, 线程安全
+//        5, (大多数集合类都是jdk1.2的时候出现的) , vector是jdk1.0出现的
+        Vector<String> vector = new Vector<>();
+
+ 		Vector<String> vector = new Vector<>(10, 5);    
+```
+
+```java
+class Vector{
+    
+    Object[] elementData;// 底层数组
+    int capacityIncrement;// 增量
+    int elementCount ; // size. 
+    
+    public Vector() {
+        this(10);
+    }
+    public Vector(int initialCapacity) {
+        this(initialCapacity, 0);
+    }
+    //                   10                    0
+    public Vector(int initialCapacity, int capacityIncrement) {
+        super();
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal Capacity: "+
+                                               initialCapacity);
+        this.elementData = new Object[initialCapacity];
+        this.capacityIncrement = capacityIncrement;
+    }
+    
+    public synchronized boolean add(E e) {
+        modCount++;
+        ensureCapacityHelper(elementCount + 1);
+        elementData[elementCount++] = e;
+        return true;
+    }
+    
+    private void ensureCapacityHelper(int minCapacity) {
+        // overflow-conscious code
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+    
+    private void grow(int minCapacity) {
+        // oldCapacity : 旧容量
+        int oldCapacity = elementData.length;
+        // newCapacity : 新容量
+        // 没有增量(增量不大于0)  新容量 = 旧容量的2倍
+        // 有增量(增量大于0)  新容量 = 旧容量 + 增量
+        int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
+                                         capacityIncrement : oldCapacity);
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+    
+}
+```
+
 ## Stack
 
 概述
