@@ -14858,40 +14858,6 @@ eg:
 
 
 
-# Collection
-
-![image-20210406091101020](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210406091101020.png)
-
-Collection 概述
-
-Collection 层次结构中的根接口。Collection 表示一组对象，这些对象也称为 collection 的元素。一些 collection 允许有重复的元素，而另一些则不允许。一些 collection 是有序的，而另一些则是无序的。
-
-
-
-Java集合类的分类: 两大类 : Collection集合类, Map集合类
-Collection:
-		List:
-			ArrayList (\*\*\*\*)
-			LinkedList (\*\*\*)
-			Vector → Stack
-        Queue
-			Deque (\*)
-				ArrayDeque (\*)
-				LinkedList
-			BlcokingQueue 
-				…
-		Set
-			HashSet （\*\*\*)
-			LinkedHashSet（\*\*\*)
-			TreeSet （\*\*)
-
-Map: key-value数据
-	HashMap （\*\*\*\*)
-	LinkedHashMap （\*\*\*)
-	TreeMap （\*\*)
-
-
-
 **集合类的特点**
 
 ​	a. 只能存储引用数据类型 
@@ -14931,6 +14897,38 @@ Map: key-value数据
 
 接口只是一个规范定义者: EE 三层架构
 
+# Collection
+
+![image-20210406091101020](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-basic-learning.assets\image-20210406091101020.png)
+
+Collection 概述
+
+Collection 层次结构中的根接口。Collection 表示一组对象，这些对象也称为 collection 的元素。一些 collection 允许有重复的元素，而另一些则不允许。一些 collection 是有序的，而另一些则是无序的。
+
+
+
+Java集合类的分类: 两大类 : Collection集合类, Map集合类
+Collection:
+		List:
+			ArrayList (\*\*\*\*)
+			LinkedList (\*\*\*)
+			Vector → Stack
+        Queue
+			Deque (\*)
+				ArrayDeque (\*)
+				LinkedList
+			BlcokingQueue 
+				…
+		Set
+			HashSet （\*\*\*)
+			LinkedHashSet（\*\*\*)
+			TreeSet （\*\*)
+
+Map: key-value数据
+	HashMap （\*\*\*\*)
+	LinkedHashMap （\*\*\*)
+	TreeMap （\*\*)
+
 
 
 Collection的特点
@@ -14945,7 +14943,7 @@ Collection的特点
 
 
 
-Collection接口的API
+**Collection接口的API**
 
 - boolean add(E e)
 
@@ -14974,6 +14972,23 @@ Collection接口的API
 
   迭代器，集合的专用遍历方式
 
+- <T> T[] toArray(T[] a)
+
+  返回包含此 collection 中所有元素的数组；返回数组的运行时类型与指定数组的运行时类型相同。
+
+  ```java
+  // 泛型的toArray方法
+  // 1, 注意, 可以传任何类型的数组, 但是如果穿进来数组, 不能存储原本的元素, 报错
+          //比如集合类存储的是String, 可以传Integer类型的数组, 但是会报错
+  // 2, 如果我们传的数组和元素个数一样长, 传进去的数组和返回数组是一个数组
+  // 3, 如果我们传的数组比元素个数还要长, 传进去的数组和返回数组是一个数组, 只不过在元素的后一个位置添加一个null(标记结束, 有问题), 别的位置不会覆盖
+  	
+  // 4, 如果我们传的数组比元素个数还要小, 传进去的数组和返回数组不是一个数组,只是类型相等, 返回的数组是重新创建的
+  
+  ```
+
+  
+
 
 
 Iterator接口
@@ -14982,8 +14997,24 @@ Iterator接口
 - 依赖于集合对象存在
 
 - boolean hasNext()
+
+  向后还有没有元素可以遍历
+  如果仍有元素可以迭代，则
+
 - E next()
+
+  向后遍历元素
+
+  返回迭代的下
+
 - void remove()
+
+  删除刚刚遍历的元素
+
+  从迭代器指向的 collection 中移除迭代器返回的最后一个元素（可选操作）。
+
+  > 注意: 对于删除操作, 删除的仅仅是刚刚遍历过的元素, 意味着, 不能做连续的删除, 不能在遍历之前删除
+  > Iterator主要是用来做遍历, 删除是一个非常非常非常次要功能
 
 
 
@@ -14996,6 +15027,11 @@ Iterator 接口原理
 - 看看源码是如何实现的。
 
 > 成员内部类、静态嵌套类、局部内部类、匿名内部类 。
+
+```
+所有集合类结构不一样, 意味着 遍历方式不一样, iterator遍历的方式也不一样, 所以Iterator类型应该是个接口(仅定义遍历规范), 具体实现由不同的集合类根据自己组织数据的方式分别实现
+由于集合类的存储的数据, 不应该被外界感知, 遍历的方式(获取这些数据), 应该是个内部类
+```
 
 
 
