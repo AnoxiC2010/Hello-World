@@ -14950,3 +14950,78 @@ ListIterator接口API
 
 - boolean hasPrevious()
 - E previous()
+
+
+
+# List的子类
+
+ArrayList
+
+- 底层数据结构是数组，查询快，增删慢
+- 线程不安全，效率高
+
+
+
+Vector
+
+- 底层数据结构是数组，查询快，增删慢
+- 线程安全，效率低
+- Vector 特有的API
+  - public void addElement(E obj)
+  - public E elementAt(int index)
+  - public Enumeration elements()
+
+
+
+LinkedList 
+
+- 底层数据结构是链表，查询慢，增删快
+- 线程不安全，效率高
+- LinkedList 特有的API
+  - public void addFirst(E e)及addLast(E e)
+  - public E getFirst()及getLast()
+  - public E removeFirst()及public E removeLast()
+
+
+
+练习：
+
+1. 去重
+2. 请用ArrayList实现栈数据结构，并测试。
+
+3.   集合的嵌套遍历
+4.   获取10个1-20之间的随机整数，要求集合中的数不能重复。
+
+```java
+public interface MyList<E> extends Iterable<E> {
+    boolean add(E e);
+    void add(int index, E element);
+    void clear();
+    boolean contains(Object o);
+    E get(int index);
+    int indexOf(Object o);
+    int lastIndexOf(Object o);
+    boolean isEmpty();
+    MyIterator<E> iterator();
+    MyIterator<E> iterator(int index);
+    E remove(int index);
+    boolean remove(Object o);
+    E set(int index, E element);
+    int size();
+}
+public interface MyIterator<E> extends Iterator<E> {
+    boolean hasNext();
+    E next();
+    boolean hasPrevious();
+    E previous();
+    int nextIndex();
+    int previousIndex();
+    void add(E e);
+    void remove();
+    void set(E e);
+}
+
+```
+
+
+
