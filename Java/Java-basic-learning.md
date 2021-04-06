@@ -15209,7 +15209,421 @@ PreviousIndex:  前一个元素的下标
 
 集合类的视图方法返回的数据, 还是源数据
 
-**ArrayList的subList方法(视图)**
+
+
+# List的子类
+
+## ArrayList
+
+概述
+
+1. List接口一个具体子实现( 它是List接口的数组实现  描述是一个线性表)
+2. 底层结构是数组
+3.  默认初始容量 : 10(第一添加时候),  扩容机制(扩容为原来的1.5倍)
+4. 允许null
+5. 允许重复
+6. 有序
+7. 线程不安全
+
+
+
+- 底层数据结构是数组，查询快，增删慢
+- 线程不安全，效率高
+
+**构造方法**
+
+| ArrayList()         构造一个初始容量为 10 的空列表。         |
+| ------------------------------------------------------------ |
+| ArrayList(Collection<? extendsE> c)         构造一个包含指定  collection 的元素的列表，这些元素是按照该 collection 的迭代器返回它们的顺序排列的。 |
+| ArrayList(int initialCapacity)         构造一个具有指定初始容量的空列表。 |
+
+**Api**
+
+| boolean          | add(Ee)         将指定的元素添加到此列表的尾部。             |
+| ---------------- | ------------------------------------------------------------ |
+| void             | add(int index,Eelement)         将指定的元素插入此列表中的指定位置。 |
+| boolean          | addAll(Collection<? extendsE> c)         按照指定 collection  的迭代器所返回的元素顺序，将该 collection 中的所有元素添加到此列表的尾部。 |
+| boolean          | addAll(int index,Collection<? extendsE> c)         从指定的位置开始，将指定  collection 中的所有元素插入到此列表中。 |
+| void             | clear()         移除此列表中的所有元素。                     |
+| Object           | clone()         返回此 ArrayList 实例的浅表副本。            |
+| boolean          | contains(Objecto)         如果此列表中包含指定的元素，则返回 true。 |
+| void             | ensureCapacity(int minCapacity)         如有必要，增加此 ArrayList 实例的容量，以确保它至少能够容纳最小容量参数所指定的元素数。 |
+| E                | get(int index)         返回此列表中指定位置上的元素。        |
+| int              | indexOf(Objecto)         返回此列表中首次出现的指定元素的索引，或如果此列表不包含元素，则返回 -1。 |
+| boolean          | isEmpty()         如果此列表中没有元素，则返回 true          |
+| int              | lastIndexOf(Objecto)         返回此列表中最后一次出现的指定元素的索引，或如果此列表不包含索引，则返回 -1。 |
+| E                | remove(int index)         移除此列表中指定位置上的元素。     |
+| boolean          | remove(Objecto)         移除此列表中首次出现的指定元素（如果存在）。 |
+| protected   void | removeRange(int fromIndex,  int toIndex)         移除列表中索引在 fromIndex（包括）和 toIndex（不包括）之间的所有元素。 |
+| E                | set(int index,Eelement)         用指定的元素替代此列表中指定位置上的元素。 |
+| int              | size()         返回此列表中的元素数。                        |
+| Object[]         | toArray()         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组。 |
+| <T> T[]          | toArray(T[] a)         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组；返回数组的运行时类型是指定数组的运行时类型。 |
+| void             | trimToSize()         将此 ArrayList 实例的容量调整为列表的当前大小。 |
+
+
+
+### ArrayList源码分析
+
+```java
+        ArrayList<String> list = new ArrayList<>();
+        list.add("zs");
+        System.out.println(list);
+```
+
+```java
+class ArrayList{   
+    
+    Object[] elementData;// 底层数组
+    int size;// 标记存储元素的数量
+    
+    private static final int DEFAULT_CAPACITY = 10;
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+    
+    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+    
+    
+     public ArrayList(Collection<? extends E> c) {
+        elementData = c.toArray();
+        if ((size = elementData.length) != 0) {
+            // c.toArray might (incorrectly) not return Object[] (see 6260652)
+            if (elementData.getClass() != Object[].class)
+                elementData = Arrays.copyOf(elementData, size, Object[].class);
+        } else {
+            // replace with empty array.
+            this.elementData = EMPTY_ELEMENTDATA;
+        }
+    }
+    
+    public ArrayList() {
+        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+    }
+    
+    
+     public void add(int index, E element) {
+        rangeCheckForAdd(index);
+
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        System.arraycopy(elementData, index, elementData, index + 1,
+                         size - index);
+        elementData[index] = element;
+        size++;
+    }
+    
+   public boolean add(E e) {
+       //                       1
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        elementData[size++] = e;
+        return true;
+    }
+    
+    //                                             1
+    private void ensureCapacityInternal(int minCapacity) { 
+        //  真
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            
+            // minCapacity =  10
+            // 							10             1
+            minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
+        }
+
+        ensureExplicitCapacity(minCapacity);
+    }
+    
+    //                                       10
+    private void ensureExplicitCapacity(int minCapacity) {
+        modCount++;
+
+        //   10         -  0 > 0  真
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+    
+     private void grow(int minCapacity) {
+        // oldCapacity 旧容量 0
+        int oldCapacity = elementData.length;
+         // newCapacity 新容量  = 1.5旧容量  0
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+         
+         // 0    - 10 < 0
+        if (newCapacity - minCapacity < 0)
+            // newCapacity = 10
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+         
+        //  Arrays.copyOf : 复制数组
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+}
+```
+
+
+
+**Iterator**
+
+Iterator():  Collection
+ListIterator():  List
+
+### ArrayList源码分析: iterator
+
+```java
+		ArrayList<String> list = new ArrayList<>();
+        list.add("zs");
+        list.add("ls");
+        list.add("wu");
+        list.add("zl");
+
+        Iterator<String> iterator = list.iterator();
+        while (iterator.hasNext()){
+            System.out.println(iterator.next());
+        }
+```
+
+```java
+//游标代码中虽然指向元素，逻辑上理解为指向元素之间（画图时清晰）
+class ArrayList{
+    
+    Object [] elementData;// 底层数组
+    int size;
+    int modCount;// 标记修改次数
+    
+    public Iterator<E> iterator() {
+        return new Itr();
+    }
+    private class Itr implements Iterator<E> {
+        int cursor;       // 标记的下一次要遍历的元素
+        int lastRet = -1; // 刚刚遍历过的元素位置
+        int expectedModCount = modCount;// 标记修改次数
+
+        public boolean hasNext() {
+            return cursor != size;
+        }
+
+        @SuppressWarnings("unchecked")
+        public E next() {
+            checkForComodification();
+            int i = cursor;
+            if (i >= size)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i + 1;
+            return (E) elementData[lastRet = i];
+        }
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+ 
+}
+```
+
+
+
+### ArrayList源码分析: listiterator
+
+```java
+		ArrayList<String> list = new ArrayList<>();
+        list.add("zs");
+        list.add("ls");
+        list.add("wu");
+        list.add("zl");
+
+       ListIterator<String> iterator = list.listIterator();
+        while (iterator.hasNext()){
+            System.out.println(iterator.next());
+        }
+```
+
+```java
+class ArrayList{
+    
+    Object [] elementData;// 底层数组
+    int size;
+    int modCount;// 标记修改次数
+    
+    public ListIterator<E> listIterator(int index) {
+        if (index < 0 || index > size)
+            throw new IndexOutOfBoundsException("Index: "+index);
+        return new ListItr(index);
+    }
+    public ListIterator<E> listIterator() {
+        return new ListItr(0);
+    }
+    // 一个实体类是另外一个实体类的子类, 那么一定是子类想复用父类的变量/结构/方法
+   private class ListItr extends Itr implements ListIterator<E> {
+       int cursor;       // 标记的下一次要遍历的元素
+        int lastRet = -1; // 刚刚遍历过的元素位置
+        int expectedModCount = modCount;// 标记修改次数
+       
+        ListItr(int index) {
+            cursor = index;
+        }
+       
+       
+        public boolean hasNext() {
+            return cursor != size;
+        }
+
+        @SuppressWarnings("unchecked")
+        public E next() {
+            checkForComodification();
+            int i = cursor;
+            if (i >= size)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i + 1;
+            return (E) elementData[lastRet = i];
+        }
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+ 
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+
+        public boolean hasPrevious() {
+            return cursor != 0;
+        }
+
+        public int nextIndex() {
+            return cursor;
+        }
+
+        public int previousIndex() {
+            return cursor - 1;
+        }
+
+        @SuppressWarnings("unchecked")
+        public E previous() {
+            checkForComodification();
+            int i = cursor - 1;
+            if (i < 0)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i;
+            return (E) elementData[lastRet = i];
+        }
+
+        public void set(E e) {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                ArrayList.this.set(lastRet, e);
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        public void add(E e) {
+            checkForComodification();
+
+            try {
+                int i = cursor;
+                ArrayList.this.add(i, e);
+                cursor = i + 1;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+   
+    private class Itr implements Iterator<E> {
+        int cursor;       // 标记的下一次要遍历的元素
+        int lastRet = -1; // 刚刚遍历过的元素位置
+        int expectedModCount = modCount;// 标记修改次数
+
+        public boolean hasNext() {
+            return cursor != size;
+        }
+
+        @SuppressWarnings("unchecked")
+        public E next() {
+            checkForComodification();
+            int i = cursor;
+            if (i >= size)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i + 1;
+            return (E) elementData[lastRet = i];
+        }
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+   
+}
+```
+
+
+
+**SubList**
+
+视图方法
+
+### ArrayList源码分析: subList方法(视图)
 
 ```java
         ArrayList<String> list = new ArrayList<>();
@@ -15471,420 +15885,6 @@ class ArrayList{
   
 }
 ```
-
-
-
-# List的子类
-
-## ArrayList
-
-概述
-
-1. List接口一个具体子实现( 它是List接口的数组实现  描述是一个线性表)
-2. 底层结构是数组
-3.  默认初始容量 : 10(第一添加时候),  扩容机制(扩容为原来的1.5倍)
-4. 允许null
-5. 允许重复
-6. 有序
-7. 线程不安全
-
-
-
-- 底层数据结构是数组，查询快，增删慢
-- 线程不安全，效率高
-
-**构造方法**
-
-| ArrayList()         构造一个初始容量为 10 的空列表。         |
-| ------------------------------------------------------------ |
-| ArrayList(Collection<? extendsE> c)         构造一个包含指定  collection 的元素的列表，这些元素是按照该 collection 的迭代器返回它们的顺序排列的。 |
-| ArrayList(int initialCapacity)         构造一个具有指定初始容量的空列表。 |
-
-**Api**
-
-| boolean          | add(Ee)         将指定的元素添加到此列表的尾部。             |
-| ---------------- | ------------------------------------------------------------ |
-| void             | add(int index,Eelement)         将指定的元素插入此列表中的指定位置。 |
-| boolean          | addAll(Collection<? extendsE> c)         按照指定 collection  的迭代器所返回的元素顺序，将该 collection 中的所有元素添加到此列表的尾部。 |
-| boolean          | addAll(int index,Collection<? extendsE> c)         从指定的位置开始，将指定  collection 中的所有元素插入到此列表中。 |
-| void             | clear()         移除此列表中的所有元素。                     |
-| Object           | clone()         返回此 ArrayList 实例的浅表副本。            |
-| boolean          | contains(Objecto)         如果此列表中包含指定的元素，则返回 true。 |
-| void             | ensureCapacity(int minCapacity)         如有必要，增加此 ArrayList 实例的容量，以确保它至少能够容纳最小容量参数所指定的元素数。 |
-| E                | get(int index)         返回此列表中指定位置上的元素。        |
-| int              | indexOf(Objecto)         返回此列表中首次出现的指定元素的索引，或如果此列表不包含元素，则返回 -1。 |
-| boolean          | isEmpty()         如果此列表中没有元素，则返回 true          |
-| int              | lastIndexOf(Objecto)         返回此列表中最后一次出现的指定元素的索引，或如果此列表不包含索引，则返回 -1。 |
-| E                | remove(int index)         移除此列表中指定位置上的元素。     |
-| boolean          | remove(Objecto)         移除此列表中首次出现的指定元素（如果存在）。 |
-| protected   void | removeRange(int fromIndex,  int toIndex)         移除列表中索引在 fromIndex（包括）和 toIndex（不包括）之间的所有元素。 |
-| E                | set(int index,Eelement)         用指定的元素替代此列表中指定位置上的元素。 |
-| int              | size()         返回此列表中的元素数。                        |
-| Object[]         | toArray()         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组。 |
-| <T> T[]          | toArray(T[] a)         按适当顺序（从第一个到最后一个元素）返回包含此列表中所有元素的数组；返回数组的运行时类型是指定数组的运行时类型。 |
-| void             | trimToSize()         将此 ArrayList 实例的容量调整为列表的当前大小。 |
-
-
-
-**ArrayList源码分析**
-
-```java
-        ArrayList<String> list = new ArrayList<>();
-        list.add("zs");
-        System.out.println(list);
-```
-
-```java
-class ArrayList{   
-    
-    Object[] elementData;// 底层数组
-    int size;// 标记存储元素的数量
-    
-    private static final int DEFAULT_CAPACITY = 10;
-    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
-    
-    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
-    
-    
-     public ArrayList(Collection<? extends E> c) {
-        elementData = c.toArray();
-        if ((size = elementData.length) != 0) {
-            // c.toArray might (incorrectly) not return Object[] (see 6260652)
-            if (elementData.getClass() != Object[].class)
-                elementData = Arrays.copyOf(elementData, size, Object[].class);
-        } else {
-            // replace with empty array.
-            this.elementData = EMPTY_ELEMENTDATA;
-        }
-    }
-    
-    public ArrayList() {
-        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
-    }
-    
-    
-     public void add(int index, E element) {
-        rangeCheckForAdd(index);
-
-        ensureCapacityInternal(size + 1);  // Increments modCount!!
-        System.arraycopy(elementData, index, elementData, index + 1,
-                         size - index);
-        elementData[index] = element;
-        size++;
-    }
-    
-   public boolean add(E e) {
-       //                       1
-        ensureCapacityInternal(size + 1);  // Increments modCount!!
-        elementData[size++] = e;
-        return true;
-    }
-    
-    //                                             1
-    private void ensureCapacityInternal(int minCapacity) { 
-        //  真
-        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
-            
-            // minCapacity =  10
-            // 							10             1
-            minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
-        }
-
-        ensureExplicitCapacity(minCapacity);
-    }
-    
-    //                                       10
-    private void ensureExplicitCapacity(int minCapacity) {
-        modCount++;
-
-        //   10         -  0 > 0  真
-        if (minCapacity - elementData.length > 0)
-            grow(minCapacity);
-    }
-    
-     private void grow(int minCapacity) {
-        // oldCapacity 旧容量 0
-        int oldCapacity = elementData.length;
-         // newCapacity 新容量  = 1.5旧容量  0
-        int newCapacity = oldCapacity + (oldCapacity >> 1);
-         
-         // 0    - 10 < 0
-        if (newCapacity - minCapacity < 0)
-            // newCapacity = 10
-            newCapacity = minCapacity;
-        if (newCapacity - MAX_ARRAY_SIZE > 0)
-            newCapacity = hugeCapacity(minCapacity);
-         
-        //  Arrays.copyOf : 复制数组
-        elementData = Arrays.copyOf(elementData, newCapacity);
-    }
-}
-```
-
-
-
-**Iterator**
-
-Iterator():  Collection
-ListIterator():  List
-
-**ArrayList源码分析: iterator**
-
-```java
-		ArrayList<String> list = new ArrayList<>();
-        list.add("zs");
-        list.add("ls");
-        list.add("wu");
-        list.add("zl");
-
-        Iterator<String> iterator = list.iterator();
-        while (iterator.hasNext()){
-            System.out.println(iterator.next());
-        }
-```
-
-```java
-class ArrayList{
-    
-    Object [] elementData;// 底层数组
-    int size;
-    int modCount;// 标记修改次数
-    
-   
-    public Iterator<E> iterator() {
-        return new Itr();
-    }
-    private class Itr implements Iterator<E> {
-        int cursor;       // 标记的下一次要遍历的元素
-        int lastRet = -1; // 刚刚遍历过的元素位置
-        int expectedModCount = modCount;// 标记修改次数
-
-        public boolean hasNext() {
-            return cursor != size;
-        }
-
-        @SuppressWarnings("unchecked")
-        public E next() {
-            checkForComodification();
-            int i = cursor;
-            if (i >= size)
-                throw new NoSuchElementException();
-            Object[] elementData = ArrayList.this.elementData;
-            if (i >= elementData.length)
-                throw new ConcurrentModificationException();
-            cursor = i + 1;
-            return (E) elementData[lastRet = i];
-        }
-
-        public void remove() {
-            if (lastRet < 0)
-                throw new IllegalStateException();
-            checkForComodification();
-
-            try {
-                ArrayList.this.remove(lastRet);
-                cursor = lastRet;
-                lastRet = -1;
-                expectedModCount = modCount;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
-            }
-        }
-
-        final void checkForComodification() {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-        }
-    }
- 
-}
-```
-
-
-
-**ArrayList源码分析: listiterator**
-
-```java
-		ArrayList<String> list = new ArrayList<>();
-        list.add("zs");
-        list.add("ls");
-        list.add("wu");
-        list.add("zl");
-
-       ListIterator<String> iterator = list.listIterator();
-        while (iterator.hasNext()){
-            System.out.println(iterator.next());
-        }
-```
-
-```java
-class ArrayList{
-    
-    Object [] elementData;// 底层数组
-    int size;
-    int modCount;// 标记修改次数
-    
-    public ListIterator<E> listIterator(int index) {
-        if (index < 0 || index > size)
-            throw new IndexOutOfBoundsException("Index: "+index);
-        return new ListItr(index);
-    }
-    public ListIterator<E> listIterator() {
-        return new ListItr(0);
-    }
-    // 一个实体类是另外一个实体类的子类, 那么一定是子类想复用父类的变量/结构/方法
-   private class ListItr extends Itr implements ListIterator<E> {
-       int cursor;       // 标记的下一次要遍历的元素
-        int lastRet = -1; // 刚刚遍历过的元素位置
-        int expectedModCount = modCount;// 标记修改次数
-       
-        ListItr(int index) {
-            cursor = index;
-        }
-       
-       
-        public boolean hasNext() {
-            return cursor != size;
-        }
-
-        @SuppressWarnings("unchecked")
-        public E next() {
-            checkForComodification();
-            int i = cursor;
-            if (i >= size)
-                throw new NoSuchElementException();
-            Object[] elementData = ArrayList.this.elementData;
-            if (i >= elementData.length)
-                throw new ConcurrentModificationException();
-            cursor = i + 1;
-            return (E) elementData[lastRet = i];
-        }
-
-        public void remove() {
-            if (lastRet < 0)
-                throw new IllegalStateException();
-            checkForComodification();
-
-            try {
-                ArrayList.this.remove(lastRet);
-                cursor = lastRet;
-                lastRet = -1;
-                expectedModCount = modCount;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
-            }
-        }
- 
-
-        final void checkForComodification() {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-        }
-
-        public boolean hasPrevious() {
-            return cursor != 0;
-        }
-
-        public int nextIndex() {
-            return cursor;
-        }
-
-        public int previousIndex() {
-            return cursor - 1;
-        }
-
-        @SuppressWarnings("unchecked")
-        public E previous() {
-            checkForComodification();
-            int i = cursor - 1;
-            if (i < 0)
-                throw new NoSuchElementException();
-            Object[] elementData = ArrayList.this.elementData;
-            if (i >= elementData.length)
-                throw new ConcurrentModificationException();
-            cursor = i;
-            return (E) elementData[lastRet = i];
-        }
-
-        public void set(E e) {
-            if (lastRet < 0)
-                throw new IllegalStateException();
-            checkForComodification();
-
-            try {
-                ArrayList.this.set(lastRet, e);
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
-            }
-        }
-
-        public void add(E e) {
-            checkForComodification();
-
-            try {
-                int i = cursor;
-                ArrayList.this.add(i, e);
-                cursor = i + 1;
-                lastRet = -1;
-                expectedModCount = modCount;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
-            }
-        }
-    }
-
-   
-    private class Itr implements Iterator<E> {
-        int cursor;       // 标记的下一次要遍历的元素
-        int lastRet = -1; // 刚刚遍历过的元素位置
-        int expectedModCount = modCount;// 标记修改次数
-
-        public boolean hasNext() {
-            return cursor != size;
-        }
-
-        @SuppressWarnings("unchecked")
-        public E next() {
-            checkForComodification();
-            int i = cursor;
-            if (i >= size)
-                throw new NoSuchElementException();
-            Object[] elementData = ArrayList.this.elementData;
-            if (i >= elementData.length)
-                throw new ConcurrentModificationException();
-            cursor = i + 1;
-            return (E) elementData[lastRet = i];
-        }
-
-        public void remove() {
-            if (lastRet < 0)
-                throw new IllegalStateException();
-            checkForComodification();
-
-            try {
-                ArrayList.this.remove(lastRet);
-                cursor = lastRet;
-                lastRet = -1;
-                expectedModCount = modCount;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
-            }
-        }
-
-        final void checkForComodification() {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-        }
-    }
-   
-}
-```
-
-
-
-**SubList**
-
-视图方法
 
 
 
