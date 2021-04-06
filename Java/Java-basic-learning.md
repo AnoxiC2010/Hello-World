@@ -15385,6 +15385,31 @@ class Vector{
 
 
 
+**Stack源码分析**
+
+```java
+//        1, Stack是Vector的子类
+//        2, 底层复用的Vector的数组（初始容量10， 扩容机制2倍）
+//        3, Stack 作为一个栈存在
+//        4，有序， 允许null， 允许重复
+//        5， 线程安全
+        Stack<String> stack = new Stack<>();
+```
+
+```java
+class Stack<E> extends Vector<E>{   
+    public E push(E item) {
+        addElement(item);
+        return item;
+    }  
+}
+
+class Vector{
+    Object [] elementData;
+    int elementCount;    
+}
+```
+
 
 
 ## LinkedList 
