@@ -16577,31 +16577,37 @@ Map接口概述
 
 
 
+1. Map接口是Map集合体系的顶级接口
+2. Map存储的数据: key-value, 键值对数据
+3.  Map不允许存储重复的key
+4. 有些Map的只实现是有序, 有些无序
+5. 有些Map的子实现允许null key, 有些不允许
+
+
+
+<font style="color:red">Key-value数据具有自我描述性: 用key描述value</font>
+
+
+
 问题：map应该提供哪些API?
 
 Map接口API
 
-- V get(Object key)
-
-- V put(K key,V value)
-
-- V remove(Object key)
-
-- void clear()
-
-- boolean containsKey(Object key)
-
-- boolean containsValue(Object value)
-
-- boolean isEmpty()
-
-- int size()
-
-- Set<K> keySet()
-
-- Collection<V> values()
-
-- Set<Map.Entry<K,V>> entrySet()
+| void            | clear()         从此映射中移除所有映射关系（可选操作）。     |
+| --------------- | ------------------------------------------------------------ |
+| boolean         | containsKey(Object key)         如果此映射包含指定键的映射关系，则返回 true。 |
+| boolean         | containsValue(Object value)         如果此映射将一个或多个键映射到指定值，则返回 true。 |
+| SetMap.EntryK,V | entrySet()         返回此映射中包含的映射关系的 Set 视图。   |
+| boolean         | equals(Object o)         比较指定的对象与此映射是否相等。    |
+| V               | get(Object key)         返回指定键所映射的值；如果此映射不包含该键的映射关系，则返回 null。 |
+| int             | hashCode()         返回此映射的哈希码值。                    |
+| boolean         | isEmpty()         如果此映射未包含键-值映射关系，则返回 true。 |
+| SetK            | keySet()         返回此映射中包含的键的 Set 视图。           |
+| V               | put(K key,  V value)          将指定的值与此映射中的指定键关联（可选操作）。 |
+| void            | putAll(Map<? extends K,? extends V> m)         从指定映射中将所有映射关系复制到此映射中（可选操作）。 |
+| V               | remove(Object key)         如果存在一个键的映射关系，则将其从此映射中移除（可选操作）。 |
+| int             | size()         返回此映射中的键-值映射关系数。               |
+| CollectionV     | values()         返回此映射中包含的值的 Collection 视图。    |
 
 
 
@@ -16614,6 +16620,361 @@ Map接口API
 - 不保证映射的顺序，特别是它不保证该顺序恒久不变。
 
 - 不同步。
+
+
+
+
+
+
+
+HashMap源码分析: 默认初始容量
+
+```java
+        HashMap<String, Integer> map = new HashMap<>();
+        map.put("zs", 18);// 第一添加数据
+        map.put("ls", 18);
+        map.put("wu", 18);
+        map.put("zl", 18);
+```
+
+```java
+class HashMap{
+    
+    final float loadFactor;// 加载因子(饱和度)
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+     transient Node<K,V>[] table;// HashMap底层数组
+    int threshold;// 阈值
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+    
+    public HashMap() {
+        this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
+    }
+    
+    //             zs      18
+    public V put(K key, V value) {
+        
+        return putVal(hash(key), key, value, false, true);
+    }
+     static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    }
+    
+    //                 3897     zs     18
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent,boolean evict) {
+        
+        
+        Node<K,V>[] tab; 
+        Node<K,V> p;
+        int n, i;
+        
+        // table = null
+        // tab = null
+        if ((tab = table) == null || (n = tab.length) == 0)
+            //  resize(): 扩容方法
+            n = (tab = resize()).length;
+        
+        // n 底层数组长度
+        // (n - 1) & hash  --> 取模
+        // tab[取模位置]  == null
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            Node<K,V> e; K k;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                e = p;
+            else if (p instanceof TreeNode)
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                for (int binCount = 0; ; ++binCount) {
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+    
+    // 
+    final Node<K,V>[] resize() {
+        // oldTab = table = null
+        Node<K,V>[] oldTab = table;
+        
+        // oldCap  = 0
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        // oldThr = threshold =  0
+        int oldThr = threshold;
+        
+        // 新长度/ 新阈值
+        int newCap, newThr = 0;
+        
+        
+        
+        if (oldCap > 0) {
+            if (oldCap >= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                     oldCap >= DEFAULT_INITIAL_CAPACITY)
+                newThr = oldThr << 1; // double threshold
+        }
+        else if (oldThr > 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {              
+            // newCap =  DEFAULT_INITIAL_CAPACITY = 16
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            // newThr =  0.75 *  16 = 12
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        
+        if (newThr == 0) {
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        
+        // threshold = 12
+        threshold = newThr;
+        @SuppressWarnings({"rawtypes","unchecked"})
+        // 创建一个数组: 创建了一个长度为16 的新数组
+            Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+        // 把创建的新数组赋值给table
+        table = newTab;
+        if (oldTab != null) {
+            for (int j = 0; j < oldCap; ++j) {
+                Node<K,V> e;
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash & (newCap - 1)] = e;
+                    else if (e instanceof TreeNode)
+                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        Node<K,V> loHead = null, loTail = null;
+                        Node<K,V> hiHead = null, hiTail = null;
+                        Node<K,V> next;
+                        do {
+                            next = e.next;
+                            if ((e.hash & oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+
+
+    
+}
+```
+
+
+
+
+
+HashMap扩容
+
+```java
+class HashMap{
+    
+      final float loadFactor;// 加载因子(饱和度)
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+     transient Node<K,V>[] table;// HashMap底层数组
+    int threshold;// 阈值
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+    int size; // 标记这个HashMAp中存储了多少份Key-value数据
+     static final int MAXIMUM_CAPACITY = 1 << 30;
+    
+    
+    public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+    
+    // 
+   final V putVal(int hash, K key, V value, boolean onlyIfAbsent,  boolean evict) {
+
+     Node<K,V>[] tab;
+       Node<K,V> p; 
+       int n, i;
+       
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            Node<K,V> e; K k;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                e = p;
+            else if (p instanceof TreeNode)
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                for (int binCount = 0; ; ++binCount) {
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+       
+       // 数组: 16
+       // threshold = 12
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+
+    
+    final Node<K,V>[] resize() {
+        
+        // oldTab = 长度16的数组
+        Node<K,V>[] oldTab = table;
+        // oldCap = 16
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        // oldThr = 12
+        int oldThr = threshold;
+        
+        // 新长度, 新阈值
+        int newCap, newThr = 0;
+        
+        
+        if (oldCap > 0) {
+            if (oldCap >= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }// newCap = 2 * oldCap = 32 > 扩为原来的两倍
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                     oldCap >= DEFAULT_INITIAL_CAPACITY)
+                // newThr = 2倍旧阈值 = 24
+                newThr = oldThr << 1; // double threshold
+        }
+        else if (oldThr > 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {               // zero initial threshold signifies using defaults
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        if (newThr == 0) {
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        
+        // threshold = 24
+        threshold = newThr;
+        @SuppressWarnings({"rawtypes","unchecked"})
+        //  创建一个长度为32的数组
+            Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+        // 赋值给全局table
+        table = newTab;
+        if (oldTab != null) {
+            for (int j = 0; j < oldCap; ++j) {
+                Node<K,V> e;
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash & (newCap - 1)] = e;
+                    else if (e instanceof TreeNode)
+                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        Node<K,V> loHead = null, loTail = null;
+                        Node<K,V> hiHead = null, hiTail = null;
+                        Node<K,V> next;
+                        do {
+                            next = e.next;
+                            if ((e.hash & oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+    
+}
+```
+
+
 
 
 
