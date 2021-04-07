@@ -16115,6 +16115,35 @@ class Vector{
 
 
 
+**descendingIterator**
+
+逆序迭代器，就是个ListItr的包装
+
+```java
+class LinkedList{
+    
+    public Iterator<E> descendingIterator() {
+        return new DescendingIterator();
+    } 
+    
+    
+     private class DescendingIterator implements Iterator<E> {
+        private final ListItr itr = new ListItr(size());
+        public boolean hasNext() {
+            return itr.hasPrevious();
+        }
+        public E next() {
+            return itr.previous();
+        }
+        public void remove() {
+            itr.remove();
+        }
+    }  
+}
+```
+
+
+
 练习：
 
 1. 去重
@@ -16155,6 +16184,386 @@ public interface MyIterator<E> extends Iterator<E> {
 ```
 
 
+
+# Queue
+
+概述
+
+1. Queue他是collection的一个子接口(队列子接口)
+2. Queue所描述的数据结构是一个队列
+3. 有序
+4. 允许重复元素
+5. 不允许存储null(LinkedList除外)
+
+对于Queue的poll操作, 如果删除一个元素, 没有元素可以删除, 他就返回一个null来标记
+
+Api
+
+| boolean | add(E e)         将指定的元素插入此队列（如果立即可行且不会违反容量限制），在成功时返回 true，如果当前没有可用的空间，则抛出  IllegalStateException。 |
+| ------- | ------------------------------------------------------------ |
+| E       | element()         获取，但是不移除此队列的头。               |
+| boolean | offer(E e)         将指定的元素插入此队列（如果立即可行且不会违反容量限制），当使用有容量限制的队列时，此方法通常要优于  add(E)，后者可能无法插入元素，而只是抛出一个异常。 |
+| E       | peek()         获取但不移除此队列的头；如果此队列为空，则返回 null。 |
+| E       | poll()         获取并移除此队列的头，如果此队列为空，则返回 null。 |
+| E       | remove()         获取并移除此队列的头。                      |
+
+
+
+# Deque
+
+概述
+
+1. Deque是Queue一个子接口
+2. 他是双端队列子接口(  Deque不仅可以作为队列存在, 作为双端队列, 可以作为栈)
+3.  有序
+4. 允许重复元素
+5. 不允许null
+
+
+
+**Api**
+
+int size() 
+          返回此双端队列的元素数。
+
+boolean add(E e) 
+          将指定元素插入此双端队列所表示的队列（换句话说，此双端队列的尾部），如果可以直接这样做而不违反容量限制的话；如果成功，则返回 true，如果当前没有可用空间，则抛出 IllegalStateException。 
+void addFirst(E e) 
+          将指定元素插入此双端队列的开头（如果可以直接这样做而不违反容量限制）。 
+void addLast(E e) 
+          将指定元素插入此双端队列的末尾（如果可以直接这样做而不违反容量限制）。 
+boolean contains(Object o) 
+          如果此双端队列包含指定元素，则返回 true。 		  
+
+E element() 
+          获取，但不移除此双端队列所表示的队列的头部（换句话说，此双端队列的第一个元素）。 
+E getFirst() 
+          获取，但不移除此双端队列的第一个元素。 
+E getLast() 
+          获取，但不移除此双端队列的最后一个元素。	   
+
+E remove() 
+          获取并移除此双端队列所表示的队列的头部（换句话说，此双端队列的第一个元素）。 
+boolean remove(Object o) 
+          从此双端队列中移除第一次出现的指定元素。 
+E removeFirst() 
+          获取并移除此双端队列第一个元素。 		  
+E removeLast() 
+          获取并移除此双端队列的最后一个元素。 
+boolean removeFirstOccurrence(Object o) 
+          从此双端队列移除第一次出现的指定元素。 
+boolean removeLastOccurrence(Object o) 
+          从此双端队列移除最后一次出现的指定元素。 
+
+​		  
+
+**boolean offer(E e)** 
+          将指定元素插入此双端队列所表示的队列（换句话说，此双端队列的尾部），如果可以直接这样做而不违反容量限制的话；如果成功，则返回 true，如果当前没有可用的空间，则返回 false。 
+
+**E poll()** 
+          获取并移除此双端队列所表示的队列的头部（换句话说，此双端队列的第一个元素）；如果此双端队列为空，则返回 null。 
+**E peek()** 
+          获取，但不移除此双端队列所表示的队列的头部（换句话说，此双端队列的第一个元素）；如果此双端队列为空，则返回 null。 
+
+**boolean offerFirst(E e)** 
+          在不违反容量限制的情况下，将指定的元素插入此双端队列的开头。 
+**boolean offerLast(E e)** 
+          在不违反容量限制的情况下，将指定的元素插入此双端队列的末尾。 
+**E peekFirst()** 
+          获取，但不移除此双端队列的第一个元素；如果此双端队列为空，则返回 null。 
+**E peekLast()** 
+          获取，但不移除此双端队列的最后一个元素；如果此双端队列为空，则返回 null。 
+
+**E pollFirst()** 
+          获取并移除此双端队列的第一个元素；如果此双端队列为空，则返回 null。 
+**E pollLast()** 
+          获取并移除此双端队列的最后一个元素；如果此双端队列为空，则返回 null。 
+		  
+
+
+
+**E pop()** 
+          从此双端队列所表示的堆栈中弹出一个元素。 
+
+**void push(E e)** 
+          将一个元素推入此双端队列所表示的堆栈（换句话说，此双端队列的头部），如果可以直接这样做而不违反容量限制的话；如果成功，则返回 true，如果当前没有可用空间，则抛出 IllegalStateException。 
+
+ 
+
+Iterator<E> descendingIterator() 
+          返回以逆向顺序在此双端队列的元素上进行迭代的迭代器。 
+
+Iterator<E> iterator() 
+          返回以恰当顺序在此双端队列的元素上进行迭代的迭代器。
+
+
+
+# ArrayDeque
+
+概述
+
+1. ArrayDeque是Deque的子实现(双端队列/ 普通队列/ 栈)
+2. 底层是一个数组(循环数组)
+3. 默认的初始容量 16 , 扩容机制(扩容机制 扩为原来的2倍)
+4. 允许重复, 有序, 不允许null
+5.  线程不安全
+6.  给定一个长度(数组长度), 但是ArrayDeque的底层数组未必是你给定的长度, 大于给定值的一个最小的2的幂值
+
+```
+10 -> 16
+20 -> 32
+100 -> 128
+40 -> 64
+
+方便位运算: 
+(tail = (tail + 1) & (elements.length - 1))
+
+
+(tail = (tail + 1) % (elements.length))
+20 -> 4 
+16 -> 1111
+20->10100
+& ->00100  -> 4
+
+```
+
+
+
+**构造方法**
+
+| ArrayDeque()         构造一个初始容量能够容纳  16 个元素的空数组双端队列。 |
+| ------------------------------------------------------------ |
+| ArrayDeque(Collection<? extends E> c)         构造一个包含指定  collection 的元素的双端队列，这些元素按 collection 的迭代器返回的顺序排列。 |
+| ArrayDeque(int numElements)         构造一个初始容量能够容纳指定数量的元素的空数组双端队列。 |
+
+
+
+## ArrayDeque的源码分析
+
+```java
+//        1, ArrayDeque是Deque的子实现(双端队列)
+//        2, 底层是一个数组(循环数组)
+//        3, 默认的初始容量, 扩容机制
+//        4, 允许重复, 有序, 不允许null
+//        5, 线程不安全
+        ArrayDeque<String> deque = new ArrayDeque<>();
+        deque.offer("zs");
+        //...
+        deque.offer("ls");
+```
+
+```java
+class ArrayDeque{
+    
+    Object [] elements;
+    
+     public ArrayDeque() {
+        elements = new Object[16];
+    }
+    
+    public boolean offer(E e) {
+        return offerLast(e);
+    }
+    
+    public boolean offerLast(E e) {
+        addLast(e);
+        return true;
+    }
+    
+    public void addLast(E e) {
+        if (e == null)
+            throw new NullPointerException();
+        elements[tail] = e;// 把元素添加到尾部
+        
+        if ( (tail = (tail + 1) & (elements.length - 1)) == head)
+            doubleCapacity();
+    }
+    
+    private void doubleCapacity() {
+        assert head == tail;
+        int p = head;
+        int n = elements.length;
+        int r = n - p; // number of elements to the right of p
+        
+        
+        // newCapacity 新容量  n旧容量  = 2 旧容量
+        int newCapacity = n << 1;
+        if (newCapacity < 0)
+            throw new IllegalStateException("Sorry, deque too big");
+        
+        Object[] a = new Object[newCapacity];
+        
+        System.arraycopy(elements, p, a, 0, r);
+        System.arraycopy(elements, 0, a, r, p);
+        elements = a;
+        head = 0;
+        tail = n;
+    }  
+}
+```
+
+
+
+ArrayDeque源码分析
+
+```java
+		ArrayDeque<String> deque = new ArrayDeque<>(10);
+        deque.offer("zs");
+        deque.offer("ls");
+
+```
+
+```java
+class ArrayDeque{
+    
+    Object[] elements;
+      private static final int MIN_INITIAL_CAPACITY = 8;
+    
+    //                     10
+    public ArrayDeque(int numElements) {
+        allocateElements(numElements);
+    }
+    //                                    10
+    private void allocateElements(int numElements) {
+        
+        // initialCapacity = 8
+        int initialCapacity = MIN_INITIAL_CAPACITY;
+      
+        if (numElements >= initialCapacity) {
+            // initialCapacity = 10
+            initialCapacity = numElements;
+            
+            // 第一步: 
+            //initialCapacity :  1010
+            // >>> 1		  :  0101
+            //                :  1111
+            initialCapacity |= (initialCapacity >>>  1);
+            // 第一步: 
+            //initialCapacity :  1111
+            // >>> 2		  :  0011
+            //                :  1111
+            initialCapacity |= (initialCapacity >>>  2);
+            initialCapacity |= (initialCapacity >>>  4);
+            initialCapacity |= (initialCapacity >>>  8);
+            initialCapacity |= (initialCapacity >>> 16);
+            // initialCapacity :  1111 -> 15
+            // initialCapacity : 16
+            initialCapacity++;
+
+            if (initialCapacity < 0)   // Too many elements, must back off
+                initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
+        }
+        
+        // 如果给定长度小于8, 创建一个长度为8的数组
+        elements = new Object[initialCapacity];
+    }
+    
+    
+}
+```
+
+```java
+ //                                
+    private void allocateElements(int numElements) {
+        
+        // initialCapacity = 8
+        int initialCapacity = MIN_INITIAL_CAPACITY;
+      
+        if (numElements >= initialCapacity) {
+            
+            initialCapacity = numElements;
+            
+            // 第一步: 
+            //initialCapacity :  1010000000000000
+            // >>> 1		  :  0101000000000000
+            //                :  1111000000000000
+            initialCapacity |= (initialCapacity >>>  1);
+            // 第一步: 
+            //initialCapacity :  1111000000000000
+            // >>> 2		  :  0011110000000000
+            //                :  1111110000000000
+            initialCapacity |= (initialCapacity >>>  2);
+            initialCapacity |= (initialCapacity >>>  4);
+            initialCapacity |= (initialCapacity >>>  8);
+            initialCapacity |= (initialCapacity >>> 16);
+            // initialCapacity :  1111 -> 15
+            // initialCapacity : 16
+            initialCapacity++;
+
+            if (initialCapacity < 0)   // Too many elements, must back off
+                initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
+        }
+        
+        // 如果给定长度小于8, 创建一个长度为8的数组
+        elements = new Object[initialCapacity];
+    }
+
+
+
+ //                                   8
+    private void allocateElements(int numElements) {
+        
+        // initialCapacity = 8
+        int initialCapacity = MIN_INITIAL_CAPACITY;
+      
+        if (numElements >= initialCapacity) {
+            // initialCapacity = 8
+            initialCapacity = numElements;
+            
+            // 第一步: 
+            //initialCapacity :  1000
+            // >>> 1		  :  0100
+            //                :  1100
+            initialCapacity |= (initialCapacity >>>  1);
+            // 第一步: 
+            //initialCapacity :  1100
+            // >>> 2		  :  0011
+            //                :  1111
+            initialCapacity |= (initialCapacity >>>  2);
+            initialCapacity |= (initialCapacity >>>  4);
+            initialCapacity |= (initialCapacity >>>  8);
+            initialCapacity |= (initialCapacity >>> 16);
+            // initialCapacity :  1111 -> 15
+            // initialCapacity : 16
+            initialCapacity++;
+
+            if (initialCapacity < 0)   // Too many elements, must back off
+                initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
+        }
+        
+        // 如果给定长度小于8, 创建一个长度为8的数组
+        elements = new Object[initialCapacity];
+    }
+```
+
+
+
+# BlockingQueue
+
+阻塞队列:  
+
+1. 如果队列满了, 添加线程等待
+2. 如果队列空了, 删除线程等待
+
+
+
+概述
+
+1. BlockingQueue是Queue接口的一个’阻塞’的子接口
+2. 代表是一个阻塞队列
+3. 阻塞队列不能扩容(如果可以扩容, 没有阻塞的必要了)
+
+
+
+Api: 阻塞Api
+
+|      | 抛出异常  | 特殊值   | 阻塞   | 超时                  |
+| ---- | --------- | -------- | ------ | --------------------- |
+| 插入 | add(e)    | offer(e) | put(e) | offer(e,  time, unit) |
+| 移除 | remove()  | poll()   | take() | poll(time,  unit)     |
+| 检查 | element() | peek()   | 不可用 | 不可用                |
+
+超时: 可以设置一个时间, 在有限的时间内阻塞, 超过设置的时间, 转化为返回特殊值
 
 # Map
 
