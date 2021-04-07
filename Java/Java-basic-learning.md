@@ -16101,3 +16101,159 @@ public interface MyIterator<E> extends Iterator<E> {
 
 
 
+# Map
+
+Map接口概述
+
+- 将键映射到值的对象。(我们可以根据键快速地查找到值)
+
+- Map 中键是唯一的 (不能包含重复的键)
+
+- 每个键最多只能映射到一个值。
+
+
+
+问题：map应该提供哪些API?
+
+Map接口API
+
+- V get(Object key)
+
+- V put(K key,V value)
+
+- V remove(Object key)
+
+- void clear()
+
+- boolean containsKey(Object key)
+
+- boolean containsValue(Object value)
+
+- boolean isEmpty()
+
+- int size()
+
+- Set<K> keySet()
+
+- Collection<V> values()
+
+- Set<Map.Entry<K,V>> entrySet()
+
+
+
+HashMap概述
+
+- 基于哈希表的Map接口实现。
+
+- 允许null键和null值。
+
+- 不保证映射的顺序，特别是它不保证该顺序恒久不变。
+
+- 不同步。
+
+
+
+LinkedHashMap概述
+
+- HashMap的子类
+
+- Map 接口的哈希表和链表实现，具有可预知的迭代顺序.
+
+- 链表定义了迭代顺序，该迭代顺序就是键值对的插入顺序。
+
+- 不同步。
+
+
+
+TreeMap概述
+
+- 底层的数据结构是红黑树。
+
+- 如果创建对象时，没有传入 Comparator 对象，键将按自然顺序进行排序。
+
+- 如果创建对象时，传入了 Comparator 对象，键将按 Comparator 进行排序。
+
+- 不同步
+
+除了Map接口中定义的方法外，由于TreeMap中的键是大小有序的，因此它还有一些特殊的方法。
+
+- K firstKey()
+
+- K lastKey()
+
+- Map.Entry<K, V> pollFirstEntry();
+
+- Map.Entry<K,V> pollLastEntry();
+
+- K floorKey(K key)
+
+- K ceilingKey(K key)
+
+- K lowerKey(K key)
+
+- K higherKey(K key)
+
+- NavigableMap<K, V> submap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive )
+
+
+
+Properties概述
+
+- Hashtable<Object, Object> 的子类
+
+- Properties 类表示了一个可持久的属性集。
+
+- Properties 可保存在流中或从流中加载。
+
+- Properties 中每个键及其对应值都是一个字符串。
+
+**注意事项：**
+
+- 不要使用Hashtable里面定义的方法添加键值对！因为它们可以插入不是String 类型的数据。
+
+- 如果一个Properties中含有非String的键值对，那么这样的Properties是”不安全”的。调用 store 或者 save 方法将失败。
+
+> 1)底层hash表
+> 2)Hashtable 中的方法是Synchronize的, 同步方法
+> 不允许null键和值
+> 初始长度11 (hashmap初始长度16)
+> hashtable扩容是2倍+ 1 (hashmap扩容 2倍)
+> Hash值计算不同
+> 无红黑树
+
+Properties 的 API:
+
+- String getProperty(String key)
+
+- String getProperty(String key, String defaultValue)
+
+- Object setProperty(String key, String value)
+
+- Set<String> stringPropertyNames();
+
+- void store(OutputStream out, String comments)
+
+- void store(Writer out, String comments)
+
+- void load(InputStream inStream)
+
+- void load(Reader read)
+
+**注意事项：**
+
+- 字节流默认使用 ISO 8859-1 字符编码。
+
+
+
+练习：
+
+1. "aababcabcdabcde",获取字符串中每一个字母出现的次数要求结果:a(5)b(4)c(3)d(2)e(1)
+
+2. 给定一个整数数组和一个目标值，找出数组中和为目标值的两个数, 返回它们的索引。
+   你可以假设每个输入只对应一种答案，且同样的元素不能被重复利用。
+
+比如：nums = [2, 7, 11, 15], target = 9.  
+             因为 nums[0] + nums[1] = 2 + 7 = 9. 所以返回 [0, 1].
+
+3. 请设计一个猜数字小游戏，可以试玩5次。试玩结束之后，给出提示：游戏试玩结束，
+     请付费。
