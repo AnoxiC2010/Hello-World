@@ -15365,6 +15365,12 @@ class ArrayList{
 Iterator():  Collection
 ListIterator():  List
 
+> 此类的 iterator 和 listIterator 方法返回的迭代器是快速失败的：在创建迭代器之后，除非通过迭代器自身的 remove 或 add 方法从结构上对列表进行修改，否则在任何时间以任何方式对列表进行修改，迭代器都会抛出 ConcurrentModificationException。因此，面对并发的修改，迭代器很快就会完全失败，而不是冒着在将来某个不确定时间发生任意不确定行为的风险。
+>
+> 注意，迭代器的快速失败行为无法得到保证，因为一般来说，不可能对是否出现不同步并发修改做出任何硬性保证。快速失败迭代器会尽最大努力抛出 ConcurrentModificationException。因此，为提高这类迭代器的正确性而编写一个依赖于此异常的程序是错误的做法：迭代器的快速失败行为应该仅用于检测 bug。
+
+由以上原因在看源码能看出，不管迭代器内部怎么在执行next或者previous方法前判断，源码时判断了两次，其实在多线成环境下也是不一定能抛出异常的，modCound完全可能在二次检查之后被改变，天知道什么时候被CPU调度插队了，所以尤其时源码中第二次以外围类持有数组的长度和cursor的暂存值i比较我是一脸懵的，目前体会不到祖师爷的精妙之处。因为就算再连续做几次判断，都不如保证迭代的环境没有线程干扰。
+
 ### ArrayList源码分析: iterator
 
 ```java
@@ -16141,7 +16147,7 @@ Map接口API
 
 
 
-HashMap概述
+## HashMap概述
 
 - 基于哈希表的Map接口实现。
 
@@ -16153,7 +16159,7 @@ HashMap概述
 
 
 
-LinkedHashMap概述
+## LinkedHashMap概述
 
 - HashMap的子类
 
@@ -16165,7 +16171,7 @@ LinkedHashMap概述
 
 
 
-TreeMap概述
+## TreeMap概述
 
 - 底层的数据结构是红黑树。
 
@@ -16197,7 +16203,7 @@ TreeMap概述
 
 
 
-Properties概述
+## Properties概述
 
 - Hashtable<Object, Object> 的子类
 
