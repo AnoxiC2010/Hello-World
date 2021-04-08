@@ -11751,7 +11751,7 @@ class DBnodeList {//我的双向链表集合
   但是, 不要在泛型类上定义过多的泛型 , 常见的1-2个, 不要再多了, 不是不可以(语法上是完全允许的), 但是极少有人这么用
 
 * 注意2:  泛型一般定义格式,常见命名方式
-  // T : type
+  // T : type（任意类型，需要的时候可以用临近的U和S）
   // E : element
   // K : key
   // V : value
@@ -11844,7 +11844,15 @@ fs.add(new F());// 可以
 fs.add(new S());// 可以
 ```
 
-> 总觉的除了向上限定的通配以外毫无用处，向下限定和不限定都是能接收，不能使用添加、修改操作，是我现在还理解不了祖师爷的精妙吧
+> 总觉的除了向上限定的通配以外毫无用处，向下限定和不限定都是能接收，不能使用添加、修改操作，是我现在还理解不了祖师爷的精妙
+
+> 一个类型变量或通配符可以有多个限定，例如：
+>
+> `T extends Comparable & Serializable`
+>
+> 限定类型用“&”分隔，而逗号用来分隔类型变量。
+>
+> 在Java的继承中，可以根据需要拥有多个接口超类型，但限定中之多有一个类。如果用一个类左为限定，它必须是限定列表中的第一个。
 
 ## 关于自然顺序（泛型通配应用）
 
@@ -11879,7 +11887,60 @@ class User implements Comparable<User>{
 
 可反编译字节码后查看编译器为我们做的事。
 
+> 原始类型用第一个限定的类型变量来替换，如果没有给定限定就用Object替换。
+>
+> `class Interval<T extends Serializable & Coparable>`
+>
+> Comparable和Serializable谁在前擦除泛型后用谁替换，如用Serializable替换T后，编译器在必要时要向Comparable插入强制类型转换。为了提高效率，应该将标签（tagging）接口（即没有方法的接口）放在边界列表的末尾。
 
+
+
+## 实例化类型变量
+
+Java SE 8 之后最好的办法是提供一个构造器表达式，比较老式的方法是通过反射就是有点繁琐
+
+实例化泛型
+
+```Java
+//Supplier<T>是一个函数式接口，表示一个无参数而且返回类型为T的函数
+import java.util.function.Supplier;
+public class Demo {
+    public static void main(String[] args) {
+        Pair<String> p = Pair.makPair(String::new);
+    }
+}
+class Pair<T> {
+    private T first = null;
+    private T second = null;
+
+    public static <T> Pair<T> makPair(Supplier<T> constr) {
+        return new Pair<>(constr.get(), constr.get());
+    }
+}
+//反射要传入Class<T> cl,用Class.newInstance来构造泛型对象
+```
+
+实例化泛型数组
+
+```java
+import java.util.function.IntFunction;
+public class Demo{
+    public static void main(String[] args) {
+        String[] strings = Pair.minmax(String[]::new, "hi", "there");
+    }
+}
+class Pair<T> {
+    private T first = null;
+    private T second = null;
+
+    public static <T extends Comparable<T>> T[] minmax(IntFunction<T[]> constr, T... ts) {
+        T[] apply = constr.apply(2);
+        ...
+        return apply;
+    }
+}
+//反射用Array.newInstance
+```
 
 **增强for循环(foreach)**
 
@@ -16564,6 +16625,14 @@ Api: 阻塞Api
 | 检查 | element() | peek()   | 不可用 | 不可用                |
 
 超时: 可以设置一个时间, 在有限的时间内阻塞, 超过设置的时间, 转化为返回特殊值
+
+```
+queue.offer("zs", 10 , TimeUnit.SECONDS);//最多等10秒
+String poll = queue.poll(3, TimeUnit.SECONDS);//最多等3秒
+put(e) 和 take()会一直阻塞
+```
+
+
 
 # Map
 
