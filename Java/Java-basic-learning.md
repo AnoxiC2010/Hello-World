@@ -16745,7 +16745,7 @@ Map接口API
 
     ​        ↓
 
-    |...|中|...|...|...|...|...|
+    |...|中|...|...|...|...|...|......emementData
       0   中   e   p
       1   中   e   p
       2   中   e   p
@@ -16753,7 +16753,7 @@ Map接口API
       4   中   e   p
       5   中   e   p
       6   中   e   p
-      7   中   e   p
+      7   <font color=red>中</font>   e   p
 
     ​        ↑
 
@@ -16764,7 +16764,7 @@ Map接口API
     B, 在扩容的时候也可能导致红黑树转化回链表(红黑树会拆分到两个位置, )
 
 14. HashMap的底层数组, 是一个Node类型的数组, 里面存储的是Node类型的结点, 包含四个值: key,  value, hash, next
-    Node<K,V>[] table;
+    `Node<K,V>[] table;`
 
 15. 如果存储的key-value数据, key是重复的, 那么新的key-value数据的value值会覆盖旧key-value数据的value值
 
@@ -16782,21 +16782,24 @@ Map接口API
     static final int MIN_TREEIFY_CAPACITY = 64;
     if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
         resize();
-    
     ```
 
 
 
-哈希
+**哈希**
 
 充分散列
 什么是hash?  数学概念, 散列
 Hash算法(hash散列): MD5, SHA1  , SHA2  复杂的位运算: 上百次
-202cb962ac59075b964b07152d234b70   123
+202cb962ac59075b964b07152d234b70  → 123
 关键信息的存储(密码/ 身份证号/ 支付密码)
 输入敏感
 加密: Hash不是加密算法
 加密: 解密→对称/非对称
+
+
+
+hashmap虽然在插入到某个数量的时候会打乱但并不是真的重新完全打乱。因为hashmap按照2倍扩容，比如原来在x位置，增加的容量为L，扩容后的位置要么在X要么在X+L。这从hash的计算和用二进制取余的方法来看会比较明显，老实说还是对位运算很陌生。
 
 
 
@@ -16829,7 +16832,7 @@ Api
 
 
 
-HashMap源码分析: 默认初始容量
+### HashMap源码分析: 默认初始容量
 
 ```java
         HashMap<String, Integer> map = new HashMap<>();
@@ -17017,7 +17020,7 @@ class HashMap{
 
 
 
-HashMap扩容
+### HashMap源码分析：扩容
 
 ```java
 class HashMap{
@@ -17178,6 +17181,727 @@ class HashMap{
 
 
 
+### HashMap源码分析: 重复位置
+
+```java
+        HashMap<String, Integer> map = new HashMap<>(10, 0.9f);
+        map.put("zs", 18);
+        map.put("ls", 18);
+// 假如zs 和ls 这两个key经过计算之后, 得到的下标位置一样
+```
+
+
+
+```java
+class HashMap{
+    
+    public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+    
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+        Node<K,V>[] tab; 
+        Node<K,V> p; int n, i;
+        
+            static final int TREEIFY_THRESHOLD = 8;
+        
+        
+        // 
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        
+        // tab底层数组
+        // i =  (n - 1) & hash    -> hash值计算的下标
+        // p 就是散列的下标位置
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            // 意味着这个下标位置已经存储了内容
+            
+            Node<K,V> e; 
+            K k;
+            
+            // p 已经存储的元素
+            if (p.hash == hash &&((k = p.key) == key || (key != null && key.equals(k))))
+                // 满足条件: 那么就认为是重复元素
+                e = p;
+            
+            // 如果走到这一步, 意味着, 数组下标位置第一个元素,和我不重复, 我要接着比较下面的元素是否和我重复
+            else if (p instanceof TreeNode)// 判断这个节点(数组下标位置第一个元素)是否是树节点
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                // 如果走到这一步, 意味着,这个下标位置存储的是一个链表,而非红黑树
+                // p 最开始标记的是这个链表的头结点
+                
+                for (int binCount = 0; ; ++binCount) {
+                    if ((e = p.next) == null) {
+                        // p 遍历的结点
+                        p.next = newNode(hash, key, value, null);
+                        
+                        // binCount >= 7
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);// 树化操作: 单链表--转化为--树
+                        break;
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;// 新value覆盖旧value值
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+    
+     Node<K,V> newNode(int hash, K key, V value, Node<K,V> next) {
+        return new Node<>(hash, key, value, next);
+    }
+    
+    static class Node<K,V> implements Map.Entry<K,V> {
+        final int hash;
+        final K key;
+        V value;
+        Node<K,V> next;
+
+        Node(int hash, K key, V value, Node<K,V> next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+    }
+    
+    
+}
+```
+
+
+
+### HashMap源码分析:给定长度
+
+```java
+        HashMap<String, Integer> map = new HashMap<>(10);
+        map.put("zs", 18);
+```
+
+
+
+```java
+class HashMap{
+    
+    threshold = ; // 阈值
+    loadFactor = 0.75;// 加载因子
+   
+    
+    public HashMap(int initialCapacity) {
+          //  10                  0.75
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+    
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity > MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+        
+        
+        this.loadFactor = loadFactor;
+        
+        // initialCapacity = 10
+        // threshold = 16
+        this.threshold = tableSizeFor(initialCapacity);
+    }
+
+    
+    //                                   10
+     static final int tableSizeFor(int cap) {
+         // n = 9  -> 1001
+        int n = cap - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+         // 1111 -> 15
+         
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+    }
+    
+     public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+    
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        
+        Node<K,V>[] tab;
+        Node<K,V> p; 
+        int n, i;
+        
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            Node<K,V> e; K k;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                e = p;
+            else if (p instanceof TreeNode)
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                for (int binCount = 0; ; ++binCount) {
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+    
+    
+    
+    final Node<K,V>[] resize() {
+        
+        // oldTab  = null
+        Node<K,V>[] oldTab = table;
+        // oldCap = 0
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        
+        // threshold = 16
+        // 旧阈值 = 16
+        int oldThr = threshold;
+        
+        // 新阈值, 新长度
+        int newCap, newThr = 0;
+        
+        if (oldCap > 0) {
+            if (oldCap >= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                     oldCap >= DEFAULT_INITIAL_CAPACITY)
+                newThr = oldThr << 1; // double threshold
+        }
+        else if (oldThr > 0) // initial capacity was placed in threshold
+            // 新长度 = 旧阈值
+            // newCap = 16
+            newCap = oldThr;
+        else {               // zero initial threshold signifies using defaults
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        if (newThr == 0) {
+            
+            // ft = 16 * 0.75 = 12
+            float ft = (float)newCap * loadFactor;
+            // newThr = ft = 12
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        // threshold = 12
+        threshold = newThr;
+        @SuppressWarnings({"rawtypes","unchecked"})
+        // 创建一个长度为16的数组
+            Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+        table = newTab;
+        if (oldTab != null) {
+            for (int j = 0; j < oldCap; ++j) {
+                Node<K,V> e;
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash & (newCap - 1)] = e;
+                    else if (e instanceof TreeNode)
+                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        Node<K,V> loHead = null, loTail = null;
+                        Node<K,V> hiHead = null, hiTail = null;
+                        Node<K,V> next;
+                        do {
+                            next = e.next;
+                            if ((e.hash & oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+
+    
+}
+```
+
+
+
+### HashMap源码分析:扩容导致红黑树回转链表
+
+```java
+// 知识, 短期没有什么影响, 
+        HashMap<String, Integer> map = new HashMap<>(10, 0.9f);
+        map.put("zs", 18);
+        map.put("ls", 18);
+```
+
+```java
+class HashMap{
+    
+    // 基础
+    
+    public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        Node<K,V>[] tab; Node<K,V> p; int n, i;
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            Node<K,V> e; K k;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                e = p;
+            else if (p instanceof TreeNode)
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                for (int binCount = 0; ; ++binCount) {
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        
+        // 添加的元素数目, 大于 阈值
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+    
+    // 底层数组长度为16, 加载因子0.75, 阈值12
+    // 添加了13个元素
+    
+    final Node<K,V>[] resize() {
+        // oldTab = 长度为16的数组
+        Node<K,V>[] oldTab = table;
+        // oldCap = 16
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        // 
+        int oldThr = threshold;
+        int newCap, newThr = 0;
+        if (oldCap > 0) {
+            if (oldCap >= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                     oldCap >= DEFAULT_INITIAL_CAPACITY)
+                newThr = oldThr << 1; // double threshold
+        }
+        else if (oldThr > 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {               // zero initial threshold signifies using defaults
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        if (newThr == 0) {
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        
+        // threshold = 24
+        threshold = newThr;
+        @SuppressWarnings({"rawtypes","unchecked"})
+        // 32长度的数组
+            Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+        table = newTab;
+        
+        
+        // 代码到这一句, 已经有新数组, 
+        // 把旧数组数据转移到新数组
+        
+        if (oldTab != null) {
+            // 遍历旧数组, j 表示数组下标
+            for (int j = 0; j < oldCap; ++j) {
+                Node<K,V> e;
+                
+                
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash & (newCap - 1)] = e;
+                    else if (e instanceof TreeNode)
+                        // 如果遍历的某一个结点是红黑树结点, (拆成两部分)
+                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        Node<K,V> loHead = null, loTail = null;
+                        Node<K,V> hiHead = null, hiTail = null;
+                        Node<K,V> next;
+                        do {
+                            next = e.next;
+                            if ((e.hash & oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+    
+     // this, newTab, j, oldCap
+         ///                  此对象           新数组      红黑树在数组的下标     旧数组长度
+        final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
+            TreeNode<K,V> b = this;
+            // Relink into lo and hi lists, preserving order
+            TreeNode<K,V> loHead = null, loTail = null;
+            TreeNode<K,V> hiHead = null, hiTail = null;
+            int lc = 0, hc = 0;
+            for (TreeNode<K,V> e = b, next; e != null; e = next) {
+                // 
+                next = (TreeNode<K,V>)e.next;
+                e.next = null;
+                if ((e.hash & bit) == 0) {// 旧位置
+                    if ((e.prev = loTail) == null)
+                        loHead = e;
+                    else
+                        loTail.next = e;
+                    loTail = e;
+                    ++lc;// 标记旧位置存储了几个元素
+                }
+                else {//  新位置
+                    if ((e.prev = hiTail) == null)
+                        hiHead = e;
+                    else
+                        hiTail.next = e;
+                    hiTail = e;
+                    ++hc;// 标记新位置存储了几个元素
+                }
+            }
+            
+            //     static final int UNTREEIFY_THRESHOLD = 6;
+
+            if (loHead != null) {
+                
+                // 小于等于6 -> 由红黑树转化为链表
+                if (lc <= UNTREEIFY_THRESHOLD)
+                    // untreeify 反树化操作, 由红黑树转化为链表
+                    tab[index] = loHead.untreeify(map);
+                else {
+                    tab[index] = loHead;
+                    if (hiHead != null) // (else is already treeified)
+                        loHead.treeify(tab);
+                }
+            }
+            if (hiHead != null) {
+                if (hc <= UNTREEIFY_THRESHOLD)
+                    tab[index + bit] = hiHead.untreeify(map);
+                else {
+                    tab[index + bit] = hiHead;
+                    if (loHead != null)
+                        hiHead.treeify(tab);
+                }
+            }
+        }
+
+ static class Node<K,V> implements Map.Entry<K,V> {
+        final int hash;
+        final K key;
+        V value;
+        Node<K,V> next;
+ }
+    
+     static class Entry<K,V> extends HashMap.Node<K,V> {
+        Entry<K,V> before, after;
+        Entry(int hash, K key, V value, Node<K,V> next) {
+            super(hash, key, value, next);
+        }
+    }
+    static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+        TreeNode<K,V> parent;  // red-black tree links
+        TreeNode<K,V> left;
+        TreeNode<K,V> right;
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        boolean red;
+    }
+    
+}
+```
+
+
+
+### HashMap源码分析:删除时由红黑树转化为链表
+
+```java
+        HashMap<String, Integer> map = new HashMap<>(10, 0.9f);
+        map.put("zs", 18);
+        map.put("ls", 18);
+
+        map.remove("zs");
+```
+
+```java
+class HashMap{
+    
+     public V remove(Object key) {
+        Node<K,V> e;
+        return (e = removeNode(hash(key), key, null, false, true)) == null ?
+            null : e.value;
+    }
+    
+    final Node<K,V> removeNode(int hash, Object key, Object value,
+                               boolean matchValue, boolean movable) {
+        Node<K,V>[] tab; Node<K,V> p; int n, index;
+        if ((tab = table) != null && (n = tab.length) > 0 &&
+            (p = tab[index = (n - 1) & hash]) != null) {
+            Node<K,V> node = null, e; K k; V v;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                node = p;
+            else if ((e = p.next) != null) {
+                if (p instanceof TreeNode)
+                    // 删除的是一个树结点
+                    
+                    // 先获得要删除的树结点
+                    node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
+                else {
+                    do {
+                        if (e.hash == hash &&
+                            ((k = e.key) == key ||
+                             (key != null && key.equals(k)))) {
+                            node = e;
+                            break;
+                        }
+                        p = e;
+                    } while ((e = e.next) != null);
+                }
+            }
+            if (node != null && (!matchValue || (v = node.value) == value ||
+                                 (value != null && value.equals(v)))) {
+                if (node instanceof TreeNode)
+                    // 把获得的树结点删除node
+                    ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
+                
+                
+                else if (node == p)
+                    tab[index] = node.next;
+                else
+                    p.next = node.next;
+                ++modCount;
+                --size;
+                afterNodeRemoval(node);
+                return node;
+            }
+        }
+        return null;
+    }
+    
+    final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
+                                  boolean movable) {
+            int n;
+            if (tab == null || (n = tab.length) == 0)
+                return;
+            int index = (n - 1) & hash;
+            TreeNode<K,V> first = (TreeNode<K,V>)tab[index], root = first, rl;
+            TreeNode<K,V> succ = (TreeNode<K,V>)next, pred = prev;
+            if (pred == null)
+                tab[index] = first = succ;
+            else
+                pred.next = succ;
+            if (succ != null)
+                succ.prev = pred;
+            if (first == null)
+                return;
+            if (root.parent != null)
+                // 获得这个红黑树的根节点
+                root = root.root();
+            if (root == null || root.right == null ||
+                (rl = root.left) == null || rl.left == null) {
+                // untreeify : 反树化操作: 由红黑树转化为链表
+                tab[index] = first.untreeify(map);  // too small
+                return;
+            }
+            TreeNode<K,V> p = this, pl = left, pr = right, replacement;
+            if (pl != null && pr != null) {
+                TreeNode<K,V> s = pr, sl;
+                while ((sl = s.left) != null) // find successor
+                    s = sl;
+                boolean c = s.red; s.red = p.red; p.red = c; // swap colors
+                TreeNode<K,V> sr = s.right;
+                TreeNode<K,V> pp = p.parent;
+                if (s == pr) { // p was s's direct parent
+                    p.parent = s;
+                    s.right = p;
+                }
+                else {
+                    TreeNode<K,V> sp = s.parent;
+                    if ((p.parent = sp) != null) {
+                        if (s == sp.left)
+                            sp.left = p;
+                        else
+                            sp.right = p;
+                    }
+                    if ((s.right = pr) != null)
+                        pr.parent = s;
+                }
+                p.left = null;
+                if ((p.right = sr) != null)
+                    sr.parent = p;
+                if ((s.left = pl) != null)
+                    pl.parent = s;
+                if ((s.parent = pp) == null)
+                    root = s;
+                else if (p == pp.left)
+                    pp.left = s;
+                else
+                    pp.right = s;
+                if (sr != null)
+                    replacement = sr;
+                else
+                    replacement = p;
+            }
+            else if (pl != null)
+                replacement = pl;
+            else if (pr != null)
+                replacement = pr;
+            else
+                replacement = p;
+            if (replacement != p) {
+                TreeNode<K,V> pp = replacement.parent = p.parent;
+                if (pp == null)
+                    root = replacement;
+                else if (p == pp.left)
+                    pp.left = replacement;
+                else
+                    pp.right = replacement;
+                p.left = p.right = p.parent = null;
+            }
+
+            TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
+
+            if (replacement == p) {  // detach
+                TreeNode<K,V> pp = p.parent;
+                p.parent = null;
+                if (pp != null) {
+                    if (p == pp.left)
+                        pp.left = null;
+                    else if (p == pp.right)
+                        pp.right = null;
+                }
+            }
+            if (movable)
+                moveRootToFront(tab, r);
+        }
+
+
+    
+}
+```
+
+
+
+
+
+
+
+
+
 
 
 ## LinkedHashMap概述
@@ -17189,6 +17913,237 @@ class HashMap{
 - 链表定义了迭代顺序，该迭代顺序就是键值对的插入顺序。
 
 - 不同步。
+
+
+
+LinkedHashMap源码分析:双向链表
+
+```java
+ LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
+ map.put("zs", 18);
+
+```
+
+```java
+class LinkedHashMap extends HashMap{
+    // 创建的到底是一个什么结点类型
+     Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
+        LinkedHashMap.Entry<K,V> p = new LinkedHashMap.Entry<K,V>(hash, key, value, e);
+        linkNodeLast(p);
+        return p;
+    }
+    
+    
+     static class Entry<K,V> extends HashMap.Node<K,V> {
+        Entry<K,V> before, after;
+        Entry(int hash, K key, V value, Node<K,V> next) {
+            super(hash, key, value, next);
+        }
+    }
+}
+class HashMap{
+    
+     static class Node<K,V> implements Map.Entry<K,V> {
+        final int hash;
+        final K key;
+        V value;
+        Node<K,V> next;
+         
+     }
+    
+    public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+    
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        Node<K,V>[] tab; Node<K,V> p; int n, i;
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            Node<K,V> e; K k;
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                e = p;
+            else if (p instanceof TreeNode)
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                for (int binCount = 0; ; ++binCount) {
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+
+    
+}
+```
+
+
+
+### LinkedHashMap源码分析: toString方法遍历
+
+```java
+        LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
+        map.put("zs", 18);
+        map.put("ls", 18);
+        map.put("wu", 18);
+        map.put("zl", 18);
+
+        System.out.println(map);// {zs=18, ls=18, wu=18, zl=18}
+
+// 位运算 , 最有路径. 
+```
+
+```java
+class LinkedhashMap{
+    
+   public Set<Map.Entry<K,V>> entrySet() {
+        Set<Map.Entry<K,V>> es;
+        return (es = entrySet) == null ? (entrySet = new LinkedEntrySet()) : es;
+    }
+    
+    
+    final class LinkedEntrySet extends AbstractSet<Map.Entry<K,V>> {
+        public final int size()                 { return size; }
+        public final void clear()               { LinkedHashMap.this.clear(); }
+        public final Iterator<Map.Entry<K,V>> iterator() {
+            return new LinkedEntryIterator();
+        }
+        public final boolean contains(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?,?> e = (Map.Entry<?,?>) o;
+            Object key = e.getKey();
+            Node<K,V> candidate = getNode(hash(key), key);
+            return candidate != null && candidate.equals(e);
+        }
+        public final boolean remove(Object o) {
+            if (o instanceof Map.Entry) {
+                Map.Entry<?,?> e = (Map.Entry<?,?>) o;
+                Object key = e.getKey();
+                Object value = e.getValue();
+                return removeNode(hash(key), key, value, true, true) != null;
+            }
+            return false;
+        }
+        public final Spliterator<Map.Entry<K,V>> spliterator() {
+            return Spliterators.spliterator(this, Spliterator.SIZED |
+                                            Spliterator.ORDERED |
+                                            Spliterator.DISTINCT);
+        }
+        public final void forEach(Consumer<? super Map.Entry<K,V>> action) {
+            if (action == null)
+                throw new NullPointerException();
+            int mc = modCount;
+            for (LinkedHashMap.Entry<K,V> e = head; e != null; e = e.after)
+                action.accept(e);
+            if (modCount != mc)
+                throw new ConcurrentModificationException();
+        }
+    }
+    
+     final class LinkedEntryIterator extends LinkedHashIterator
+        implements Iterator<Map.Entry<K,V>> {
+        public final Map.Entry<K,V> next() { return nextNode(); }
+    }
+    
+    abstract class LinkedHashIterator {
+        LinkedHashMap.Entry<K,V> next;
+        LinkedHashMap.Entry<K,V> current;
+        int expectedModCount;
+
+        LinkedHashIterator() {
+            next = head;
+            expectedModCount = modCount;
+            current = null;
+        }
+
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final LinkedHashMap.Entry<K,V> nextNode() {
+            LinkedHashMap.Entry<K,V> e = next;
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            if (e == null)
+                throw new NoSuchElementException();
+            current = e;
+            // 核心代码
+            next = e.after;
+            return e;
+        }
+
+        public final void remove() {
+            Node<K,V> p = current;
+            if (p == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            current = null;
+            K key = p.key;
+            removeNode(hash(key), key, null, false, false);
+            expectedModCount = modCount;
+        }
+    }
+}
+
+class HashMap{
+    
+}
+
+abstract class AbstractMap{
+    
+
+    public String toString() {
+            Iterator<Entry<K,V>> i = entrySet().iterator();
+            if (! i.hasNext())
+                return "{}";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append('{');
+            for (;;) {
+                Entry<K,V> e = i.next();
+                K key = e.getKey();
+                V value = e.getValue();
+                sb.append(key   == this ? "(this Map)" : key);
+                sb.append('=');
+                sb.append(value == this ? "(this Map)" : value);
+                if (! i.hasNext())
+                    return sb.append('}').toString();
+                sb.append(',').append(' ');
+            }
+        }
+    
+}
+
+```
+
+
 
 
 
@@ -17284,3 +18239,98 @@ Properties 的 API:
 
 3. 请设计一个猜数字小游戏，可以试玩5次。试玩结束之后，给出提示：游戏试玩结束，
      请付费。
+
+
+
+# Set
+
+set概述
+
+一个不包含重复元素的 collection。更确切地讲, set 不包含满足 e1.equals(e2) 的元素对 e1 和 e2, 并且最多包含一个 null 元素。正如其名称所暗示的，此接口模仿了数学上的 set 抽象。
+
+注意事项：Set 集合并不一定都是无序的，有些 Set 集合是有序的。
+
+
+
+## HashSet
+
+概述
+
+- 底层是HashMap
+
+- 它不保证迭代顺序，特别是它不保证该顺序恒久不变 (无序的)。
+
+- 允许存储 null 元素。
+
+- 不同步
+
+
+
+HashSet 是如何保证元素的唯一性的呢？（Set 存储的元素是作为 Map 的 key，而Map的key是唯一的）
+
+- 查看源码 
+- 它依赖于存储元素的两个方法: int hashCode() & boolean equals(Object obj)
+
+<font color=red>注意事项：千万不要修改 HashSet 元素的属性值!</font>
+
+
+
+## LinkedHashSet
+
+概述
+
+- HashSet 的子类
+
+- 底层是HashMap & 双向链表
+
+- HashMap 保证了元素的唯一性。
+
+- 链表定义了迭代的顺序，按照元素的插入顺序进行迭代。
+
+- 不同步。
+
+
+
+## TreeSet
+
+概述
+
+- 底层的数据结构是 TreeMap, TreeMap的底层是红黑树。
+
+- 如果创建对象时，没有传入 Comparator 对象，则根据自然顺序进行排序。
+- 如果创建对象时，传入了 Comparator 对象，则根据 Comparator 进行排序。
+- 不能存储 null 元素，除非在Comparator中定义的null的比较规则
+- 不同步
+
+
+
+TreeSet 是如何保证元素的唯一性的呢？
+
+- 查看源码 
+
+- 它依赖于存储元素的 compareTo(obj) 方法，或者是传入的 Comparator 对象的 compare(o1, o2) 方法
+
+<font color=red>注意事项：千万不要修改 TreeSet 元素的属性值!</font>
+
+
+
+除Set接口中定义的方法外，由于TreeSet 中的元素是大小有序的，因此它还有一些特殊的方法。
+
+E first();
+
+E last();
+
+E pollFirst();
+
+E pollLast();
+
+E ceiling(E e);
+
+E floor(E e);
+
+E higher(E e)
+
+E lower(E e)
+
+NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive);
+
