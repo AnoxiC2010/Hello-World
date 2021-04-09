@@ -18244,11 +18244,37 @@ Properties 的 API:
 
 # Set
 
-set概述
+概述
 
 一个不包含重复元素的 collection。更确切地讲, set 不包含满足 e1.equals(e2) 的元素对 e1 和 e2, 并且最多包含一个 null 元素。正如其名称所暗示的，此接口模仿了数学上的 set 抽象。
 
 注意事项：Set 集合并不一定都是无序的，有些 Set 集合是有序的。
+
+1.  Set这个接口 Collection的子接口(集合)
+2. Set有些子实现有序(LinkedHashSet, TreeSet), 有些子实现无序(HashSet)
+3. 有些子实现不允许存储null值(TreeSet), 有些子实现允许存储null值(HashSet, LinkedHashSet)
+4. 不允许存储重复元素( ) 
+
+**Api**
+
+| boolean   | add(E e)         如果 set 中尚未存在指定的元素，则添加此元素（可选操作）。 |
+| --------- | ------------------------------------------------------------ |
+| boolean   | addAll(Collection<? extends E> c)         如果 set 中没有指定 collection 中的所有元素，则将其添加到此 set 中（可选操作）。 |
+| void      | clear()         移除此 set 中的所有元素（可选操作）。        |
+| boolean   | contains(Object o)         如果 set 包含指定的元素，则返回 true。 |
+| boolean   | containsAll(Collection<?> c)         如果此 set 包含指定 collection 的所有元素，则返回 true。 |
+| boolean   | equals(Object o)         比较指定对象与此 set 的相等性。     |
+| int       | hashCode()         返回 set 的哈希码值。                     |
+| boolean   | isEmpty()         如果 set 不包含元素，则返回 true。         |
+| IteratorE | iterator()         返回在此 set 中的元素上进行迭代的迭代器。 |
+| boolean   | remove(Object o)         如果 set 中存在指定的元素，则将其移除（可选操作）。 |
+| boolean   | removeAll(Collection<?> c)         移除 set 中那些包含在指定 collection 中的元素（可选操作）。 |
+| boolean   | retainAll(Collection<?> c)         仅保留 set 中那些包含在指定 collection 中的元素（可选操作）。 |
+| int       | size()         返回 set 中的元素数（其容量）。               |
+| Object[]  | toArray()         返回一个包含 set 中所有元素的数组。        |
+| <T> T[]   | toArray(T[] a)         返回一个包含此 set 中所有元素的数组；返回数组的运行时类型是指定数组的类型。 |
+
+
 
 
 
@@ -18266,12 +18292,88 @@ set概述
 
 
 
+1.  HashSet是Set的一个子实现
+2.  HashSet底层持有一个HashMap对象(数组+链表+红黑树)
+3. HashSet存储元素的特点基本上遵从于HashMap的存储key的特点
+4. 无序
+5. 不允许重复:  什么是重复(元素hash值一样, 并且, 两个元素知否直接相等或者相equals)
+6. 允许null
+7. 线程不安全
+
+
+
 HashSet 是如何保证元素的唯一性的呢？（Set 存储的元素是作为 Map 的 key，而Map的key是唯一的）
 
 - 查看源码 
 - 它依赖于存储元素的两个方法: int hashCode() & boolean equals(Object obj)
 
 <font color=red>注意事项：千万不要修改 HashSet 元素的属性值!</font>
+
+
+
+**构造方法**
+
+| HashSet()         构造一个新的空 set，其底层 HashMap 实例的默认初始容量是 16，加载因子是 0.75。 |
+| ------------------------------------------------------------ |
+| HashSet(Collection<? extends E> c)         构造一个包含指定  collection 中的元素的新 set。 |
+| HashSet(int initialCapacity)         构造一个新的空 set，其底层 HashMap 实例具有指定的初始容量和默认的加载因子（0.75）。 |
+| HashSet(int initialCapacity,  float loadFactor)         构造一个新的空 set，其底层 HashMap 实例具有指定的初始容量和指定的加载因子。 |
+
+
+
+**Api**
+
+| boolean   | add(E e)         如果此 set 中尚未包含指定元素，则添加指定元素。 |
+| --------- | ------------------------------------------------------------ |
+| void      | clear()         从此 set 中移除所有元素。                    |
+| Object    | clone()         返回此 HashSet 实例的浅表副本：并没有复制这些元素本身。 |
+| boolean   | contains(Object o)         如果此 set 包含指定元素，则返回 true。 |
+| boolean   | isEmpty()         如果此 set 不包含任何元素，则返回 true。   |
+| IteratorE | iterator()         返回对此 set 中元素进行迭代的迭代器。     |
+| boolean   | remove(Object o)         如果指定元素存在于此  set 中，则将其移除。 |
+| int       | size()         返回此 set 中的元素的数量（set 的容量）。     |
+
+
+
+### HashSet源码分析
+
+```java
+//        1, HashSet是Set的一个子实现
+//        2, HashSet底层持有一个HashMap对象(数组+链表+红黑树)
+//        3, HashSet存储元素的特点基本上遵从于HashMap的存储key的特点
+//        4, 无序
+//        5, 不允许重复
+//        6, 允许null
+//        7, 线程不安全
+        HashSet<String> set = new HashSet<>();
+        set.add("zs");
+ 		set.add("ls");
+```
+
+```java
+class HashSet{
+    private transient HashMap<E,Object> map;
+    
+     // Dummy value to associate with an Object in the backing Map
+    // 哑变量:  没有什么特殊作用, 就是单纯的用来填充value(key-value)
+    private static final Object PRESENT = new Object();
+    
+    public HashSet() {
+        map = new HashMap<>();
+    }
+     public HashSet(int initialCapacity) {
+        map = new HashMap<>(initialCapacity);
+    }
+
+    
+    public boolean add(E e) {
+        return map.put(e, PRESENT)==null;
+    }
+    
+}
+```
+
+
 
 
 
@@ -18291,6 +18393,136 @@ HashSet 是如何保证元素的唯一性的呢？（Set 存储的元素是作�
 
 
 
+1. 他是HashSet的一个子类
+2. 底层持有一个LinkedHashMap
+3.  基本特点遵从, HashSet, LinkedHashMap
+4. 有序
+5. 允许null
+6. 不允许重复
+7. 线程不安全
+8. 底层持有一个LinkedHashMap -> 拥有一个双向链表
+
+
+
+| 构造方法摘要                                                 |
+| ------------------------------------------------------------ |
+| LinkedHashSet()         构造一个带默认初始容量  (16) 和加载因子 (0.75) 的新空链接哈希 set。 |
+| LinkedHashSet(Collection<? extends E> c)         构造一个与指定  collection 中的元素相同的新链接哈希 set。 |
+| LinkedHashSet(int initialCapacity)         构造一个带指定初始容量和默认加载因子 (0.75) 的新空链接哈希 set。 |
+| LinkedHashSet(int initialCapacity,  float loadFactor)         构造一个带有指定初始容量和加载因子的新空链接哈希 set。 |
+
+
+
+**Api**
+
+是复用父类(HashSet)的api, 自己并没有定义特殊api
+
+
+
+理解一下: HashMap  , HashSet, LinkedHashMap, LinkedHashSet 之间的关系
+
+### LinkedHashSet源码分析:在set和map圈的关系
+
+```java
+  LinkedHashSet<String> set = new LinkedHashSet<>();
+        set.add("zs");
+```
+
+```java
+class LinkedHashSet{
+    
+     public LinkedHashSet() {
+        super(16, .75f, true);
+    }
+
+    
+}
+
+class HashSet{
+    
+    private transient HashMap<E,Object> map;
+    
+    HashSet(int initialCapacity, float loadFactor, boolean dummy) {
+        map = new LinkedHashMap<>(initialCapacity, loadFactor);
+    }
+   
+    
+}
+
+class LinkedHashMap{
+     public LinkedHashMap(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor);
+        accessOrder = false;
+    }
+    
+}
+
+class HashMap{
+    
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity > MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+        this.loadFactor = loadFactor;
+        this.threshold = tableSizeFor(initialCapacity);
+    }
+}
+
+```
+
+
+
+```java
+class LinkedHashSet{
+    
+    private transient HashMap<E,Object> map;
+    
+    HashSet(int initialCapacity, float loadFactor, boolean dummy) {
+        map = new LinkedHashMap<>(initialCapacity, loadFactor);
+    }
+     public LinkedHashSet() {
+        this(16, .75f, true);
+    }
+
+    
+}
+
+
+class LinkedHashMap{
+    
+      
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity > MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+        this.loadFactor = loadFactor;
+        this.threshold = tableSizeFor(initialCapacity);
+    }
+    
+     public LinkedHashMap(int initialCapacity, float loadFactor) {
+        this(initialCapacity, loadFactor);
+        accessOrder = false;
+    }
+    
+}
+
+
+```
+
+
+
+
+
 ## TreeSet
 
 概述
@@ -18304,6 +18536,17 @@ HashSet 是如何保证元素的唯一性的呢？（Set 存储的元素是作�
 
 
 
+1. 是Set接口的一个具体(树)实现
+2. 它的底层持有一个TreeMap对象
+3. 存到TreeSet里面的元素, 相当于存储到TreeMap里面的key
+4. TreeSet的基本特点基本遵从于TreeMap的key
+5. 大小有序
+6. 不允许null
+7. 不允许重复(自然顺序: )
+8. 线程不安全
+
+
+
 TreeSet 是如何保证元素的唯一性的呢？
 
 - 查看源码 
@@ -18314,23 +18557,51 @@ TreeSet 是如何保证元素的唯一性的呢？
 
 
 
+**构造方法**
+
+| TreeSet()         构造一个新的空 set，该 set 根据其元素的自然顺序进行排序。 |
+| ------------------------------------------------------------ |
+| TreeSet(Collection<? extends E> c)         构造一个包含指定  collection 元素的新 TreeSet，它按照其元素的自然顺序进行排序。 |
+| TreeSet(Comparator<? super E> comparator)          构造一个新的空  TreeSet，它根据指定比较器进行排序。 |
+| TreeSet(SortedSetE s)         构造一个与指定有序 set  具有相同映射关系和相同排序的新 TreeSet。 |
+
+
+
+**Api**
+
 除Set接口中定义的方法外，由于TreeSet 中的元素是大小有序的，因此它还有一些特殊的方法。
 
-E first();
+| boolean               | add(E e)         将指定的元素添加到此 set（如果该元素尚未存在于 set 中）。 |
+| --------------------- | ------------------------------------------------------------ |
+| boolean               | addAll(Collection<? extends E> c)         将指定  collection 中的所有元素添加到此 set 中。 |
+| E                     | ceiling(E e)         返回此 set 中大于等于给定元素的最小元素；如果不存在这样的元素，则返回 null。 |
+| void                  | clear()         移除此 set 中的所有元素。                    |
+| Object                | clone()         返回 TreeSet 实例的浅表副本。                |
+| Comparator<? super E> | comparator()         返回对此 set 中的元素进行排序的比较器；如果此 set 使用其元素的自然顺序，则返回 null。 |
+| boolean               | contains(Object o)         如果此 set 包含指定的元素，则返回 true。 |
+| IteratorE             | descendingIterator()         返回在此 set 元素上按降序进行迭代的迭代器。 |
+| NavigableSetE         | descendingSet()         返回此 set 中所包含元素的逆序视图。  |
+| E                     | first()         返回此 set 中当前第一个（最低）元素。        |
+| E                     | floor(E e)         返回此 set 中小于等于给定元素的最大元素；如果不存在这样的元素，则返回 null。 |
+| SortedSetE            | headSet(E toElement)         返回此 set 的部分视图，其元素严格小于 toElement。 |
+| NavigableSetE         | headSet(E toElement,  boolean inclusive)         返回此 set 的部分视图，其元素小于（或等于，如果 inclusive 为 true）toElement。 |
+| E                     | higher(E e)         返回此 set 中严格大于给定元素的最小元素；如果不存在这样的元素，则返回 null。 |
+| boolean               | isEmpty()         如果此 set 不包含任何元素，则返回 true。   |
+| IteratorE             | iterator()         返回在此 set 中的元素上按升序进行迭代的迭代器。 |
+| E                     | last()         返回此 set 中当前最后一个（最高）元素。       |
+| E                     | lower(E e)         返回此 set 中严格小于给定元素的最大元素；如果不存在这样的元素，则返回 null。 |
+| E                     | pollFirst()         获取并移除第一个（最低）元素；如果此 set 为空，则返回 null。 |
+| E                     | pollLast()         获取并移除最后一个（最高）元素；如果此 set 为空，则返回 null。 |
+| boolean               | remove(Object o)         将指定的元素从 set 中移除（如果该元素存在于此 set 中）。 |
+| int                   | size()         返回 set 中的元素数（set 的容量）。           |
+| NavigableSetE         | subSet(E fromElement,  boolean fromInclusive, E toElement,  boolean toInclusive)         返回此 set 的部分视图，其元素范围从 fromElement 到 toElement。 |
+| SortedSetE            | subSet(E fromElement,  E toElement)         返回此 set 的部分视图，其元素从 fromElement（包括）到 toElement（不包括）。 |
+| SortedSetE            | tailSet(E fromElement)          返回此 set 的部分视图，其元素大于等于 fromElement。 |
+| NavigableSetE         | tailSet(E fromElement,  boolean inclusive)         返回此 set 的部分视图，其元素大于（或等于，如果 inclusive 为 true）fromElement。 |
 
-E last();
 
-E pollFirst();
 
-E pollLast();
 
-E ceiling(E e);
 
-E floor(E e);
 
-E higher(E e)
-
-E lower(E e)
-
-NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive);
 
