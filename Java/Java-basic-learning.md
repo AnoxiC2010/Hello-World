@@ -17957,7 +17957,49 @@ class HashMap{
 
 
 
-LinkedHashMap源码分析:双向链表
+概述
+
+1. LinkedHashMap 是HashMap的一个子类
+
+2. LinkedHashMap 基本上完全复用了HashMap的参数结构方法(数组+链表+红黑树)
+
+3. LinkedHashMap的特点基本遵从于Hashmap
+
+4. LinkedHashMap在HashMap的基础上额外维护了一个双向链表(保存顺序)
+
+5. LinkedHashMap是有序的
+
+6. `//LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder)`
+
+   `//构造一个带指定初始容量、加载因子和'排序模式'的空 LinkedHashMap 实例。`
+
+   默认值是假, 如果设为真,
+   如果在排序模式为真的情况下, 一旦我们访问了LinkedHashMap中的数据, 那么这个被访问的数据, 就会在LinkedhashMap所维护的双向链表上移动到最后的位置
+
+
+
+| 构造方法摘要                                                 |
+| ------------------------------------------------------------ |
+| LinkedHashMap()         构造一个带默认初始容量  (16) 和加载因子 (0.75) 的空插入顺序 LinkedHashMap 实例。 |
+| LinkedHashMap(int initialCapacity)         构造一个带指定初始容量和默认加载因子 (0.75) 的空插入顺序 LinkedHashMap 实例。 |
+| LinkedHashMap(int initialCapacity,  float loadFactor)         构造一个带指定初始容量和加载因子的空插入顺序 LinkedHashMap 实例。 |
+| LinkedHashMap(int initialCapacity,  float loadFactor, boolean accessOrder)         构造一个带指定初始容量、加载因子和排序模式的空 LinkedHashMap 实例。 |
+| LinkedHashMap(Map<? extendsK,? extendsV> m)         构造一个映射关系与指定映射相同的插入顺序 LinkedHashMap 实例。 |
+
+
+
+**Api**
+
+Api基本是复用HashMap实现的方法
+
+| void    | clear()         从该映射中移除所有映射关系。                 |
+| ------- | ------------------------------------------------------------ |
+| boolean | containsValue(Objectvalue)         如果此映射将一个或多个键映射到指定值，则返回 true。 |
+| V       | get(Objectkey)         返回此映射到指定键的值。              |
+
+
+
+### LinkedHashMap源码分析:双向链表2
 
 ```java
  LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
