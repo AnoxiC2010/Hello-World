@@ -15081,7 +15081,9 @@ Collection的特点
   > 注意: 对于删除操作, 删除的仅仅是刚刚遍历过的元素, 意味着, 不能做连续的删除, 不能在遍历之前删除
   > Iterator主要是用来做遍历, 删除是一个非常非常非常次要功能
 
+- devault void forEachRemaining(Consumer<? super E> action);
 
+  Java SE 8 中以此可用lambda做简化遍历
 
 Iterator 接口原理
 
@@ -15157,7 +15159,9 @@ class Collection具体实现子类{
 
 ```
 
-### Foreach/增强的for循环/加强的for循环:
+## for each 循环
+
+/增强的for循环/加强的for循环:
 
 Jdk1.5
 
@@ -15178,6 +15182,93 @@ Java的for循环, 底层就是iterator迭代(也不要瞎做改变modCound的事
 数组也可以使用增强的for循环, 但是数组能使用是jvm做的适配, 和iterator迭代没有关系
 
 
+
+## forEachRemaining + lambda
+
+> for each 循环可以与任何实现了Iterable接口的对象一起工作，Collection接口扩展了Iterable接口，所以标准类库中的任何集合都可以使用"for each"循环。
+>
+> 在Java SE 8中甚至不用写循环。可以调用forEachRemaining方法提供一个lambda表达式（它会处理一个元素）。将对迭代器的每一个元素调用这个lambda表达式，直到在没有元素为止。e.g.
+>
+> `iterator.forEachRemaining(element -> do something with element);`
+>
+> 元素的访问顺序取决于集合类型，如ArrayList从索引0开始，Set类型看各自有序情况
+>
+> forEachRemaining中不能使用iterator.remove会直接报IllegalStateException，因为不是用.next()迭代的；也不要使用集合的remove方法，删除后会在下一次进入循环时在forEachRemaining这行报ConcurrentModificationException。
+>
+> 不需要写这么作的代码。
+
+
+
+## removeIf + lambda
+
+> default boolean removeIf(Predicate<? super E> filter)
+>
+> 用于删除满足某个条件的元素。
+
+
+
+## RandomAccess接口
+
+Java SE 1.4引入的标记接口，不含任何方法，用来测试一个特定的集合是否支持高效的随机访问。
+
+```java
+//选择更高效的遍历方式
+if (c instanceof RandomAccess) {
+    use random access algorithm
+} else {
+    use sequential access algorithm
+}
+```
+
+根据接口描述来看LinkedList虽然也支持按照下标访问，但是由于底层不是数组，更适合用迭代器来遍历，LinkedList确实没有实现该接口，ArrayList实现了。
+
+但是根据实际测试（测试1），LinkedList按照下标访问的速度上比用迭代器要快，这就很尴尬了，这个标记接口就很干；事实时我的关注点错了，这并不是这个接口的针对，此接口是用来选择最适合的遍历方式，就是说在遍历的情况下，LinkedList用迭代器的方式会比用下标遍历的方式高效很多，想一下LinkedList用下标访问的底层实现能明白，如果用下标遍历中间元素的时间是n/2 阶乘，迭代器遍历就是n/2，见测试2.
+
+```java
+//测试 LinkedList按下标访问和迭代访问的速度对比
+public static void main(String[] args) {
+        List<String> list = new LinkedList<>();
+        for (int i = 0; i < 10000 * 1000; i++) {
+            list.add("hello");
+        }
+        list.add("zs");
+        for (int i = 0; i < 10000 * 1000; i++) {
+            list.add("hello");
+        }
+        long before = System.currentTimeMillis();
+//        String s = list.get(10000 * 1000);//34毫秒
+        for (String s : list) {//42毫秒
+            if (s.equals("zs")) {
+                System.out.println(s);
+                break;
+            }
+        }
+        long after = System.currentTimeMillis();
+        System.out.println(after - before);
+    }
+```
+
+```java
+public static void main(String[] args) {
+        List<String> list = new LinkedList<>();
+        for (int i = 0; i < 10000; i++) {
+            list.add("hello");
+        }
+        list.add("zs");
+        for (int i = 0; i < 10000; i++) {
+            list.add("hello");
+        }
+        long before = System.currentTimeMillis();
+//        for (int i = 0; i < list.size(); i++) {
+//            System.out.println(list.get(i));//477毫秒
+//        }
+        for (String s : list) {//174毫秒
+            System.out.println(s);
+        }
+        long after = System.currentTimeMillis();
+        System.out.println(after - before);
+    }
+```
 
 # List
 
