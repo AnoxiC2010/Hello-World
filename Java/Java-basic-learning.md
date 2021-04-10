@@ -18313,6 +18313,99 @@ abstract class AbstractMap{
 
 
 
+# Hashtable
+
+经常面试问: Hashmap和hashtable的区别?
+Hashtable: 工作中实际使用用不到.
+
+1. 线程安全问题
+
+   HashMap: 线程不安全
+   Hashtable: 线程安全
+
+2.  底层结构
+   HashMap: 数组+链表+红黑树(jdk1.8有)
+   Hashtable: 数组+链表
+
+3. 数组: 初始容量, 扩容
+   HashMap: 默认初始容量16, 默认扩容2倍
+   Hashtable: 默认初始容量11, 默认扩为原来的 (2倍+1)
+
+4. hash计算
+   HashMap:  
+   			Int hash = (h = key.hashCode )^ (h >>> 16)
+   			I =  hash & (n - 1)
+   Hashtable: 
+   			int hash = key.hashCode();
+   		    int index = (hash & 0x7FFFFFFF) % tab.length;
+
+
+
+## Hashtable源码分析
+
+```java
+class hashtable{
+    
+    table;
+    
+      public Hashtable(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal Capacity: "+
+                                               initialCapacity);
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal Load: "+loadFactor);
+
+        if (initialCapacity==0)
+            initialCapacity = 1;
+          
+          
+        this.loadFactor = loadFactor;
+        table = new Entry<?,?>[initialCapacity];
+        threshold = (int)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
+    }
+    
+    public Hashtable() {
+        this(11, 0.75f);
+    }
+    
+    
+    protected void rehash() {
+        int oldCapacity = table.length;
+        Entry<?,?>[] oldMap = table;
+
+        // overflow-conscious code
+        int newCapacity = (oldCapacity << 1) + 1;
+        if (newCapacity - MAX_ARRAY_SIZE > 0) {
+            if (oldCapacity == MAX_ARRAY_SIZE)
+                // Keep running with MAX_ARRAY_SIZE buckets
+                return;
+            newCapacity = MAX_ARRAY_SIZE;
+        }
+        Entry<?,?>[] newMap = new Entry<?,?>[newCapacity];
+
+        modCount++;
+        threshold = (int)Math.min(newCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
+        table = newMap;
+
+        for (int i = oldCapacity ; i-- > 0 ;) {
+            for (Entry<K,V> old = (Entry<K,V>)oldMap[i] ; old != null ; ) {
+                Entry<K,V> e = old;
+                old = old.next;
+
+                int index = (e.hash & 0x7FFFFFFF) % newCapacity;
+                e.next = (Entry<K,V>)newMap[index];
+                newMap[index] = e;
+            }
+        }
+    }
+    
+}
+```
+
+
+
+
+
 ## Properties概述
 
 - Hashtable<Object, Object> 的子类
@@ -18326,8 +18419,8 @@ abstract class AbstractMap{
 **注意事项：**
 
 - 不要使用Hashtable里面定义的方法添加键值对！因为它们可以插入不是String 类型的数据。
-
 - 如果一个Properties中含有非String的键值对，那么这样的Properties是”不安全”的。调用 store 或者 save 方法将失败。
+- Properties 是Hashtable的子类( 但是, 不要把它当做Hashtable的子类使用) Properties 主要是用来做持久化, properties文件(配置文件），作为Properties使用存储的数据, 必须是字符串
 
 > 1)底层hash表
 > 2)Hashtable 中的方法是Synchronize的, 同步方法
@@ -18735,7 +18828,93 @@ TreeSet 是如何保证元素的唯一性的呢？
 
 
 
+# 哈希
+
+hash算法不是加密算法
+
+Hash是用来做散列的
 
 
 
+<font color=red>哈希算法的特点</font>
 
+一个优秀的 hash 算法，满足以下特点： 
+
+（是一种理想情况: 现实不可能） 
+
+<font color=red>正向快速</font>：给定明文和 hash 算法，在有限时间和有限资源内能计算出 hash 值。 
+
+<font color=red>逆向困难</font>：给定（若干） hash 值，在有限时间内很难（基本不可能）逆推出明文。 
+
+<font color=red>输入敏感</font>：原始输入信息修改一点信息，产生的 hash 值看起来应该都有很大不同。 
+
+<font color=red>冲突避免</font>：很难找到两段内容不同的明文，使得它们的 hash 值一致（发生冲突）。即对于任意两个不同的数据块，其hash值相同的可能性极小；对于一个给定的数据块，找到和它hash值相同的数据块极为困难。  
+
+我们可以简单地把哈希函数理解为在模拟随机映射，然后从随机映射的角度去理解哈希函数。 
+一些皆文件:  文件都可以通过hash算法得到一串hash值
+
+文件  --hash算法 ----hash值
+不能在有限的时间内, 找到另外一个文件, 经过计算, 找到这个hash值
+
+
+
+**有哪些主流的hash算法**
+
+MD4:  128位, MD4已被证明不够安全。  
+
+MD5： 128位, MD5 已被证明不具备"强抗碰撞性"。王小云 
+
+SHA1： 160位, SHA-1 已被证明不具"强抗碰撞性"。Google算法 
+
+SHA2：  (SHA-224、SHA-256、SHA-384，和SHA-512) 
+
+SHA3: 相关算法已经被提出
+
+我们相关: 信息散列, 保证关键信息的安全
+主流应用: MD5(小公司), SHA1(大公司). 
+
+**碰撞**: 试 
+Key -> hash
+Hash码,  找到一个文件
+
+Zs
+123  -> 3c6934926ebcf81c1646da93105ac12f
+456 -> 3c6934926ebcf81c1646da93105ac12f
+
+**加盐**
+123  -> 123haha  ->  3c6934926ebcf81c16 3c6934926ebcf81c16
+Xxx  -> xxxhahah    ->  3c69343c69343c69343c69343c69343c6934
+
+
+
+Hash冲突: 理论
+用哈希函数将键转换为数组中的一个索引。理想情况下不同的键都能转换成不同的索引值。当然这只是理想情况下，所以我们需要处理两个或者多个键都散列到相同索引值的情况 (哈希冲突)。 
+
+
+
+处理碰撞冲突。理论        
+
+a. 开放地址法，线性探测法, 平方探测法, 再散列法…        
+
+b. 拉链法
+
+
+
+Hash算法的应用
+哪个地方用到Hash算法:  关键用户信息的散列 (密码/支付密码/银行卡号/身份证号)
+
+指纹 (身份的标识)       
+
+ a. 证书, 文件        
+
+b. 加密        
+
+… 
+
+散列      
+
+ a. 集群, 分布式(负载均衡)       
+
+b. 数据结构       
+
+… 
