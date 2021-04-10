@@ -15224,6 +15224,10 @@ if (c instanceof RandomAccess) {
 
 但是根据实际测试（测试1），LinkedList按照下标访问的速度上比用迭代器要快，这就很尴尬了，这个标记接口就很干；事实时我的关注点错了，这并不是这个接口的针对，此接口是用来选择最适合的遍历方式，就是说在遍历的情况下，LinkedList用迭代器的方式会比用下标遍历的方式高效很多，想一下LinkedList用下标访问的底层实现能明白，如果用下标遍历中间元素的时间是n/2 阶乘，迭代器遍历就是n/2，见测试2.
 
+实测ArrayList用下标遍历比迭代器遍历要快，但两者的时间差距没有LinkedList两种方式相差的那么夸张。
+
+综上使用链表的唯一理由是尽可能地减少在列表中间插入或删除元素所付出的代价。如果列表只有少数几个元素，就完全可以使用ArrayList。强烈建议避免使用以整数索引表示链表中位置的所有方法。需要随机访问就是用数组或者ArrayList而不要使用链表。
+
 ```java
 //测试 LinkedList按下标访问和迭代访问的速度对比
 public static void main(String[] args) {
@@ -15249,6 +15253,7 @@ public static void main(String[] args) {
 ```
 
 ```java
+//LinkedList用下标遍历效率极其低下，相当于每次都要从头部开始重新搜索。如果发现正在使用LinkedList的get方法，说明可能对于所要解决的问题使用了错误的数据结构。
 public static void main(String[] args) {
         List<String> list = new LinkedList<>();
         for (int i = 0; i < 10000; i++) {
@@ -15356,7 +15361,7 @@ PreviousIndex:  前一个元素的下标
 | void    | remove()         从列表中移除由 next 或 previous 返回的最后一个元素（可选操作）。 |
 | void    | set(E e)         用指定元素替换 next 或 previous 返回的最后一个元素（可选操作）。 |
 
-
+add之后不能set也不能remove，因为add改变了集合的状态，set和remove只能操作刚刚遍历过的元素，但是add之后lastReturn会重新回到-1,即lastReturn已经失去了目标。
 
 ## 视图:subList
 视图 → 数据库(数据仓库)
