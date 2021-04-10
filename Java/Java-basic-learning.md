@@ -18233,32 +18233,83 @@ abstract class AbstractMap{
 ## TreeMap概述
 
 - 底层的数据结构是红黑树。
-
 - 如果创建对象时，没有传入 Comparator 对象，键将按自然顺序进行排序。
-
 - 如果创建对象时，传入了 Comparator 对象，键将按 Comparator 进行排序。
-
 - 不同步
+
+
+
+概述
+
+1. TreeMap是Map的一个子实现
+
+2. TreeMap描述的结构是树
+
+3. 是用链表实现的树
+
+4. 大小有序
+
+5. 不允许null  键
+
+6. 不允许重复元素(key自然顺序)
+
+7. 线程 不安全
+
+8. TreeMap来说(底层是个红黑树/ 特殊二叉搜索树), 存储的的元素是需要比较大小的, 就需要比较方式. 有两种比较方式, 
+
+   第一种: 给key-value的key实现自然顺序(实现Comparable)
+   第二种: 手动提供一个比较器(常用)
+
+
+
+| 构造方法摘要                                                 |
+| ------------------------------------------------------------ |
+| TreeMap()         使用键的自然顺序构造一个新的、空的树映射。 |
+| TreeMap(Comparator<? superK> comparator)         构造一个新的、空的树映射，该映射根据给定比较器进行排序。 |
+| TreeMap(Map<? extendsK,? extendsV> m)         构造一个与给定映射具有相同映射关系的新的树映射，该映射根据其键的自然顺序  进行排序。 |
+| TreeMap(SortedMap<K,? extendsV> m)         构造一个与指定有序映射具有相同映射关系和相同排序顺序的新的树映射。 |
 
 除了Map接口中定义的方法外，由于TreeMap中的键是大小有序的，因此它还有一些特殊的方法。
 
-- K firstKey()
+**Api**
 
-- K lastKey()
-
-- Map.Entry<K, V> pollFirstEntry();
-
-- Map.Entry<K,V> pollLastEntry();
-
-- K floorKey(K key)
-
-- K ceilingKey(K key)
-
-- K lowerKey(K key)
-
-- K higherKey(K key)
-
-- NavigableMap<K, V> submap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive )
+| Map.Entry<K,V>       | ceilingEntry(Kkey)         返回一个键-值映射关系，它与大于等于给定键的最小键关联；如果不存在这样的键，则返回  null。 |
+| -------------------- | ------------------------------------------------------------ |
+| K                    | ceilingKey(Kkey)         返回大于等于给定键的最小键；如果不存在这样的键，则返回 null。 |
+| void                 | clear()         从此映射中移除所有映射关系。                 |
+| Object               | clone()         返回此 TreeMap 实例的浅表副本。              |
+| Comparator<? superK> | comparator()         返回对此映射中的键进行排序的比较器；如果此映射使用键的自然顺序，则返回  null。 |
+| boolean              | containsKey(Objectkey)         如果此映射包含指定键的映射关系，则返回 true。 |
+| boolean              | containsValue(Objectvalue)         如果此映射为指定值映射一个或多个键，则返回 true。 |
+| NavigableSet<K>      | descendingKeySet()         返回此映射中所包含键的逆序 NavigableSet  视图。 |
+| NavigableMap<K,V>    | descendingMap()         返回此映射中所包含映射关系的逆序视图。 |
+| Set<Map.Entry<K,V>>  | entrySet()         返回此映射中包含的映射关系的 Set  视图。  |
+| Map.Entry<K,V>       | firstEntry()         返回一个与此映射中的最小键关联的键-值映射关系；如果映射为空，则返回 null。 |
+| K                    | firstKey()         返回此映射中当前第一个（最低）键。        |
+| Map.Entry<K,V>       | floorEntry(Kkey)         返回一个键-值映射关系，它与小于等于给定键的最大键关联；如果不存在这样的键，则返回  null。 |
+| K                    | floorKey(Kkey)         返回小于等于给定键的最大键；如果不存在这样的键，则返回 null。 |
+| V                    | get(Objectkey)         返回指定键所映射的值，如果对于该键而言，此映射不包含任何映射关系，则返回  null。 |
+| SortedMap<K,V>       | headMap(KtoKey)         返回此映射的部分视图，其键值严格小于 toKey。 |
+| NavigableMap<K,V>    | headMap(KtoKey,  boolean inclusive)         返回此映射的部分视图，其键小于（或等于，如果 inclusive 为 true）toKey。 |
+| Map.Entry<K,V>       | higherEntry(Kkey)         返回一个键-值映射关系，它与严格大于给定键的最小键关联；如果不存在这样的键，则返回  null。 |
+| K                    | higherKey(Kkey)         返回严格大于给定键的最小键；如果不存在这样的键，则返回 null。 |
+| Set<K>               | keySet()         返回此映射包含的键的 Set 视图。             |
+| Map.Entry<K,V>       | lastEntry()         返回与此映射中的最大键关联的键-值映射关系；如果映射为空，则返回  null。 |
+| K                    | lastKey()         返回映射中当前最后一个（最高）键。         |
+| Map.Entry<K,V>       | lowerEntry(Kkey)         返回一个键-值映射关系，它与严格小于给定键的最大键关联；如果不存在这样的键，则返回  null。 |
+| K                    | lowerKey(Kkey)         返回严格小于给定键的最大键；如果不存在这样的键，则返回 null。 |
+| NavigableSet<K>      | navigableKeySet()         返回此映射中所包含键的 NavigableSet  视图。 |
+| Map.Entry<K,V>       | pollFirstEntry()         移除并返回与此映射中的最小键关联的键-值映射关系；如果映射为空，则返回 null。 |
+| Map.Entry<K,V>       | pollLastEntry()         移除并返回与此映射中的最大键关联的键-值映射关系；如果映射为空，则返回 null。 |
+| V                    | put(Kkey,Vvalue)         将指定值与此映射中的指定键进行关联。 |
+| void                 | putAll(Map<? extendsK,? extendsV> map)         将指定映射中的所有映射关系复制到此映射中。 |
+| V                    | remove(Objectkey)         如果此  TreeMap 中存在该键的映射关系，则将其删除。 |
+| int                  | size()         返回此映射中的键-值映射关系数。               |
+| NavigableMap<K,V>    | subMap(KfromKey,  boolean fromInclusive,KtoKey,  boolean toInclusive)         返回此映射的部分视图，其键的范围从 fromKey 到 toKey。 |
+| SortedMap<K,V>       | subMap(KfromKey,KtoKey)         返回此映射的部分视图，其键值的范围从 fromKey（包括）到 toKey（不包括）。 |
+| SortedMap<K,V>       | tailMap(KfromKey)         返回此映射的部分视图，其键大于等于 fromKey。 |
+| NavigableMap<K,V>    | tailMap(KfromKey,  boolean inclusive)         返回此映射的部分视图，其键大于（或等于，如果 inclusive 为 true）fromKey。 |
+| Collection<V>        | values()         返回此映射包含的值的 Collection  视图。     |
 
 
 
