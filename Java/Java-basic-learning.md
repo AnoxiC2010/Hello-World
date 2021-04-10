@@ -14939,6 +14939,8 @@ Se 常问: String,  HashMap,  多线程,  流
 
 
 
+## 有条理地描述问题
+
 注意1: 集合类工作每天都在用. 
 注意2: 面试基本必问集合类 . 
 注意3: 有条理的回答.  
@@ -14971,24 +14973,24 @@ Collection 层次结构中的根接口。Collection 表示一组对象，这些�
 Java集合类的分类: 两大类 : Collection集合类, Map集合类
 Collection:
 		List:
-			ArrayList (****)
-			LinkedList (***)
+			ArrayList (\*\*\*\*)
+			LinkedList (\*\*\*)
 			Vector → Stack
         Queue
-			Deque (*)
-				ArrayDeque (*)
+			Deque (\*)
+				ArrayDeque (\*)
 				LinkedList
 			BlcokingQueue 
 				…
 		Set
-			HashSet （***)
-			LinkedHashSet（***)
-			TreeSet （**)
+			HashSet (\*\*\*)
+			LinkedHashSet(\*\*\*)
+			TreeSet (\*\*)
 
 Map: key-value数据
-	HashMap （****)
-	LinkedHashMap （***)
-	TreeMap （**)
+	HashMap （\*\*\*\*)
+	LinkedHashMap （\*\*\*)
+	TreeMap (\*\*)
 
 
 
@@ -16702,7 +16704,7 @@ Map接口API
 
 4. 不允许存储’’重复’’的key,
 
-5. 允许存储null, key.
+5. 允许存储null key.
 
 6. 无序的 
 
@@ -16760,9 +16762,43 @@ Map接口API
     ​      null 
 
 13. 有时候红黑树是会转化回链表的:
-    A, 不断的删除(并且删除的元素是红黑树上的)
-    B, 在扩容的时候也可能导致红黑树转化回链表(红黑树会拆分到两个位置, )
+    
+    - A. 不断的删除(并且删除的元素是红黑树上的)
 
+      ```
+      if (root == null || root.right == null ||
+                      (rl = root.left) == null || rl.left == null) 
+      ```
+    
+      Root: 红黑树的根节点
+    
+      根节点是不是null;
+    
+      根节点左右子结点是不是null
+    
+      根节点的左节点的左节点 是不是null
+    
+      如果这4个结点有一个为空, 要把树转化会链表
+    
+    - B. 在扩容的时候也可能导致红黑树转化回链表(红黑树会拆分到两个位置, ) 6
+    
+      `(e.hash & bit) == 0`
+    
+      在扩容的时候可能导致红黑树拆分到两个位置, 这两个位置的元素数量如果小于等于6, 要由红黑树转化为链表
+    
+      ```
+      Hash值20:
+      10100  → 存储4位置
+      10000
+      
+      →	新位置20
+      100000
+      
+      (e.hash & bit) == 0说明高位为0，保持原位；相与不为0说明高位为1，移到新位置 = 原下标+原数组长度
+      ```
+    
+      
+    
 14. HashMap的底层数组, 是一个Node类型的数组, 里面存储的是Node类型的结点, 包含四个值: key,  value, hash, next
     `Node<K,V>[] table;`
 
@@ -16783,6 +16819,11 @@ Map接口API
     if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
         resize();
     ```
+
+19. 如果HashMap的底层数组产生扩容, 那么原本下标位置在index位置的元素, 会重新散列, 但是只会散列到两个位置, 1原位置不变, 2, 新位置 = 旧长度+旧下标
+
+20. 在HashMap中一旦添加了某一个key-value数据, (eg: key-User类型), 不要修改它的key, 一旦修改, 这个key-value数据就再也无法操作
+    →	如果一个数据存储到HashMap中, 不要再修改(尤其不要通过引用修改里面的内容)
 
 
 
