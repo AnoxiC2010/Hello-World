@@ -16758,7 +16758,7 @@ Key-value数据具有自我描述性: 用key描述value
 
 问题：map应该提供哪些API?
 
-Map接口API
+**Map接口API**
 
 | void            | clear()         从此映射中移除所有映射关系（可选操作）。     |
 | --------------- | ------------------------------------------------------------ |
@@ -16770,11 +16770,36 @@ Map接口API
 | int             | hashCode()         返回此映射的哈希码值。                    |
 | boolean         | isEmpty()         如果此映射未包含键-值映射关系，则返回 true。 |
 | SetK            | keySet()         返回此映射中包含的键的 Set 视图。           |
-| V               | put(K key,  V value)          将指定的值与此映射中的指定键关联（可选操作）。 |
+| V               | put(K key,  V value)          将指定的值与此映射中的指定键关联（可选操作）。 <br />该方法如果返回null说明原来没有这个key或者有这个key对应的value是null。 |
 | void            | putAll(Map<? extends K,? extends V> m)         从指定映射中将所有映射关系复制到此映射中（可选操作）。 |
 | V               | remove(Object key)         如果存在一个键的映射关系，则将其从此映射中移除（可选操作）。 |
 | int             | size()         返回此映射中的键-值映射关系数。               |
 | CollectionV     | values()         返回此映射中包含的值的 Collection 视图。    |
+
+比较新的API,多和lambda配合使用提供便利
+
+| default V       | getOrDefault(Object key, V defaultValue) Returns the value to which the specified key is mapped, or defaultValue if this map contains no mapping for the key. |
+| --------------- | ------------------------------------------------------------ |
+| default V       | replace(K key, V value) Replaces the entry for the specified key only if it is currently mapped to some value. |
+| default boolean | replace(K key, V oldValue, V newValue) Replaces the entry for the specified key only if currently mapped to the specified value. |
+| default V       | merge(K key, V value, BiFunction<? super V,? super V,? extends V> remappingFunction) If the specified key is not already associated with a value or is associated with null, associates it with the given non-null value.<br />配合lambda使用很便利的在原有value的基础上通过与给定value以给定的运算方法加以合并成一个新value，比如计算单词出现的频次就很好用 |
+| default V       | compute(K key, BiFunction<? super K,? super V,? extends V> remappingFunction) Attempts to compute a mapping for the specified key and its current mapped value (or null if there is no current mapping).<br />如果传入的表达式返回值为Null,不管原来map中又没有这个key，方法执行完就没这个key了。Compute方法的返回值不是key对应的原来的值，而是传入的lambda表达式的返回值，lambda表达式的返回值如果有则替换旧值，为null就抹除该键值对（如果有）. 表达式里报异常会抛出，不做改动。 |
+| default V       | computeIfAbsent(K key, Function<? super K,? extends V> mappingFunction) If the specified key is not already associated with a value (or is mapped to null), attempts to compute its value using the given mapping function and enters it into this map unless null.<br />返回值始终为当前key |
+| default V       | computeIfPresent(K key, BiFunction<? super K,? super V,? extends V> remappingFunction)  If the value for the specified key is present and non-null, attempts to compute a new mapping given the key and its current mapped value. |
+| default void    | replaceAll(BiFunction<? super K,? super V,? extends V> function)Replaces each entry's value with the result of invoking the given function on that entry until all entries have been processed or the function throws an exception. |
+
+
+
+**forEach + lambda迭代**
+
+代替entrySet()迭代成为最高效的迭代方式
+
+| default void | forEach(BiConsumer<? super K,? super V> action) Performs the given action for each entry in this map until all entries have been processed or the action throws an exception.<br />对这个映射中的所有键/值对应用这个动作 |
+| ------------ | ------------------------------------------------------------ |
+
+```java
+scores.forEach((k, v) -> System.out.println("key=" + k + ", value=" + v));
+```
 
 
 
@@ -18071,6 +18096,8 @@ class HashMap{
 
    默认值是假, 如果设为真,
    如果在排序模式为真的情况下, 一旦我们访问了LinkedHashMap中的数据, 那么这个被访问的数据, 就会在LinkedhashMap所维护的双向链表上移动到最后的位置
+   
+   <span style="color:red;">访问顺序对于实现高速缓存的“最近最少使用”原则十分重要。</span>
 
 
 
