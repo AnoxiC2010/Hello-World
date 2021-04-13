@@ -2,6 +2,10 @@
 
 了解前端基本知识, 了解Vue语法以及Vue开发流程
 
+HTML -> 骨架
+CSS  -> 皮肤和血肉
+JS  -> 思想逻辑
+
 ## 互联网三要素
 
 1. <span style="color:red">url:  统一资源定位符</span>
@@ -71,6 +75,10 @@ html最开始是设计用来描述论文格式的
   5. 如果用户需要的是一个html页面，并且这个页面需要数据，先去数据库查数据，把数据和html文件结合到一起-->形成一个带数据的html文件，返回给浏览器
 
 - 百度数据库
+
+
+
+
 
 # HTML概念
 
@@ -194,13 +202,13 @@ W3C曾疯狂给html扩充标签, 添加属性  →  CSS（取而代之）
 
 ## 块级标签
 
-特性
+<span style="color:red;">特性</span>
 
 - 独占一行，每一个块级元素都会从新的一行重新开始，从上到下排布
 - 可以直接控制宽度、高度以及盒子模型的相关css属性
 - 在不设置宽度的情况下，块级元素的宽度是它父级元素内容的宽度
 - 在不设置高度的情况下，块级元素的高度是它本身内容的高度
-- 块级元素是指本身属性为display:block;的元素。
+- 块级元素是指本身属性为`display:block;`的元素。
 - 通常使用块级元素来进行大布局（大结构）的搭建
 
 常见的块级元素：
@@ -211,13 +219,13 @@ div、p、h1、 h2、 h3、 h4、 h5、 h6，ol、ul、dl、li、form、table
 
 ## 行级标签
 
-特性
+<span style="color:red;">特性</span>
 
 - 和其他行级元素从左到右在一行显示
 - 不能直接控制宽度、高度以及盒子模型的相关css属性，(但是直接设置内外边距的左右值是可以的)
 - 行级元素的宽高是由本身内容的大小决定（文字、图片等）
 - 行级元素只能容纳文本或者其他行级元素（不要在行级元素中嵌套块级元素）
-- 行级元素是指本身属性为display:inline;的元素。
+- 行级元素是指本身属性为`display:inline;`的元素。
 - 通常使用行级元素来进行文字、小图标（小结构）的搭建。
 
 
@@ -239,10 +247,10 @@ div、p、h1、 h2、 h3、 h4、 h5、 h6，ol、ul、dl、li、form、table
 
 特性
 
-- 本质属于行级元素
+- <span style="color:red;">本质属于行级元素</span>
 - 可以与其他行级元素共处一行
-- 可以设置宽高、内外边距
-- 属性为display:inline-block;的元素。
+- <span style="color:red;">可以设置宽高、内外边距</span>
+- 属性为`display:inline-block;`的元素。
 
 
 
@@ -255,9 +263,9 @@ div、p、h1、 h2、 h3、 h4、 h5、 h6，ol、ul、dl、li、form、table
 
 可以在行内样式或css样式中改变元素的display将三种元素进行转换。
 
-- display: block；(将元素变为块级元素)
-- display: inline； (将元素变为行级元素)
-- display: inline-block；(将元素变为行级块元素)
+- `display: block;`(将元素变为块级元素)
+- `display: inline;` (将元素变为行级元素)
+- `display: inline-block;`(将元素变为行级块元素)
 
 
 
@@ -324,7 +332,19 @@ px  像素,  逻辑像素
 
 ### `<div>`
 
-`<div>` 可定义文档中的分区或节。
+注意：
+
+如果要实现一个页面,
+<span style="color:red">第一步首先就是观察: 区和块,  划分区块, 实现内容</span>
+<span style="color:red">第二步: 调</span>
+
+大布局的调整和确定
+
+<span style="color:red;background:yellow;">怎么写页面? 首先划分区节</span>
+
+
+
+`<div>` 划分区或者节,  构建大布局. 最常用的一个html标签 
 
 `<div>` 标签可以把文档分割为独立的、不同的部分。
 
@@ -338,9 +358,11 @@ px  像素,  逻辑像素
 
 ### `<p>`
 
-`<p>` 标签定义段落。
+`<p>` 标签定义段落。极类似与div, 可以划分区块
 
 `<p>` 元素会自动在其前后创建一些空白。浏览器会自动添加这些空间，您也可以在样式表中规定。
+
+<span style="color:red;background:yellow;">p标签, 自带段前段后间距</span>
 
 
 
@@ -534,7 +556,7 @@ eg:
 ### `<ol>`
 
 `<ol>` 标签定义有序列表(有序:数字,字母)
-属性:
+属性:<span style="color:red;">\(CSS无法替代，但很少使用)</span>
 
 - `type`:规定在列表中使用的标记类型(1,A,a,I,i)。
 
@@ -557,7 +579,7 @@ eg:
 
 标签定义无序列表(圆点,空心点)
 
-属性`type`:
+属性`type`:<span style="color:red;">\(CSS无法替代，但很少使用)</span>
 
 - `disc`:默认值。实心圆。
 - `circle` :空心圆。
@@ -691,7 +713,7 @@ Eg:
 
 ### `<form>`
 
-<span style="color:red;background:yellow;">表单元素常用于表单提交数据, 表单元素有一个默认的属性value</span>
+<span style="color:red;background:yellow;">表单元素常用于表单提交数据, 表单元素有一个默认的属性value→value等价于用户输入</span>
 
 表单
 
@@ -706,3 +728,345 @@ Eg:
 </form>
 ```
 
+form表单, 一般用来向后台(后端服务器) 提交数据 → 登录注册
+
+用于搜索只是附带功能
+
+
+
+#### 提交表单的过程演示
+
+```html
+<form action="https://www.baidu.com/s" method="get">
+	<input name="wd">
+    <input type="submit">
+</form>
+```
+
+浏览器端
+
+1. 在浏览器里面触发请求，url:https://www.baidu.com/ 
+
+2. 百度服务器返回页面，浏览器拿到这个html页面解析执行，如果有外部资源(html代码中引用了图片等)，异步加载外部资源
+
+3. 完全显示和得到一个页面
+
+4. 在页面中表单的输入框中输入一个内容，点击搜索(从结果来看获得一个新页面，意味着点击搜索之后，又发起了一次网络请求)
+
+url哪来的→点击搜索这个按钮所产生的
+
+form是怎么产生一个url的
+
+`https://www.baidu.com/s?wd=1`
+
+key-value数据交互，数据具有自我描述性
+
+value就是表单元素的value值
+
+key就是表单元素的name属性设置的
+
+除了参数的那一部分是哪来的→action中写的
+
+参数哪来的→表单元素在表单中提交的
+
+多个参数之间用&符号链接`https://s.taobao.com/search?x=1&q=2 `
+
+
+
+#### 关于请求方式
+
+method: 请求方式 http
+get, post: 99.9999%  get:70-80%
+为什么http要有多种请求方式,  发起一个http的请求目的是多种多样的, 进一步产生的很多不同的请求方式
+
+get和post 的区别:
+
+1. get请求,一般把参数拼接到url之后
+   post请求(也可以把参数拼接到url之后), 但是一般放到请求正文里
+2. get请求相对而言不安全
+   post相对更安全一些
+   第一个安全的方面:  参数不会放到url之后
+   第二个安全: get请求浏览器历史记录中保存 post不会记录参数(正文)
+3. url之后拼接参数, 最多拼接1kb
+4. get和post的区别更多是'语义化'的区别
+   get一般用来请求数据
+   post一般用来提交数据  -- 登录注册, 添加信息
+
+整体来讲, from登录注册.  
+
+
+
+# CSS
+
+**CSS历史**
+
+- web的 衰落：
+  在web早期（1990-1993）,html是一个很局限的语言。几乎完全由用于描述段落，超链接，列表和标题的结构化元素组成。随着万维网的出现（用户交互体验的加强），对html的要求越来越大，人们迫切需要html增加新的元素，去完成一个个特定的功能。
+- 一片混乱：
+  迫于压力，html开始出现`<font>`，`<i>` , `<s>` 等标签,还增加了某些标签的很多属性。<span style="color:red;">但是html是一种描述结构的语言，也开始描述外在表现了</span>。几年之后这种随便的做法暴露出严重的问题：1：由于html既写结构又写样式，导致页面缺乏结构性，降低了网页的可访问性。2：页面维护越来越困难
+- 在1995年w3c开始发布CSS的计划(work-in-progress)。
+
+
+
+**CSS概念**
+
+CSS 指<span style="color:red;">层叠样式表</span> （级联样式表）
+主要用于设置HTML页面中的文本内容（字体、大小、对齐方式等）、图片的外形（宽高、边框样式、边距等）以及版面的布局等等<span style="color:red;">外观显示</span>样式。
+<span style="color:red;">CSS以HTML为基础</span>，提供了丰富样式功能。
+
+
+
+# CSS与HTML结合方式
+
+<span style="color:red;">CSS依赖于HTML而存在</span>
+
+方式一:
+```html
+<p style="background-color:#FF0000; color:#FFFFFF">
+	p标签段落内容。
+</p>
+```
+
+方式二：
+```html
+<head>
+    <style type=”text/css”>
+        p { color:#FF0000;}
+    </style>
+</head>
+```
+
+方式三:
+
+- 链接
+
+  ```html
+  <link rel="stylesheet" type="text/css" href="css_3.css" />
+  ```
+
+  
+
+- 导入
+
+  ```html
+  <style type="text/css">
+  	@import url(css_3.css);
+  </style>
+  ```
+
+
+
+# 选择器
+
+## 标签选择器
+
+通过标签名, 把对应的html代码和他的css样式关联起来
+
+e.g.
+
+对所有`<p>`标签
+
+```html
+<style>
+	p {color:red;}
+</style>
+```
+
+
+
+## 类选择器
+
+通过类名, 把css样式和html代码结合起来
+
+类选择器的选择符是 “.“
+类选择器在css样式编码中是最常用到的 
+
+e.g.
+
+style
+
+```html
+<!-- style -->
+<style>
+    .aaa{
+        background: #FF0000;
+    }
+</style>
+<!-- class -->
+<div class="aaa">11
+</div>
+```
+
+
+
+## id选择器
+
+通过id名把对应的html代码和css样式结合起来
+
+id选择器以 "#" 来定义
+不同于类选择器，id 选择器不能结合使用
+不提倡用id 去写样式，因为他的权重太高。 id 主要是为了 js 做准备。
+
+注：同一个id名在一个html文档上只能出现一次（即使浏览器不报错也按规范写）
+
+e.g.
+
+```html
+<!-- style -->
+<style>
+    #aaa{
+        background: #FF0000;
+    }
+</style>
+<!-- class -->
+<div id="aaa">11
+</div>
+```
+
+
+
+复合选择器
+
+伪类选择器
+伪元素选择器
+属性选择器
+
+
+
+# 样式优先级
+
+`!important`
+CSS定义了一个!important命令，该命令被赋予最大的优先级。也就是说不管权重如何以及样式位置的远近，!important都具有最大优先级。
+ `div{ background: red !important; }`
+
+!important <span style="color:red;">> 行内 > ID选择器 > 伪类|类 | 属性选择 > 标签 > 通配符</span>
+<span style="color:red;">就近原则</span> ： 在优先级同等的情况下, 满足适配的就近原则(谁在下面听谁的)
+
+
+
+# 盒子模型
+
+一个html标签, 在页面上真正占据的空间, 我们可以把它看成一个矩形的盒子
+
+<span style="color:red;">盒子模型, 从内向外大值可以分为四块内容:  元素内容大小, 内边距, 边框, 外边距</span>
+
+<span style="background:yellow;">注意1:</span>
+<span style="background:yellow;">对于一个盒子模型, 我们设置的宽高 仅仅是, 最里面元素内容的大小</span>
+<span style="background:yellow;">注意2: </span>
+<span style="background:yellow;">子元素or子标签, 仅能占据父元素的元素内容区域</span>
+
+<span style="background:yellow;">注意3:</span>
+ <span style="background:yellow;">(设计的略有缺陷)背景色 =  元素内容区域大小 +  内边距大小</span>
+
+- 块级元素上表现完全正常
+- <span style="color:red;">行级元素上表现完全不正常</span>: (一般没有给行级元素加背景色的需求)
+
+
+
+<span style="color:red;">起码对于div来讲 → 宽度可以继承, 高度不可以继承</span>
+
+![image-20210413203340978](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\HTML-CSS\HTML-CSS-basic-learning.assets\image-20210413203340978.png)
+
+**盒子模型属性**
+
+- `margin`: 外边距(参数方式上右下左)
+- `padding`:内边距
+- `border`:边框
+- 内容
+
+注意
+
+- background = padding + 内容
+- 高宽属性仅是'内容'高宽
+
+行内元素的`margin`和`padding`属性
+
+- 水平方向的padding-left,padding-right,margin-left,margin- right都产生边距效果
+- 竖直方向的padding-top,padding-bottom,margin-top,margin-bottom不 会产生边距效果.
+
+
+
+# 外边距合并现象
+
+如果两个盒子模型, 他们的外边距, 在垂直方向上紧相邻, 那么就会产生一种现象, 叫外边距合并
+
+父子之间 or 兄弟之间
+
+![image-20210413204128082](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\HTML-CSS\HTML-CSS-basic-learning.assets\image-20210413204128082.png)
+
+![image-20210413204132831](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\HTML-CSS\HTML-CSS-basic-learning.assets\image-20210413204132831.png)
+
+
+
+# 行/块元素转换
+
+对应属性
+
+- 块级元素对应于`display:block`.
+- 行内元素对应于`display:inline`.
+- 行内块元素对应于`display: inline-block`属性
+
+改变
+
+- `display: block` 显示为块级元素
+- `display: inline` 显示为内联元素
+- `display: inline-block` 显示为内联块级元素，表现为同行显示并可修改宽高内外边距等属性
+
+
+
+
+
+# float浮动
+
+<span style="color:red;">标准流</span>：
+
+- 块级元素纵向有序排列
+- 行内块（行内）元素横向有序排列
+- float被设计出来的初衷是用于:文字环绕效果
+
+设置了浮动的元素，使元素脱离标准流（块级元素横向排列等）
+浮动特性
+
+1. 浮动只影响后面的元素
+2. 连续浮动一行显示
+3. 浮动以元素顶部为基准对齐
+4. 浮动可是实现模式转换
+
+
+
+clear: 谁受影响谁清除
+
+- left:在左侧不允许浮动元素。
+- right:在右侧不允许浮动元素。
+- both:在左右侧不允许浮动元素。
+
+e.g.
+
+`.text { clear:both; }`
+
+
+
+overflow
+
+overflow 属性规定当内容溢出元素框时发生的事情
+属性
+
+- `visible`:默认值。内容不会被修剪，会呈现在元素框之外。
+- <span style="color:red;">`hidden`</span>:内容会被修剪，并且其余内容是不可见的。
+- `scroll`:内容会被修剪，但是浏览器会显示滚动条以便查看其余的内容。
+- `auto`:如果内容被修剪，则浏览器会显示滚动条以便查看其余的内容。
+
+注意:
+
+1. `display:none;` 元素隐藏不占位置
+2. `overflow:hiddenx;` 将超出部分的元素隐藏
+3. `visibility:hidden;` 元素隐藏占位置
+
+注意:
+
+- 主要长宽单位
+  - px 像素
+  - %  相对于<span style="color:red;">父元素</span>的大小
+- line-height(设置行高)
+- 浏览器默认字体大小为:16px
+- 浏览器默认行高：18px
