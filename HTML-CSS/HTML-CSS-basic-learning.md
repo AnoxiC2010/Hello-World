@@ -925,11 +925,207 @@ e.g.
 
 
 
-复合选择器
+## 复合选择器
 
-伪类选择器
-伪元素选择器
-属性选择器
+### 关联选择器（包含选择器）-->嵌套
+
+```css
+p { color:#00FF00;}
+p b { color:#FF000;}
+p { color:#00FF00;}
+.aaa b { color:#FF000;}
+```
+
+后代选择器用来选择元素或元素组的后代，其写法就是把外层标记写在前面，内层标记写在后面，中间用空格分隔。当标记发生嵌套时，内层标记就成为外层标记的后代。
+
+```html
+<p>
+	<b>刘德华</b>
+</p>
+<p>p标签段落</p>
+```
+
+### 组合选择器
+
+多个不同选择器要用逗号分隔开
+
+```css
+p,div { color:#FF0000;}
+```
+
+```html
+<p>P标签显示段落。</p>
+<div>DIV标签显示段落</div>
+```
+
+类组合
+
+```css
+.aaa ,div { color:#FF0000;}
+```
+
+```html
+<p class="aaa">
+P标签显示段落。
+</p>
+<div>DIV标签显示段落</div>
+```
+
+## 属性选择器
+
+`[attribute]`
+用于选取带有指定属性的元素
+
+```css
+[target]
+{ 
+background-color:yellow;
+}
+div[id]
+{ 
+background-color:yellow;
+}
+```
+
+
+
+`[attribute=value]`
+用于选取带有指定属性和值的元素。
+
+```css
+a[href="http://www.w3school.com.cn/"][title="W3School"] {
+color: red;
+}
+```
+
+
+
+`[attribute~=value]`
+用于选取属性值中包含指定词汇的元素。
+
+```css
+[title~=flower]
+{ 
+background-color:yellow;
+}
+```
+
+
+
+`[attribute|=value]`
+用于选取带有以指定值开头的属性值的元素，该值必须是整个单词。
+
+
+
+`[attribute^=value]`
+匹配属性值以指定值开头的每个元素。
+
+
+
+`[attribute$=value]`
+匹配属性值以指定值结尾的每个元素。
+
+
+
+`[attribute*=value]`
+匹配属性值中包含指定值的每个元素。
+
+```css
+a[href*="w3school.com.cn"] {color: red;}
+```
+
+
+
+## 伪类选择器
+
+CSS伪类是用来添加一些选择器的特殊效果。
+
+其实就在html中预先定义好的一些选择器。
+
+:link 应用于未被访问过的链接；
+
+:hover 应用于鼠标悬停到的元素；
+
+:active 应用于被激活的元素；
+
+:visited 应用于被访问过的链接，与:link互斥。
+
+:focus 应用于拥有键盘输入焦点的元素。
+
+:first-child 选择某个元素的第一个子元素；
+
+:last-child 选择某个元素的最后一个子元素；
+
+:nth-child() 选择某个元素的一个或多个特定的子元素；
+
+:nth-last-child() 选择某个元素的一个或多个特定的子元素，从这个元素的最后一个子元素开始算；
+
+:nth-of-type() 选择指定的元素；
+
+:nth-last-of-type() 选择指定的元素，从元素的最后一个开始计算；
+
+:first-of-type 选择一个上级元素下的第一个同类子元素；
+
+:last-of-type 选择一个上级元素的最后一个同类子元素；
+
+:only-child 选择的元素是它的父元素的唯一一个子元素；
+
+:only-of-type 选择一个元素是它的上级元素的唯一一个相同类型的子元素；
+
+:empty 选择的元素里面没有任何内容。
+
+Eg:
+
+```css
+<a class="red" href="https://www.baidu.com/" target="_blank">CSS 语法</a>
+
+a:link {color:#FF0000;} /* 未访问的链接 */ 不一定和你期望的一样
+
+a:visited {color:#00FF00;} /* 已访问的链接 */
+
+a:hover {color:#FF00FF;} /* 鼠标划过链接 */
+
+a:active {color:#0000FF;} /* 已选中的链接 */
+```
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\HTML-CSS\HTML-CSS-basic-learning.assets\clip_image002.jpg)
+
+```css
+a.red:link {color:#FF0000;} /* 未访问的链接 */
+
+a.red:visited {color:#00FF00;} /* 已访问的链接 */
+
+a.red:hover {color:#FF00FF;} /* 鼠标划过链接 */
+
+a.red:active {color:#0000FF;} /* 已选中的链接 */
+```
+
+ 
+
+## 伪元素选择器
+
+伪元素是对元素中的特定内容进行操作，而不是描述状态。它的操作层次比伪类更深一层，因此动态性比伪类低很多
+:first-letter 选择元素文本的第一个字（母）。
+:first-line 选择元素文本的第一行。
+:before 在元素内容的最前面添加新内容。
+:after 在元素内容的最后面添加新内容。
+
+```css
+div::before {
+content: "1111";
+height: 40px;
+width: 100px;
+background-color: blue;
+display: block;
+}
+```
+
+
+
+## 区别(伪元素/伪类)
+
+伪类：用于已有元素处于某种状态时为其添加对应的样式，这个状态是根据用户行为而动态变化的。
+伪元素：用于创建一些不在DOM树中的元素，并为其添加样式。
 
 
 
