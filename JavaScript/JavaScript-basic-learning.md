@@ -183,6 +183,25 @@ e.g.
 
 
 
+Event事件
+
+| [onkeypress](https://www.w3school.com.cn/jsref/event_onkeypress.asp) | 某个键盘按键被按下并松开。   |
+| ------------------------------------------------------------ | ---------------------------- |
+| [onkeyup](https://www.w3school.com.cn/jsref/event_onkeyup.asp) | 某个键盘按键被松开。         |
+| [onload](https://www.w3school.com.cn/jsref/event_onload.asp) | 一张页面或一幅图像完成加载。 |
+| [onmousedown](https://www.w3school.com.cn/jsref/event_onmousedown.asp) | 鼠标按钮被按下。             |
+| [onmousemove](https://www.w3school.com.cn/jsref/event_onmousemove.asp) | 鼠标被移动。                 |
+| [onmouseout](https://www.w3school.com.cn/jsref/event_onmouseout.asp) | 鼠标从某元素移开。           |
+| [onmouseover](https://www.w3school.com.cn/jsref/event_onmouseover.asp) | 鼠标移到某元素之上。         |
+| [onmouseup](https://www.w3school.com.cn/jsref/event_onmouseup.asp) | 鼠标按键被松开。             |
+| [onreset](https://www.w3school.com.cn/jsref/event_onreset.asp) | 重置按钮被点击。             |
+| [onresize](https://www.w3school.com.cn/jsref/event_onresize.asp) | 窗口或框架被重新调整大小。   |
+| [onselect](https://www.w3school.com.cn/jsref/event_onselect.asp) | 文本被选中。                 |
+| [onsubmit](https://www.w3school.com.cn/jsref/event_onsubmit.asp) | 确认按钮被点击。             |
+| [onunload](https://www.w3school.com.cn/jsref/event_onunload.asp) | 用户退出页面。               |
+
+
+
 # 语言逻辑
 
 运算符
