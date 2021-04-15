@@ -431,7 +431,10 @@ px  像素,  逻辑像素
   </body>
   ```
 
-  
+
+其他属性：
+
+`title`: 所链接的文本描述（鼠标指向时显示，通常与所连接页面的head里的title相同，也可以自己定义描述），视障模式浏览器可能会读出来。
 
 ### `<img>`
 
@@ -454,6 +457,8 @@ eg:
 <span style="color:red;background:yellow">在前端中, 绝对路径, 不再是以盘符开头的路径.</span>
 <span style="color:red;background:yellow">前端中本质上只有url,</span>
 <span style="color:red;background:yellow">所谓的url就是前端的绝对路劲</span>
+
+路径分隔符在WIN和类UNIX上统一使用"/"
 
 ### `<input>`
 
@@ -603,6 +608,8 @@ Eg:
 `<li>` 标签定义列表项目。
 
 `<li>` 标签可用在有序列表 (`<ol>`) 和无序列表 (`<ul>`) 中。
+
+对于有序列表和无序列表之中都可以再嵌套列表
 
 
 
@@ -796,7 +803,13 @@ get和post 的区别:
 
 整体来讲, from登录注册.  
 
+## 其他标签
 
+`<em></em>`斜体强调，行级
+
+`<q></q>`短引用（就是给之间的文字加双引号），行级
+
+`<blockquote></blockquote>`块引用（自带带缩进效果，可内嵌段落等标签），块级
 
 # CSS
 
@@ -831,6 +844,7 @@ CSS 指<span style="color:red;">层叠样式表</span> （级联样式表）
 
 方式二：
 ```html
+<!--type设计之初为将来更多类型扩展做了准备，但长久以来并没有其他type增加的苗头，type属性现在没有写的必要了-->
 <head>
     <style type=”text/css”>
         p { color:#FF0000;}
@@ -1289,7 +1303,7 @@ overflow 属性规定当内容溢出元素框时发生的事情
   - px 像素
   - %  相对于<span style="color:red;">父元素</span>的大小
   -  rem  em 移动端多用
-- line-height(设置行高)
+- line-height(设置行高)->设置为和块一样高文字就垂直居中了
 - 浏览器默认字体大小为:16px
 - 浏览器默认行高：18px
 
