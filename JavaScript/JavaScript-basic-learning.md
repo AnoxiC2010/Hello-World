@@ -4,20 +4,52 @@
 
 概念
 
-- JavaScript 是一种轻量级的编程语言。
-- JavaScript 是可插入 HTML 页面的编程代码。
-- JavaScript是一种弱类型语言
+- JavaScript 是一种<span style="color:red">轻量级</span>的编程语言。
+- JavaScript 是<span style="color:red">可插入 HTML 页面的编程代码</span>。
+- JavaScript是一种<span style="color:red">弱类型语言</span>
 - 它的解释器被称为JavaScript引擎，为浏览器的一部分
-- 主要用来向HTML（标准通用标记语言下的一个应用）页面添加交互行为。 
+- 主要用来向HTML（标准通用标记语言下的一个应用）页面添加<span style="color:red">交互行为。</span> 
 - 跨平台特性，在绝大多数浏览器的支持下。
 
 
+
+<span style="color:red">ES6(2015年, 极大的扩充了js的能力) → ECMAScript  js版本</span>
+
+
+
+HTML CSS JS     --- 浏览器
+Java          ---   虚拟机
+JS            ---   node(本质: chromev8 引擎核心,:   浏览器套壳)
+
+TypeScript:  TS.  火了. 
+TypeScript  super般JavaScript
+TypeScript    →  先编译成  → JavaScript
+
+
+
+<span style="background:yellow">HTML: 不负责存储数据, 仅负责显示</span>
+<span style="background:yellow">JS功能: JS在前端的角度上不负责处理复杂的数据(可以处理),  它仅仅只是用来对一些数据进行存储, 稍作改变</span>
+
+
+
+<span style="background:yellow">交互行为</span>
+
+<span style="background:yellow">HTML(显示)  →  点击HTML相关内容  →触发JS一些方法  → JS方法中, 又反过来修改HTML</span>
+
+
+
+更多：
+
+ES6 → node, webpack,
+
+三大基础；HTML CSS JS 
+三大框架：Vue   R  A 
 
 # 在HTML中引用JS
 
 内部JS程序
 
-- 在HTML文本中
+- <span style="color:red">直接写在html页面上, 用script标签包裹:  (一般我们习惯于写在靠近body的尾标签)</span>
 
   HTML 中的JS脚本(代码)必须位于` <script>` 与 `</script>` 标签之间。
 
@@ -26,6 +58,8 @@
 - `<script src="1.js"></script>`
 
   在引用外部JS的script标签间不能编写JavaScript代码
+  
+  <span style="color:red">JavaScript 是可插入 HTML 页面的编程代码。(最开始就是做这个事情的)</span>
 
 
 
@@ -49,14 +83,14 @@
 
 - JavaScript在声明时统一使用无类型（untyped）的“var”关键字
 - var来声明一个变量,这是一个固定的写法，是js的语法。
-- JavaScript并没有避开数据类型，它的数据类型是根据所赋值的类型来确定的。
-- JavaScript 对大小写敏感
+- <span style="color:red">JavaScript并没有避开数据类型，它的数据类型是根据所赋值的类型来确定的。不能通过声明体现。</span>
+- JavaScript 对<span style="color:red">大小写敏感</span>。
 
 变量名有命名规范：
 
 - 只能由英语字母、数字、下划线、美元符号$构成，且不能以数字开头，并且不能是JavaScript保留字
 
-(let const) 
+ES6 : (let const) 
 
 
 
@@ -256,7 +290,7 @@ e.g.
   }
   ```
 
-- 注意: 普通的for循环在JS中一般用来遍历数组, foreach循环在JS中一般用来遍历对象
+- <span style="color:red">注意: 普通的for循环在JS中一般用来遍历数组, foreach循环在JS中一般用来遍历对象</span>
 
 
 
@@ -284,7 +318,7 @@ var x = 9.6544;
 x.toFixed(2);           // 返回 9.65
 ```
 
-`toPrecision() `返回字符串值，它包含了指定长度的数字：
+`toPrecision() `返回字符串值，它包含了指定长度的数字（四舍五入）：
 
 ```javascript
 var x = 9.656;
@@ -397,7 +431,7 @@ fruits.sort();            // 对 fruits 中的元素进行排序
 `reverse()`方法反转数组中的元素。返回值和原数组都变为经过反转数组
 
 ```javascript
-fruits. reverse();            // 对 fruits 中的元素进行排序
+fruits.reverse();            // 对 fruits 中的元素进行排序
 ```
 
 
@@ -410,3 +444,179 @@ fruits. reverse();            // 对 fruits 中的元素进行排序
 `Math.round(x)` 把一个数四舍五入为最接近的整数。
 `Math.max(x,y,z,...,n)` 返回最高值
 `Math.min(x,y,z,...,n)` 返回最低值
+
+
+
+# DOM
+
+<span style="color:red">文档对象模型(document object model )</span>。
+
+HTML → DOM树(不同对象之间相互引用构建的内存模型) → 页面HTML DOM 将 HTML 文档视作树结构。这种结构被称为节点树：DOM Tree
+
+![image-20210415220751143](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\JavaScript-basic-learning.assets\image-20210415220751143.png)
+
+
+
+DOM相关概念
+
+dom树中的节点彼此拥有层级关系(由节点构成)
+整个文档是一个文档节点
+每个 HTML 元素是元素节点
+HTML 元素内的文本是文本节点
+每个 HTML 属性是属性节点
+注释是注释节点
+在节点树中，顶端节点被称为根（root）
+每个节点都有父节点、除了根（它没有父节点）
+一个节点可拥有任意数量的子节点
+父、子 和同胞(兄弟或姐妹）节点。
+同胞是拥有相同父节点的节点
+
+
+
+## DOM加载顺序(html从代码→真正显示)
+
+解析HTML结构(从上向下的过程)。
+加载外部脚本和样式表文件。
+解析并执行脚本代码。
+构造HTML DOM模型。
+加载图片等外部文件。
+页面加载完毕。
+
+
+
+一个页面是怎么产生的:
+
+1. 通知浏览器发起请求:  告诉浏览器一个url 
+
+2. 浏览器根据这个url发起请求， 
+   判断url第二部分， 到底是个域名还是个ip地址
+   如果是个域名， 做dns解析（域名 变成  ip地址）
+   根据ip地址在互联网找到这个ip地址所对应的计算机
+   找到这个计算机的对应端口（自带了要去那个端口， 没带找默认：80 443）
+
+3. 服务器监听某一个端口，获得用户请求的url（一整个报文）
+   服务器分析这个url，（重点分析url第三部分： 服务器内部路径+参数部分） 
+   根据分析的结果， 返回对应的内容。（第一次html页面代码）
+
+4. 浏览器会获得到服务器的返回， （第一次，拿到html页面）
+
+5. 解析html页面 → dom树
+   解析HTML结构(<span style="color:red">从上向下的过程</span>)。---实际上在解析的过程中， 边解析，一边构建dom树 
+
+   加载外部脚本js和样式表文件css。异步加载 
+
+   解析并执行脚本代码。Js已经加载过来， 要执行 
+
+   <span style="color:red">构造HTML DOM模型。→ 完成构建 → 立即显示</span>
+   加载图片等外部文件。 页面加载完毕。
+
+
+
+## 获得节点
+
+获得节点的常用方法
+getElementById()
+getElementsByName()
+getElementsByTagName()
+
+
+
+## 添加节点
+
+Element 对象表示 HTML 元素(节点)对象
+Element 对象是拥有类型为元素节点、文本节点、注释节点等子节点的节点(标签)。
+部分方法
+
+element.appendChild()向元素添加新的子节点，作为最后一个子节点
+
+```html
+//注意ul所辖范围内标签之间有换行或空格就会多一个文本子节点
+<ul id="myList"><li>Coffee</li><li>Tea</li></ul>
+<input id="input"> 
+<button onclick="myFunction()">添加</button>
+<script>
+function myFunction(){
+  var node=document.createElement("LI");
+  var input=document.getElementById("input")
+  var textnode=document.createTextNode(input.value);
+  node.appendChild(textnode);
+  document.getElementById("myList").appendChild(node);
+}
+</script>
+```
+
+
+
+## 删除节点
+
+element.removeChild():从元素中移除子节点
+
+```html
+<ul id="myList"><li>Coffee</li><li>Tea</li><li>Milk</li><li>1</li><li>2</li><li>3</li></ul>
+节点位置:<input id="input"> 
+<button onclick="myFunction()">删除</button>
+<script>
+function myFunction(){
+    var input=document.getElementById("input")
+    var list=document.getElementById("myList");
+    list.removeChild(list.childNodes[input.value]);
+}
+</script>
+```
+
+
+
+## 替换节点
+
+element.replaceChild():替换元素中的子节点。
+
+e.g. 1
+
+```html
+<ul id="myList"><li>Coffee</li><li>Tea</li><li>Milk</li></ul>
+节点位置:<input id="inputN"> 替换内容:<input id="inputS"> 
+<button onclick="myFunction()">试一下</button>
+<script>
+function myFunction(){
+    var inputN=document.getElementById("inputN")
+    var inputS=document.getElementById("inputS")
+    var textnode=document.createTextNode(inputS.value);
+    var item=document.getElementById("myList").childNodes[inputN.value];
+    item.replaceChild(textnode,item.childNodes[0]);
+}
+</script>
+```
+
+e.g. 2
+
+```javascript
+var inputN=document.getElementById("imgchange")
+var img=document.createElement("img");
+img.src=“----";
+inputN.replaceChild(img,inputN.childNodes[1]);		
+```
+
+
+
+## INNER
+
+Element 对象表示 HTML 元素(节点)
+Element 对象是拥有类型为元素节点、文本节点、注释节点的子节点。
+部分方法
+
+<span style="color:red">innerText&innerHTML (一个结点的内部内容)</span>
+
+```html
+function changeLink(){
+document.getElementById('aaa').innerHTML="<H1>cskaoyan</H1>";
+document.getElementById('aaa').innerText="<H1>cskaoyan</H1>";
+document.getElementById('aaa').href="http://www.cskaoyan.com";
+document.getElementById('aaa').target="_blank";
+}
+</script>
+</head>
+<body>
+<a id="aaa" href="http://www.microsoft.com">123</a>
+<input type="button" onclick="changeLink()" value="更改链接">
+```
+
