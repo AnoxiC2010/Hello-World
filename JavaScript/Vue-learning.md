@@ -530,3 +530,228 @@ java服务器 （对数据稍作处理）<=> 数据库
 ```
 
 没有最好, 只有最合适.
+
+
+
+# Vue项目构建
+
+## node
+
+安装node
+
+- https://nodejs.org/en/
+- 默认安装方式
+- 检查
+  - node –v
+  - npm –v
+
+安装cnpm
+
+- npm install -g cnpm --registry=https://registry.npm.taobao.org
+- cnpm -v
+
+
+
+## 初始化项目--准备工作
+
+安装vue-cli
+
+- cnpm install -g @vue/cli    (3.X)
+- 
+- cnpm install -g @vue/cli-init    (2.X桥接工具:脚手架)
+  vue -V (v必须大写)
+
+安装webpack
+
+- cnpm install -g webpack   (安装webpack)
+
+
+
+初始化项目--创建项目
+
+真正的创建项目
+
+- vue init webpack my-project    (2.X)
+- 拒绝npm安装
+- cnpm install
+
+![image-20210417092943412](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\image-20210417092943412.png)
+
+![image-20210417092949958](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\image-20210417092949958.png)
+
+![image-20210417092956483](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\image-20210417092956483.png)
+
+
+
+## 多组件和标准Vue页面
+
+```
+<template>
+  <div class="helloworld">
+    <hello-header :text="text1"></hello-header>
+  </div>
+</template>
+<script>
+import HelloHeader from './HelloWorld/HelloHeader'
+export default {
+  name: 'HelloWorld',
+  components: {
+    HelloHeader: HelloHeader
+  },
+  data () {
+    return {
+      text1: 'HelloHeader'
+    }
+  }
+}
+</script>
+<style scoped>
+</style>
+
+```
+
+```
+<template>
+    <div id="helloheader">
+      {{text}}-->
+    </div>
+</template>
+
+<script>
+export default {
+  name: 'HelloHeader',
+  props: {
+    text: String
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+
+```
+
+
+
+## 父子组件传值
+
+父组件向子组件传值
+父传递: `<right :url="url"></right>`
+子接收: `props: ['url’]`
+	
+子组件向父组件传值
+父接收:`<left @changeurl="changeurl"></left>`
+子抛出: `this.$emit('changeurl', url)`
+
+
+
+## VueBus( Vue事务总线)
+
+vue bus可以实现不同组件间、不同页面间的通信，比如我在A页触发发点击事件，要B页面发生变化
+一个中央事件总线bus，可以作为一个简单的组件传递数据，用于解决跨级和兄弟组件通信问题
+创建Bus.js
+
+- import Vue from 'vue'
+- const Bus = new Vue()
+- export default Bus
+
+使用 emit   on   off 
+
+```
+import Bus from './Bus'
+export default {
+    data() {
+        return {
+            .........
+            }
+      },
+  methods: {
+        ....
+        Bus.$emit('log', 120)
+    },
+  }
+```
+
+```
+import Bus from './Bus'
+export default {
+    data() {
+        return {
+            .........
+            }
+      },
+    mounted () {
+       Bus.$on('log', content => { 
+          console.log(content)
+        });    
+    }    
+}
+```
+
+
+
+其它注册方式
+
+- Main.js中
+
+  ```
+  import bus from './vuebus/Bus'
+  Vue.prototype.Bus = bus
+  ```
+
+- 使用
+
+  ```
+  this.Bus.$emit('clickTest', '我在footer点击’)
+  this.Bus.$on('clickTest', content => {
+        this.text = content
+      })
+  ```
+
+  
+
+## Axios与json
+
+什么是json
+
+- JSON 指的是 JavaScript 对象表示法（JavaScript Object Notation）
+- JSON 是轻量级的文本数据交换格式
+- JSON 独立于语言 *
+- JSON 具有自我描述性，更易理解
+- *JSON 使用 JavaScript 语法来描述数据对象，但是 JSON 仍然独立于语言和平台。JSON 解析器和 JSON 库支持许多不同的编程语言。
+
+http
+
+- HTTP协议（HyperText Transfer Protocol，超文本传输协议）是因特网上应用最为广泛的一种网络传输协议，所有的WWW文件都必须遵守这个标准。
+  HTTP是一个基于TCP/IP通信协议来传递数据（HTML 文件, 图片文件, 查询结果等）。
+
+前后台交互
+接口的概念
+
+
+
+什么是axios
+
+- axios 是一个基于 promise 的 HTTP 库，在浏览器和 node.js 中使用。
+- axios主要是用于向后台发起请求的，还有在请求中做更多是可控功能。
+
+使用axios
+
+- npm install axios  --save
+- main.js
+  - import axios from 'axios’
+  - Vue.prototype.$axios = axios
+- this.$axios.get('/terms')
+        .then(this.res1Method).catch((err) => {
+          this.catchMethod(err)
+        })
+
+
+
+## Vue项目(前端)部署上线
+
+打包
+
+- npm run build
+- dist
