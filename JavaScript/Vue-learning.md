@@ -535,6 +535,55 @@ java服务器 （对数据稍作处理）<=> 数据库
 
 # Vue项目构建
 
+## Vue开发流程
+
+Vue的环境配置启动
+
+Java 
+Jvm开发环境 → idea 开发工具 → idea配置插件 → 用idea创建创建项目
+
+Vue: (js)
+Node(js运行环境) → vue-cli “脚手架”  开发vue项目的idea → webpack (模块打包机)
+
+Maven: 
+百万文件
+Npm
+
+
+
+拿到新项目后
+
+1. 装包(在 这个项目路径下, 执行 cnpm install)
+2. 启动
+
+
+
+项目目录
+
+- `config/index.js` webpack配置（也是这个项目的基础配置）
+- `index.html` 项目入口
+- `package.jason` 包文件版本/命令启动方式
+
+
+
+`config/index.js`里的`proxyTable: {}`属性用于同源阻塞处理
+
+浏览器的同源阻塞策略：跨域（ip or 端口 不一致浏览器会阻塞从服务器的请求结果）
+
+```
+后端服务器（这样需要服务器做认可不同ip的某种操作）
+↑ ↓
+浏览器		或者 浏览器<=>前端服务器<=>后端服务器
+↑ ↓
+前端服务器
+```
+
+
+
+在Vue项目中实现组件嵌套
+
+Vue的组件化
+
 ## node
 
 安装node
@@ -557,9 +606,8 @@ java服务器 （对数据稍作处理）<=> 数据库
 安装vue-cli
 
 - cnpm install -g @vue/cli    (3.X)
-- 
 - cnpm install -g @vue/cli-init    (2.X桥接工具:脚手架)
-  vue -V (v必须大写)
+- vue -V (v必须大写)
 
 安装webpack
 
@@ -637,43 +685,83 @@ export default {
 ## 父子组件传值
 
 父组件向子组件传值
+
 父传递: `<right :url="url"></right>`
 子接收: `props: ['url’]`
-	
+
+```javascript
+父组件’递’数据: 通过单向绑定
+<body1 class="body1" v-bind:aaaa="applist"></body1>
+
+子组件”接”数据: 
+// 专门用来接收父组件穿过来的值
+// 可以当做data看待, 和data就有一个差别,
+// (props数据是父组件传来的, 不可修改, 即使修改, 也要是父组件修改)
+props:['aaaa'],
+```
+
+
+
 子组件向父组件传值
 父接收:`<left @changeurl="changeurl"></left>`
 子抛出: `this.$emit('changeurl', url)`
+
+```javascript
+子组件向上传递:
+// this.$emit 就是用来子组件向父组件传值的
+// 第一个参数, 向父组件抛出的方法名
+// 第二个参数, 就是这个方法携带了什么参数
+this.$emit("deletelist", index)
+
+父组件接收
+<body-son2 class="son2"  v-bind:bodyson="aaaa" v-on:deletelist="deletebody1"></body-son2>
+```
+
+高耦合，需要Bus传值简化
 
 
 
 ## VueBus( Vue事务总线)
 
-vue bus可以实现不同组件间、不同页面间的通信，比如我在A页触发发点击事件，要B页面发生变化
+`vue bus`可以实现不同组件间、不同页面间的通信，比如我在A页触发发点击事件，要B页面发生变化
 一个中央事件总线bus，可以作为一个简单的组件传递数据，用于解决跨级和兄弟组件通信问题
-创建Bus.js
 
-- import Vue from 'vue'
-- const Bus = new Vue()
-- export default Bus
+<span style="color:red">思想: 我们独立的创建一个数据的中转位置, 让这个中转位置和所有的需要数据传值的组件(Vue对象)建立联系, 传值就以中转站为媒介来进行</span>
+
+<span style="background:yellow">引入第三方插件</span>:
+
+1. <span style="background:yellow">导包或者导入第三方配置文件</span>
+2. <span style="background:yellow">在main.js做全局配置</span>
+3. <span style="background:yellow">使用</span>
+
+
+
+创建Bus.js (src/bus/Bus.js)
+
+- ```javascript
+  import Vue from 'vue'
+  const Bus = new Vue()
+  export default Bus
+  ```
 
 使用 emit   on   off 
 
-```
+```javascript
 import Bus from './Bus'
 export default {
     data() {
         return {
-            .........
-            }
-      },
-  methods: {
+        	.........
+        }
+    },
+    methods: {
         ....
         Bus.$emit('log', 120)
     },
-  }
+}
 ```
 
-```
+```javascript
 import Bus from './Bus'
 export default {
     data() {
@@ -693,7 +781,7 @@ export default {
 
 其它注册方式
 
-- Main.js中
+- main.js中
 
   ```
   import bus from './vuebus/Bus'
@@ -755,3 +843,204 @@ http
 
 - npm run build
 - dist
+
+
+
+前端资源了解
+
+cnpm install element-ui --save
+
+```javascript
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
+Vue.use(ElementUI);
+```
+
+
+
+iconfont
+
+
+
+googlefont
+
+
+
+# Vue项目创建流程
+
+对比Java开发的项目创建流程
+
+​    1. 首先我们安装了jvm, 这个是我们java代码运行的环境
+
+​    2. 之后我们安装idea, 这是一个帮我们构建以及管理java项目的工具
+
+​    3. 紧接着我们在idea里new Project 创建一个javase项目
+
+​    4. 之后我们在idea所创建的java项目中写java代码
+
+ 
+
+那么对应的, 如果我们创建一个Vue项目,并且想写一些Vue代码也需要上述流程
+
+​    1, 我们需要安装node , node是js的运行环境(node的本质是个浏览器)
+
+​    这一步等价于我们java安装jvm
+
+​    2, 我们需要安装cnpm, (node自带npm工具, 但是我们没法快速访问国外内容, 所以需要安装中国镜像访问工具)(npm 或者cnpm 类似我们java的包管理工具Maven )
+
+​    3, 安装vue-cli , 这是一个Vue项目构建工具
+
+这一步等价于我们java安装idea软件
+
+​    4, 安装webpack, 这是一个包管理工具
+
+这一步等价于我们写java代码时, 在idea里安装一些插件
+
+​    5, 创建Vue项目
+
+这一步等价于我们写java代码时, 用idea创建项目
+
+​    
+
+## 具体步骤
+
+## 安装node
+
+根据电脑类型,在node官方网站下载node, 然后默认安装到计算机上 
+
+安装成功的标志如下, 打开计算机命令行 减产node版本 以及 npm版本
+
+![文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image002.jpg)
+
+ 
+
+## 安装cnpm
+
+因为创建一个Vue项目(并且在本地作为一个前端服务器运行起来 ), 需要很多第三方的包的支持(至少上百个包), 我们没有办法一个一个下载这些包(因为包需要 依赖另一个包, 并且依赖关系有版本要求), 所以我们前端就开发了一个工具叫npm, 这个工具的原理就是, 大家都把包存储到它的服务器上(有成千上万), 当我们需要的时候, 可以使用这个npm工具帮我们从它的服务器上下载正确的以及对应的包到我们本地,以供我们使用. 
+
+但是, 这个npm服务器在国外,(另外安装node自带npm下载工具, node集成了npm), 所以下载很慢.
+
+我们就需要一个国内镜像那就是cnpm(阿里提供), 所以我们可以安装cnpm的下载工具, 在我们国内镜像上下载我们需要的包
+
+ 
+
+安装方式:如下
+
+在计算机命令行执行如下命令
+
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+
+![文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image004.jpg) 
+
+安装成功的标志, 检查版本号
+
+cnpm -v
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image006.jpg)
+
+ 
+
+## 安装Vue-cli
+
+Vue-cli对于我们创建一个项目来说, 就像创建java项目我们需要安装一个idea一样
+
+ 
+
+安装方式:如下
+
+在计算机命令行执行如下命令(总共需要两个命令)
+
+cnpm install -g @vue/cli
+
+cnpm install -g @vue/cli-init
+
+![图片包含 文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image008.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image010.jpg)
+
+![图片包含 文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image012.jpg)
+
+判断安装成功的标志:检查版本号
+
+vue -V
+
+![文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image014.jpg)
+
+ 
+
+## 安装webpack
+
+安装命令如下:
+
+cnpm install -g webpack
+
+![形状  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image016.jpg)
+
+![文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image018.jpg)
+
+ 
+
+上述安装均属于基础配置
+
+比如我们计算机如果安装了jvm 安装了idea 就不需要重复安装(除非idea或者jvm崩溃了)
+
+##  
+
+## 创建项目
+
+创建一个Vue项目, 就类似与通过idea创建一个se项目一样, 只不过我们创建项目是通过命令行的命令
+
+创建项目的命令: (注意项目名建议全小写英文)
+
+vue init webpack 项目名
+
+ 
+
+注意, 创建项目一定要选好命令行路径
+
+比如, 我希望在桌面创建一个Vue项目, 就把命令行路径切换到桌面, 那么当项目创建完成, 这个项目就在桌面上
+
+![文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image020.jpg)
+
+
+
+比如, 我希望在D盘MyProject目录下创建一个Vue项目, 就把命令行路径切换到D盘MyProject目录, 那么当项目创建完成, 这个项目就在D盘MyProject目录下
+
+![图形用户界面, 文本, 应用程序  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image022.jpg)
+
+ 
+
+例如在桌面创建项目
+
+(注意, 就像我们可以通过idea反复创建一个se项目, 我们也可以通过vue init webpack 项目名 命令反复在不同地方创建项目, 但是如果创建了之后不想要了, 记得吧创建出来的项目删除)
+
+
+
+如果在这一步一直卡着, 可以选择切换一下手机热点
+
+ 
+
+以上步骤, 默认回车, 让选择的y或者n 统一选n(输入n 回车)
+
+ 
+
+注意最后一步, 上下键, 选最后一个, 回车, 项目目录构建已经完成
+
+ 
+
+最后一步, 安装包
+
+根据命令提示
+
+第二步注意使用 cnpm install
+
+// ---------------项目创建完成--------------------
+
+ 启动这个前端vue项目
+
+命令 npm run dev
+
+ 这也就意味着, 我在我的计算机里启动了一个Vue项目(是一个前端服务器) 端口在8080
+
+ 关闭这个项目(停止) 命令ctrl + c, 已经关闭
