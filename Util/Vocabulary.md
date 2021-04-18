@@ -201,9 +201,9 @@
 | Behind-The-Scenes          | 幕后的，在后台                         |
 | indirection operator       | 间接运算符 *                           |
 | dereference                | 间接引用，间接访问                     |
-|                            |                                        |
-|                            |                                        |
-|                            |                                        |
+| thumbnail                  | 索引图像；（打印预览）略图；拇指甲     |
+| backwards compatibility    | 向后兼容                               |
+| leading                    | 行间距（读作ledding）                  |
 |                            |                                        |
 |                            |                                        |
 | end                        |                                        |
