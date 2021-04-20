@@ -10,7 +10,12 @@ Database：A database is an organized collection of data,
 数据库：数据库是按照数据结构来组织、存储和管理数据
 的仓库。——百度百科
 
+优势：
 
+```
+1. 查询统计方便
+2. 可读性强
+```
 
 分类：
 
@@ -39,20 +44,47 @@ NoSQL 的应用场景：
 
 常用的关系型数据库（系统）
 
-<span style="color:red">Oracle---TikTok()   apple  云上贵州</span>  
-<span style="color:red">MySQL</span>
-<span style="color:red">MariaDB</span>
-<span style="color:red">SQL Server</span>
-Access (office)
-DB2(IBM)
-Informix
-Sybase （power design）
-SQLite等 （Android）
-OceanBase
+- <span style="color:red">Oracle---TikTok()   apple  云上贵州</span>  
+
+  这是一家公司，但是也这家公司核心产品Oracle数据库的名字。Oracle数据库是收费的，所以一般大公司使用这个数据库
+
+- <span style="color:red">MySQL</span>
+
+  之前是一个开源的关系型数据库，现在被Oracle收购了，社区版（现在免费），企业版（收费），是目前市面上使用份额最大的关系型数据库
+
+- <span style="color:red">MariaDB</span>
+
+- <span style="color:red">SQL Server</span>
+
+- Access (office)
+
+- DB2(IBM)
+
+- Informix
+
+- Sybase （power design）
+
+- SQLite等 （Android）
+
+  是一个很轻量级的数据库。一般在手机的操作系统里面会使用它。使用它来保存我们手机里面的通讯录以及短信。
+
+- OceanBase
+
+  这是阿里开源的一个关系型数据库。
+
+- Access，这个是微软的数据库产品。
 
 > 1970 E.F.Codd 提出                      
 >
 > Larry Ellison
+
+
+
+关系型数据库都是使用的这种表结构去存储和管理数据。我们如何去操作关系型数据库的这些表呢？
+
+我们关系型数据库为了操作方便，所以由SQL标准委员会制定了一个统一的标准（语法） 去操作我们的这些关系型数据库。这个统一的标准就叫做SQL，其实就是SQL语言。
+
+SQL：Structured Query Language，其实就是用来专门和关系型数据库打交道的一个语言。
 
 
 
@@ -64,6 +96,16 @@ OceanBase
 Cassandra（Facebook）
 Hbase （Apache, Hadoop database）
 MemcachedDB（Sina）
+
+非关系型数据库
+
+NOSQL：Not only SQL。
+
+仅存储数据本身。他是一个用来对关系型数据库补充的一种产品。
+
+因为关系型数据库大多数时候都是把数据存储在磁盘上，储存在磁盘上就会有读取慢的问题（因为要经过磁盘IO），此时就有了非关系型数据库的使用场景。
+
+非关系型数据库一般都是把数据储存在内存里面，这样我们去读写的时候才会比较快。
 
 
 
@@ -124,7 +166,17 @@ mysqld --install [服务名]
 安装完成之后，就可以通过命令net start mysql启动MySQL的服务了。通过命令net stop mysql停止服务。
 ```
 
+```
+说明一下，我们的命令行也是一个客户端。（C/S架构，B/S架构）
 
+这个客户端是Mysql原生支持的一个客户端，但是看起来不够优雅，不够好看。Mysql有很多图形化界面的客户端可以让我们开发者来选择。
+
+- Navicat
+- Sql young
+- Workbench
+- dbeaver
+只需要选择其中的一个就可以了。
+```
 
 登录 MySQL Server
 
@@ -148,6 +200,8 @@ mysql -u root
 
 SQL是结构化查询语言（Structured Query Language）的缩写。
 它是一种专门用来与关系型数据库沟通的语言。 
+
+SQL去操作这些关系型数据库其实就相当于是我们使用普通话和各个省份的人交流。当然，各个省份的人还有方言。也就是我们各个关系型数据库还有方言，但是这个方言比较少，一般现在也用的不多。所以我们和数据库去打交道只需要把普通话学会就好了。
 
 
 
@@ -196,7 +250,7 @@ DDL：Data Definition Language
 
 ## 创建数据库
 
-```
+```SQL
 CREATE DATABASE [IF NOT EXISTS] db_name
     [create_specification [ create_specification] ...];
  
@@ -205,9 +259,27 @@ create_specification:
   | [DEFAULT] COLLATE collation_name//指定数据库字符集的比较方式
 ```
 
+```SQL
+# e.g.新增数据库
+create database sql1 character set utf8 collate utf8_general_ci;
+```
+
 ```
 https://dev.mysql.com/doc/refman/8.0/en/charset.html   utf8_general_ci（不区分大小写）, utf8_bin（区分大小写）
 ```
+
+字符集与校对规则：
+
+一般建议大家使用utf8编码的字符集。校对规则有两个
+
+- utf8_bin 这个是二元校对规则，区分大小写
+- utf8_general_ci，这个是不区分大小写的校对规则
+
+补充说明：
+
+- Mysql还给我们提供一个utf8这个字符集的拓展字符集，utf8mb4，这个比utf8的范围要大一些。
+
+- 有一个字符集需要大家注意一下，叫做 `Latin1`，这个字符集是不支持中文的。
 
 
 
@@ -224,6 +296,15 @@ SHOW CREATE DATABASE db_name
 DROP DATABASE  [IF EXISTS]  db_name 
 ```
 
+```sql
+# e.g.
+# 查看数据库
+-- 查看所有的数据库
+show databases;
+-- 查看单个数据库的建表语句
+show create database sql2;
+```
+
 
 
 ## 修改数据库
@@ -236,6 +317,11 @@ alter_specification:   
 
     [DEFAULT] CHARACTER SET charset_name  
 |   [DEFAULT] COLLATE collation_name
+```
+
+```sql
+# e.g.修改数据库
+alter database sql2 character set gbk;
 ```
 
 ```
@@ -268,6 +354,61 @@ int id
 String name
 String password
 Date birthday
+```
+
+```sql
+# e.g.
+# 表的增删改查
+# 首先要确定这个表的操作是在哪个数据库里面
+# use databaseName;
+use 30_sql;
+# 创建表
+create table t_int
+(
+t1 tinyint,
+t2 SMALLINT,
+t3 int
+) character set utf8 collate utf8_bin;
+
+-- 浮点类型
+CREATE table t_f 
+(
+t1 float(4,2),
+t2 DOUBLE(6,2),
+t3 decimal(5,2)
+);
+insert into t_f values (0,0,0);
+insert into t_f values (412.1256,0,0);
+-- 日期与时间类型
+create table t_time(t1 year, t2 time, t3 date, t4 datetime, t5 timestamp);
+
+insert into t_time values 
+('2021','15:05:33','2018-05-20','2018-05-20 15:05:33','2018-05-20 15:05:33');
+insert into t_time values (now(),now(),now(),now(),now());
+
+set time_zone = "+8:00";
+
+-- 字符串类型
+create table t_str (
+t1 char(20),
+t2 varchar(255),
+t3 text
+);
+insert into t_str values ('珠珠','天明','景天');
+-- 需要注意的是我们存储字符串的时候需要添加引号
+
+-- 枚举类型
+create table t_enum (
+t1 ENUM('男','女')
+);
+insert into t_enum values (null);
+
+-- 集合类型
+create table t_set(
+t1 set('中杯','大杯','超大杯')
+);
+insert into t_set values ('小份');
+insert into t_set values ('中杯,大杯,超大杯');
 ```
 
 
@@ -383,6 +524,16 @@ DESCRIBE 表名
 查看生成表的 DDL 语句
 SHOW CREATE TABLE 表名
 
+```sql
+# e.g.
+# 查询表的结构
+desc employee;
+describe employee;
+
+# 查询表的建表语句
+show create table employee;
+```
+
 
 
 ## 修改表
@@ -424,11 +575,34 @@ RENAME TABLE 旧数据库名.旧表名 TO 新数据库名.新表名
 提示：我们可以把 RENAME TABLE 的这两种用法很好地统一起来，如果我们把 “重命名” 理解为 “在同一数据库里的移动”。甚至我们可以省略数据库名，如果你恰好正在使用该数据库。
 ```
 
+```sql
+# e.g.
+# 修改表
+-- 修改表的字符集
+alter table employee character set gbk;
+-- 修改字段的名字 
+-- modify只能修改类型 
+alter table employee modify name char(20);
+-- change 可以修改名字和类型
+alter table employee change name username varchar(20);
+-- 增加字段 add
+alter table employee add weight int;
+-- 删除字段 drop
+alter table employee drop weight; 
+-- 修改表名
+rename table employee to dagongren;
+```
+
 
 
 ## 删除表
 
 DROP TALBE 表名
+
+```sql
+# e.g.删除表
+drop table [if exists] t;
+```
 
 
 
@@ -456,6 +630,15 @@ VALUES		(value [, value...]);
 <span style="color:red">字符串和日期型数据应包含在单引号中。</span>
 插入空值 insert into table value(null)
 
+```sql
+# e.g.
+insert into user values
+(1001,'张飞','男','2200-06-22','2198-04-23','tank',100,'俺也一样'),
+(1002,'关羽','男','2200-06-22','2198-04-23','上单',100,'华雄小儿');
+
+insert into user (id,username) values (1003,'刘备',null),(1004,'曹操');
+```
+
 
 
 ## Update语句
@@ -471,6 +654,17 @@ UPDATE 	tbl_name   
 UPDATE语法可以用新值更新原有表行中的各列。
 SET子句指示要修改哪些列和要给予哪些值。
 WHERE子句指定应更新哪些行。如没有WHERE子句，则更新所有的行。
+
+```sql
+-- e.g.
+-- 修改 update 
+update user set gender = '男';
+update user set gender = '女' where username = '刘备';
+update user set gender = '女' where id < 1003;
+
+-- 修改多列
+update user set gender = '男',salary = 10000 where username = '张飞';
+```
 
 
 
@@ -491,6 +685,14 @@ Delete语句不能删除某一列的值（可使用update）<span style="color:r
 ```
 删除表中数据也可使用TRUNCATE TABLE 语句，它和delete有所不同 
 delete 和drop的区别
+```
+
+```sql
+-- e.g.
+-- 删除
+delete from user;
+-- 加上限制条件 where 
+delete from user where username = '曹操';
 ```
 
 
@@ -515,7 +717,9 @@ SELECT CONCAT('ab','cd’); 	-- 拼接字符串'ab'和'cd'
 
 
 
-## 查询单列
+## 查询列
+
+查询单列
 
 ```
 SELECT column_name FROM table_name;
@@ -523,7 +727,7 @@ SELECT column_name FROM table_name;
 
 
 
-## 查询多列
+查询多列
 
 ```
 SELECT col_name1, col_name2, … , col_namen 
@@ -532,7 +736,7 @@ FROM table_name;
 
 
 
-## 查询所有列
+查询所有列
 
 ```
 SELECT * FROM table_name;
@@ -546,7 +750,7 @@ SELECT * FROM table_name;
 
 
 
-## 使用 WHERE 子句过滤记录
+使用 WHERE 子句过滤记录
 
 ```
 SELECT * | {column_names}
@@ -558,6 +762,23 @@ filter_condition 是一个逻辑表达式，即表达式的结果是布尔类型
 
 ```
 注意：在 MySQL 中，0 表示 false，非 0 表示 true，故：SELECT * FROM t_students WHERE 1; 也是合法的。 
+```
+
+
+
+```sql
+# e.g.
+-- 1. 查询语数外总成绩大于 180 的同学信息；
+-- 2. 查询数学成绩在[80，90]区间的同学姓名；
+-- 3. 查询各科都及格的同学姓名；
+-- 4. 查询一班和二班的同学信息；
+select * from t_students where english + math + chinese > 290;
+
+select name from t_students where math >= 80 and math <= 90;
+
+select name from t_students where math>= 60 and english >= 60 and chinese >= 60;
+
+select * from t_students where class = '一班' or class = '二班';
 ```
 
 
@@ -589,6 +810,30 @@ LIKE 通配符规则：
 ‘_’ 只能匹配一个字符
 ```
 
+```sql
+-- e.g.
+-- 运算符
+
+-- !=
+select * from t_students where class != '一班';
+-- >=
+-- <=
+-- is null
+select * from t_students where chinese is null;
+-- is not null
+select * from t_students where chinese is not null;
+-- between and
+select * from t_students where math BETWEEN 80 AND 90;
+-- in
+select * from t_students where id = 1 or id = 2 or id = 3 or id = 4 or id = 5;
+select * from t_students where id in (1,5,7);
+-- not in 
+select * from t_students where id not in (1,5,7);
+-- like 
+-- 这个是模糊查询 %表示通配，_ 表示占位（1位）
+select * from t_students where name like '黄__';
+```
+
 
 
 ## DISTINCT 过滤相同的记录
@@ -600,6 +845,12 @@ FROM table_name;
 
 ```
 注意：DISTINCT 操作的基本单位是行（记录），只有当两行数据一模一样的情况下，才会删除另一行。
+```
+
+```sql
+-- e.g.
+-- 去重
+select distinct(class) from t_students;
 ```
 
 
@@ -622,6 +873,14 @@ LIMIT nums OFFSET offset;
 扩展：我们可以使用 LIMIT 关键字实现分页查询。 LIMIT (page_num – 1) * page_size, page_size;
 ```
 
+```sql
+-- e.g.
+-- 限制结果
+select * from t_students;
+-- 查询前四条
+select * from t_students where class = '一班'  LIMIT 0,4;
+```
+
 
 
 ## 对查询结果进行排序
@@ -639,9 +898,18 @@ LIMIT nums OFFSET offset;
 提示：其实，检索出的数据并不是随机显示的。如果不排序，数据一般将以它在底层表中出现的顺序显示，这有可能是数据最初添加到表中的顺序。 但是，如果数据随后进行过更新或删除，那么这个顺序将会受到DBMS重用回收存储空间的方式的影响。因此，如果不明确控制的话，则最终的结果不能（也不应该）依赖该排序顺序。关系数据库设计理论认为，如果不明确规定排列顺序，则不应该假定检索出的数据的顺序有任何意义。 	
 ```
 
+```sql
+-- e.g.
+-- order by 排序 asc-升序 desc-降序
+select * from t_students order by chinese asc; 
+
+-- 多字段排序
+select * from t_students order by chinese desc,english asc;
+```
 
 
-## 计算字段
+
+## 计算字段+别名
 
 我们想查询同学的总成绩信息，该怎么办？这时候计算字段就可以派上用场了。计算字段并不实际存在于数据库表中。计算字段是运行时在SELECT语句内创建的。
 SELECT name, chinese + math + english  FROM t_students;
@@ -658,9 +926,24 @@ SELECT name, chinese + math + english AS total FROM t_students;
 提示：AS 关键字不仅能给列起别名，还可以给表起别名。在多表查询中，我们会这样使用它。
 ```
 
+```sql
+# e.g.
+# 别名，计算字段
+select name as  username,class as clazz  from t_students as t ;
+-- 查询出所有同学的姓名与总分，并按照分数从高到低排序
+select name,english+chinese+math as total from t_students order by total desc;
+```
+
+说明：
+
+- as可以省略，但是一般不建议大家省略，因为省略的话我们sql的可读性较差
+- 给表起别名，这个再单表查询的时候没有作用，但是在多表查询的时候很有用
+
 
 
 ## 聚合函数
+
+聚合函数通常不会单独使用，通常是和分组（group by）一起配合起来使用
 
 COUNT()
     COUNT(*) 计算表中的总行数;
@@ -673,6 +956,17 @@ MAX():返回指定列的最大值
     计算时将忽略值为NULL的行;
 MIN():返回指定列的最小值
     计算时将忽略值为NULL的行;
+
+```sql
+# e.g.
+select count(id) as count  from t_students where class = '一班';
+
+select avg(chinese),avg(math),sum(math) from t_students where class = '一班';
+
+select sum(math) from t_students where class = '一班';
+
+select max(math) from t_students;
+```
 
 
 
