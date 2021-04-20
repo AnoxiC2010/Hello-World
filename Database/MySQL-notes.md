@@ -1067,11 +1067,28 @@ group_concat()按照性别进行分组，每组有哪些人
  select group_concat(name)as people,gender from t_students group by gender;
 ```
 
+e.g.
+
+```sql
+select class,COUNT(id) from cs group by class;
+
+select min(cs),max(id) from cs;
+
+select name,cs from cs order by cs asc LIMIT 1;
+
+-- 查询学生人数大于1的班级
+select class,GROUP_CONCAT(name),COUNT(id) as num  from cs group by class HAVING num > 1; 
+
+-- 查询班级及格人数大于1的班级
+SELECT class, GROUP_CONCAT( NAME ), COUNT( id ) AS num 
+FROM cs where cs > 59 GROUP BY class HAVING num > 1;
+```
+
 
 
 ## SELECT语句的执行顺序 
 
-```
+```sql
 (5) SELECT column_name, ... 
 (1) FROM table_name, ...
 (2) [WHERE ...] 
@@ -1089,9 +1106,64 @@ group_concat()按照性别进行分组，每组有哪些人
 <span style="color:red">实体完整性 （唯一性）</span>
 规定表的一行（即每一条记录）在表中是唯一的实体。实体完整性通过表的主键来实现。
 <span style="color:red">域完整性</span>：
-指数据库表的列（即字段）必须符合某种特定的数据类型或<span style="color:red">约束</span>。比如NOT NULL。
+指数据库表的列（即字段）必须符合某种特定的数据类型或<span style="color:red">约束</span>。
+
+通俗一点来说，其实就是对数据库的其他的字段做一定的限制。这个限制主要是在两个方面
+
+- 字段必须指定数据类型
+
+- 字段可以有一些特殊的限制词
+
+  - NOT NULL
+
+  - UNIQUE
+
+    注意：UNIQUE可以是null(多个null不算重复)，但是不能重复
+
 <span style="background:yellow">参照完整性：</span>
 <span style="background:yellow">保证一个表的外键和另一个表的主键对应。</span>
+
+外键主要是有两个作用：
+
+- 在有外键的表里面去添加数据数据的时候，需要去外键指向的表里面去查找这个数据是否合法，例如下图中我们去城市表添加数据的时候，需要去省份表看一下有没有对应的province_id
+
+- 在我们删除外键指向的表的时候，这里是省份表，Mysql需要去查一下这个省份表的id对应的外键是否有被使用。
+
+
+外键有利有弊端。
+
+- 利：可以防止我们插入非法数据，还可以防止我们误删数据
+- 弊：
+  - 性能问题。我们在做增加或者删除的时候需要额外的性能开销
+  - 我们去修改或者是管理数据的时候其实有的会带来很大的不便
+
+```sql
+create table province(
+	id int PRIMARY KEY,
+	name varchar(20) NOT NULL
+) CHARACTER SET utf8;
+
+INSERT INTO province VALUES (1,'湖北省');
+INSERT INTO province VALUES (2,'安徽省');
+INSERT INTO province VALUES (3,'陕西省');
+
+create table city (
+id int PRIMARY KEY,
+name varchar(50) NOT NULL,
+province_id int
+)CHARACTER set utf8;
+
+insert into city values (1,'武汉市',1);
+insert into city values (2,'合肥市',2);
+insert into city values (3,'芜湖市',2);
+insert into city values (4,'西安市',3);
+insert into city values (5,'南京市',2);
+
+# 添加外键
+alter table city add CONSTRAINT constraint_fk FOREIGN KEY(province_id) REFERENCES province(id);
+```
+
+
 
 ```
 数据库主键主键：表中经常有一个列或列的组合，其值能唯一地标识表中的每一行。这样的一列或多列称为表的主键，通过它可强制表的实体完整性。当创建或更改表时可通过定义 PRIMARY KEY 约束来创建主键。一个表只能有一个 PRIMARY KEY 约束，而且 PRIMARY KEY 约束中的列不能接受空值。由于 PRIMARY KEY 约束确保唯一数据，所以经常用来定义标识列。 作用 :
@@ -1125,6 +1197,9 @@ constraint constraint_FK_name foreign key(ordersid) references orders(id),
 ## 多表设计(两个表)
 
 一对多 （省份和城市、分类和商品、班级和学生）
+
+- 关系维护在多的一方
+
 多对多（学生和课程、用户和商品）
 一对一（学生和学号、人和身份证号码）
 
@@ -1196,7 +1271,7 @@ alter table employee add constraint FK_employee_departmentid foreign key (depart
 | 2    | 2    |
 | 3    | 1    |
 
-```
+```sql
 create table TEACHER(
 ID int primary key,
 NAME varchar(100)
@@ -1238,7 +1313,7 @@ constraint S_ID_FK foreign key(S_ID) references STUDENT3(ID));
 | 1    | 联想T420     | 1                         |
 | 2    | 苹果mac  pro | 2                         |
 
-```
+```sql
 方法1：外键关联+唯一
 create table PERSON(
 ID int primary key,
@@ -1263,12 +1338,32 @@ constraint PERSON_ID_FK foreign key(ID) references PERSON(ID)
 第一范式（1NF）：（每列保持原子性）
       如果数据库中的所有字段都是不可分割的原子值，则说明该数据库满足第一范式，用户的收货地址
 
+
+
 第二范式（2NF）：（记录的唯一性）
-      要求记录有唯一标识，不存在部分依赖。表：学号、课程号、姓名、学分;
+
+翻译一下，也就是说每一个表都应该有主键这个字段。
+
+Mysql给我们提供了主键自增的解决方案，也就是说你不需要关注这个主键是不是重复了，因为这些都交给mysql来维护了。      
+
+tips：建议以后建表的时候主键使用Mysql提供的自增的方案。（性能）
+
+要求记录有唯一标识，不存在部分依赖。表：学号、课程号、姓名、学分;
        学分依赖课程，姓名依赖学号
 
+
+
 第三范式（3NF）：（字段不要冗余）
-         表: 学号, 姓名, 年龄,       学院名称, 学院电话，不要存在传递依赖
+
+也就是说，我们去存储数据的时候不要重复存储同一个种数据。
+
+![image-20210420151815683](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Database\MySQL-notes.assets\image-20210420151815683.png)
+
+
+
+一般来说，假如我们进行了数据的冗余，这种操作叫做反范式化设计。这种设计比较常见。
+
+表: 学号, 姓名, 年龄,       学院名称, 学院电话，不要存在传递依赖
 
 
 
@@ -1389,6 +1484,8 @@ SELECT * FROM customer c RIGHT OUTER JOIN orders o ON c.id=o.customer_id WHERE o
 
 子查询也叫嵌套查询，是指在where子句或from子句中又嵌入select查询语句（一般写在where字句）
 
+子查询相当于执行了多条sql语句，效率不高。并且对比连接查询，使用的场景有限，因为他查询出来的最后的结果不能显示子查询里面的其他列。
+
 e.g.
 查询“郭靖”的所有订单信息
 
@@ -1412,7 +1509,7 @@ SELECT * FROM orders WHERE price>100 UNION SELECT * FROM orders WHERE customer_i
 注意：联合查询的各子查询使用的表结构应该相同，同时两个子查询返回的列也应相同。
 ```
 
-
+联合查询有没有用呢？其实有一点用，在我们使用or或者是in关键字来查询的时候，有可能性能很差（因为索引的原因），这个时候就可以使用联合查询，有的时候会有奇效。
 
 ## 报表查询
 
@@ -1428,7 +1525,7 @@ select …  from … [where…] [ group by … [having… ]] [ order by … ]
 
 # 数据的备份与恢复
 
-数据库备份： cmd命令下
+## 数据库备份： cmd命令下
 
 mysqldump -u root -p test(数据库名称)>test.sql
 
@@ -1448,3 +1545,18 @@ mysqldump -u root -p test(数据库名称)>test.sql
 
 
 注：如果文件放在c盘，可能由于权限原因无法访问。更换到其他盘符再试。
+
+需要注意的是：不管是我们navicat还是我们的命令行，都不会给你备份数据库的建库语句。
+
+## Navicat
+
+- 保存
+
+![image-20210420174340624](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Database\MySQL-notes.assets\image-20210420174340624.png)
+
+
+
+- 恢复
+
+  ![image-20210420174407540](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Database\MySQL-notes.assets\image-20210420174407540.png)
+
