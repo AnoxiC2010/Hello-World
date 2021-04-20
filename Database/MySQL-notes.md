@@ -239,6 +239,22 @@ TPL： 事务处理语言
 
 
 
+**注释**
+
+ SQL 语言的注释有三种：
+
+```sql
+SELECT * FROM t_students;  --（需要加空格） This is a annotation
+
+SELECT * FROM t_students;  # This is a annotation
+
+/* Hello World!
+   Hello Kitty~  */
+SELECT * FROM t_students;
+```
+
+
+
 # 数据定义语言（DDL）
 
 DDL：Data Definition Language
@@ -523,6 +539,20 @@ DESCRIBE 表名
 
 查看生成表的 DDL 语句
 SHOW CREATE TABLE 表名
+
+```
+# DESC等效于以下，但更快捷
+SHOW COLUMNS FROM 表名
+
+# 其他SHOW语句拓展
+SHOW STATUS 显示广泛的服务器状态信息；
+SHOW GRANTS 显示授予用户（或特定用户）的安全权限；
+SHOW ERRORS和SHOW WARNINGS 用来希纳是服务器错误或警告消息。
+...
+执行命令HELP SHOW显示允许的更多SHOW语句
+```
+
+
 
 ```sql
 # e.g.
@@ -945,17 +975,47 @@ select name,english+chinese+math as total from t_students order by total desc;
 
 聚合函数通常不会单独使用，通常是和分组（group by）一起配合起来使用
 
-COUNT()
-    COUNT(*) 计算表中的总行数;
-    COUNT(column_name) 计算指定列下的总行数，计算时将忽略值为NULL的行。
-SUM():返回指定列的所有值之和
-    计算时将忽略值为NULL的行;
-AVG():返回指定列的平均值
-    计算时将忽略值为NULL的行;
-MAX():返回指定列的最大值
-    计算时将忽略值为NULL的行;
-MIN():返回指定列的最小值
-    计算时将忽略值为NULL的行;
+- COUNT()
+  COUNT(*) 计算表中的总行数;
+  COUNT(column_name) 计算指定列下的总行数，计算时将忽略值为NULL的行。
+
+  ```sql
+  Select count(*)|count(列名) from tablename
+  		[WHERE where_definition] 
+  ```
+
+- SUM():返回指定列的所有值之和,返回满足where条件的行的和
+  计算时将忽略值为NULL的行;
+
+  ```sql
+  Select sum(列名)｛,sum(列名)…｝ from tablename
+  		[WHERE where_definition]   
+  
+  ```
+
+  注意：sum仅对数值起作用，否则会报错。
+  注意：对多列求和，“，”号不能少。
+
+- AVG():返回指定列的平均值,返回满足where条件的一列的平均值
+      计算时将忽略值为NULL的行;
+
+  ```sql
+  Select sum(列名)｛,sum(列名)…｝ from tablename
+  		[WHERE where_definition]   
+  ```
+
+- MAX():返回指定列的最大值
+  计算时将忽略值为NULL的行;
+
+  ```sql
+  Select max(列名)　from tablename
+  		[WHERE where_definition]   
+  ```
+
+- MIN():返回指定列的最小值
+  计算时将忽略值为NULL的行;
+
+  
 
 ```sql
 # e.g.
@@ -983,6 +1043,7 @@ select max(math) from t_students;
 如：查询人数大于2的班级
 
     提示：GROUP BY 关键字通常是和集合函数一起使用的。
+    Having和where均可实现过滤，但在having可以使用合计函数,having通常跟在group by后，它作用于组。
 
 
 
@@ -1025,9 +1086,9 @@ group_concat()按照性别进行分组，每组有哪些人
 
 数据完整性是为了保证插入到数据库中的数据是正确的，它防止了用户可能的输入错误。
 数据完整性主要分为以下三类：
-实体完整性 （唯一性）
+<span style="color:red">实体完整性 （唯一性）</span>
 规定表的一行（即每一条记录）在表中是唯一的实体。实体完整性通过表的主键来实现。
-域完整性：
+<span style="color:red">域完整性</span>：
 指数据库表的列（即字段）必须符合某种特定的数据类型或<span style="color:red">约束</span>。比如NOT NULL。
 <span style="background:yellow">参照完整性：</span>
 <span style="background:yellow">保证一个表的外键和另一个表的主键对应。</span>
@@ -1052,7 +1113,7 @@ group_concat()按照性别进行分组，每组有哪些人
 定义主键自动增长
   auto_increment
 定义唯一约束
-  unique
+  unique (可以为null，且可以后多个null)
 定义非空约束
   not null
 定义外键约束
@@ -1227,4 +1288,163 @@ constraint PERSON_ID_FK foreign key(ID) references PERSON(ID)
 	购物车模块：用户名，商品编号，商品名称，商品价格，加入时间，商品数量
 
 出发点：从页面出发。展示什么，那么表里面就应该有什么。其次分析各个表之间的相对关系，一对多、一对一、多对多。进而就可以知道应该在哪一方保存相对关系。
-	
+
+
+
+## 连接查询
+
+<span style="color:red">交叉连接</span>（cross join）:不带on子句，返回连接表中所有数据行的笛卡儿积。
+<span style="color:red">内连接</span>（inner join）：返回连接表中符合连接条件及查询条件的数据行。
+<span style="color:red">外连接</span>：分为左外连接（left out join）、右外连接（right outer join）。与内连接不同的是，外连接不仅返回连接表中符合连接条件及查询条件的数据行，也返回左表（左外连接时）或右表（右外连接时）中仅符合查询条件但不符合连接条件的数据行。
+
+
+
+连接查询的from子句的连接语法格式为：
+
+```sql
+Select *
+from TABLE1 join_type TABLE2  [on (join_condition)]
+				              [where (query_condition)]
+```
+
+其中，TABLE1和TABLE2表示参与连接操作的表，TABLE1为左表，TABLE2为右表。on子句设定连接条件，where子句设定查询条件，join_type表示连接类型
+
+
+
+### 交叉连接查询
+
+交叉连接查询CUSTOMER表和ORDERS表
+
+```sql
+SELECT * FROM customer CROSS JOIN orders;
+SELECT * FROM customer,orders;
+```
+
+
+
+### 内连接查询
+
+显式内连接：使用inner join关键字，在on子句中设定连接条件
+
+```sql
+SELECT * FROM customer as c INNER JOIN orders as o ON c.id=o.customer_id; 
+SELECT * FROM customer as c INNER JOIN orders as o 
+ON c.id=o.customer_id; 
+```
+
+隐式内连接：不包含inner join关键字和on关键字，在where子句中设定连接条件
+
+```sql
+SELECT * FROM customer c,orders o WHERE c.id=o.customer_id; 
+```
+
+```
+内连接 
+内连接查询操作列出与连接条件匹配的数据行，它使用比较运算符比较被连接列的列值。内连接分三种： 
+1、等值连接：在连接条件中使用等于号(=)运算符比较被连接列的列值，其查询结果中列出被连接表中的所有列，包括其中的重复列。
+例，下面使用等值连接列出authors和publishers表中位于同一城市的作者和出版社：
+SELECT * 
+FROM authors AS a INNER JOIN publishers AS p ON a.city=p.city
+2、不等连接： 在连接条件使用除等于运算符以外的其它比较运算符比较被连接的列的列值。这些运算符包括>、>=、<=、<、!>、!<和<>。
+3、自然连接：在连接条件中使用等于(=)运算符比较被连接列的列值，但它使用选择列表指出查询结果集合中所包括的列，并删除连接表中的重复列。
+```
+
+
+
+### 左外连接查询
+
+使用left outer join关键字，在on子句中设定连接条件
+
+```sql
+SELECT * FROM customer c LEFT OUTER JOIN orders o ON c.id=o.customer_id; 
+```
+
+<span style="color:red">不仅包含符合c.id=o.customer_id连接条件的数据行，还包含左表中的其他数据行</span>
+带查询条件的左外连接查询，在where子句中设定查询条件
+
+```sql
+SELECT * FROM customer c LEFT OUTER JOIN orders o ON c.id=o.customer_id WHERE o.price>250;
+```
+
+
+
+### 右外连接查询
+
+使用right outer join关键字，在on子句中设定连接条件
+
+```sql
+SELECT * FROM customer c RIGHT OUTER JOIN orders o ON c.id=o.customer_id; 
+```
+
+不仅包含符合c.id=o.customer_id连接条件的数据行，还包含orders右表中的其他数据行
+带查询条件的右外连接查询，在where子句中设定查询条件
+
+```sql
+SELECT * FROM customer c RIGHT OUTER JOIN orders o ON c.id=o.customer_id WHERE o.price>250;
+```
+
+
+
+## 子查询
+
+子查询也叫嵌套查询，是指在where子句或from子句中又嵌入select查询语句（一般写在where字句）
+
+e.g.
+查询“郭靖”的所有订单信息
+
+```sql
+SELECT * FROM orders WHERE customer_id=(SELECT id FROM customer WHERE name LIKE ‘%郭靖%');
+
+select * from customer c inner join orders o on c.id = o.customer_id and c.name like '%郭靖%';
+```
+
+
+
+## 联合查询
+
+联合查询能够合并两条查询语句的查询结果，去掉其中的重复数据行，然后返并没有重复数据行的查询结果。联合查询使用union关键字
+
+```sql
+SELECT * FROM orders WHERE price>100 UNION SELECT * FROM orders WHERE customer_id=1;
+```
+
+```
+注意：联合查询的各子查询使用的表结构应该相同，同时两个子查询返回的列也应相同。
+```
+
+
+
+## 报表查询
+
+报表查询对数据行进行分组统计，其语法格式为：
+
+```sql
+select …  from … [where…] [ group by … [having… ]] [ order by … ]
+```
+
+其中group by 子句指定按照哪些字段分组，having子句设定分组查询条件。
+
+
+
+# 数据的备份与恢复
+
+数据库备份： cmd命令下
+
+mysqldump -u root -p test(数据库名称)>test.sql
+
+
+
+数据库恢复：
+创建数据库并选择该数据库
+
+- 在cmd命令下：mysql -u root -p test<test.sql
+  或者：
+- 在mysql >命令行下 执行  SOURCE 数据库文件
+  先创建一个空的数据库
+  Mysql>create databse mydb7;
+  Mysql>use mydb7;
+  mysql > source c:\user\zhao\test.sql
+
+
+
+注：如果文件放在c盘，可能由于权限原因无法访问。更换到其他盘符再试。
