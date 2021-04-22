@@ -889,6 +889,9 @@ account | CREATE TABLE `account` (
 # JDBC 事务Transaction
 
 - 事务的概念
+
+  [事务理解参考资料](https://developer.aliyun.com/article/743691#:~:text=MySQL%E7%9A%84%E4%BA%8B%E5%8A%A1,%E8%AF%BB%E4%BB%A5%E5%8F%8A%E5%8F%AF%E4%B8%B2%E8%A1%8C%E5%8C%96%E3%80%82)
+
   事务指逻辑上的一组操作，组成这组操作的各个单元，要么全部成功，要么全部不成功。
   例如: A——B转帐100，对应于如下两条sql语句
 
@@ -931,8 +934,11 @@ JDBC控制事务语句
 - Connection.commit();  		commit
 
 ```
-命令行：
-show variables like ‘%commit%’:
+# 命令行查看自动提交开启状态：
+show variables like ‘%commit%’; # on/off
+# 或
+select @@autocommit; # 1/0
+# 修改自动提交
 set autocommit = off
 ```
 
@@ -954,6 +960,82 @@ update from account set money=money+100 where name=‘b’;
 - Conn.commit();   //<span style="color:red">回滚后必须要提交</span>
 
 
+
+## JDBC事务的使用示例
+
+通过一个转账的案例，来连续JDBC事务操作的使用
+
+```java
+public Boolean transfer(String fromName, String toName, Integer salary) {
+        
+        try {
+            // 开启事务
+            connection.setAutoCommit(false);
+
+            // 第一步 给 fromName 账户扣钱
+            String sql = "update account set money = money - ? where name = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+            preparedStatement.setInt(1, salary);
+            preparedStatement.setString(2, fromName);
+
+            int effectedRows = preparedStatement.executeUpdate();
+
+            if (effectedRows <= 0) {
+                System.out.println("扣钱失败");
+                return  false;
+            }
+
+//            int i = 1/0;
+            // 第二步 给 toName 账户加钱
+            preparedStatement.clearParameters();
+
+            preparedStatement.setInt(1, -salary);
+            preparedStatement.setString(2, toName);
+            int effectedRows2 = preparedStatement.executeUpdate();
+
+            if (effectedRows2 > 0) {
+
+                // 提交事务
+                connection.commit();
+
+                System.out.println("加钱成功");
+                return true;
+            }
+
+            return false;
+        }catch (Exception ex) {
+            ex.printStackTrace();
+
+            // 回滚事务
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+
+    }
+```
+
+事务相关的API
+
+```java
+// 开启事务 
+// 其实这个说法是不够严谨的，其实这个地方的意思是把事务的自动提交关闭
+// 在Mysql中，每一条SQL语句的执行都是一个事务，这个事务是自动提交的，在SQL语句执行后还未提交前，其实这个SQL对数据库产生的影响还未持久化，那么提交以后相当于对数据库的改变就是永久性的了,设置autoCommit=false其实就是不让这个SQL语句自动提交，我们手动的来控制这个sql语句什么时候提交，什么时候回滚(回滚其实就是让之前的还未提交的操作失效)
+connection.setAutoCommit(false);
+
+// 回滚
+connection.rollback();
+
+// 提交
+connection.commit();
+```
+
+我们在使用事务的时候，需要注意我们必须使用同一个Connection对象去操作数据库，如果不是同一个connection对象的话，那么这个事务就会失效。
 
 ## 事务的特性(ACID)
 
@@ -985,12 +1067,14 @@ update from account set money=money+100 where name=‘b’;
 
 - 脏读（dirty reads） 
   一个事务读取了另一个未提交的并行事务写的数据。 
+
 - 不可重复读（non-repeatable reads） 
   一个事务重新读取前面读取过的数据， 发现该数据已经被另一个已提交的事务修改过。 
+
 - 幻读（phantom read） 
   一个事务重新执行一个查询，返回一套符合查询条件的行， 发现这些行因为其他最近提交的事务而发生了改变。
 
-
+  在一个事务中，读取到了其他事务新增的记录
 
 ## 事务隔离性的设置语句
 
@@ -1002,13 +1086,19 @@ update from account set money=money+100 where name=‘b’;
 - Read uncommitted：最低级别，以上情况均无法保证。(读未提交)
 
 ```
-# MySQL命令行客户端查村和设置隔离级别
-# session会话，global全局
+# MySQL命令行客户端查询数据库隔离级别
 select @@transaction_isolation;# 或 select @@tx_isolation
+# MySQL命令行客户端修改数据库隔离级别
+# session会话，global全局
 set session/global transaction isolation level read uncommitted.
+# 注意：我们修改了之后要重新去连接数据库
 ```
 
+我们发现Mysql默认的数据库的隔离级别是：**Repeatable read**
 
+按照可重复读的官方定义来说，可重复读这种隔离级别并不能解决虚幻读的问题。
+
+但是在Mysql中，我们Mysql的存储引擎（InnoDB）帮助我们解决了再可重复读这种隔离级别下的虚幻读问题。
 
 ```
 Innodb的重复读（repeatable read）不允许脏读，不允许非重复读（即可以重复读，Innodb使用多版本一致性读来实现）和不允许幻象读（这点和ANSI/ISO SQL标准定义的有所区别）。
@@ -1016,6 +1106,25 @@ Mysql数据库的隔离级别 设定为repeatable read，就已经可以防止 �
 
 Mysql8 现在更名为 transaction_isolation
 ```
+
+- 串行化
+
+  **Serializable**： 其实就是表示我们Mysql在应对并发的问题的时候，是一个一个sql语句串行起来执行的。
+
+  没有并发安全性相关的问题，但是效率很差。
+
+  ![image-20210422174551987](C:\Users\AnoxiC2010\Desktop\wdJava30th\SE\DB\Day04_JDBC&Transaction\note\事务.assets\image-20210422174551987.png)
+
+  
+
+## 隔离级别总结
+
+|          | 脏读 | 不可重复读 | 虚幻读                           |
+| -------- | ---- | ---------- | -------------------------------- |
+| 读未提交 | √    | √          | √                                |
+| 读已提交 | ×    | √          | √                                |
+| 可重复读 | ×    | ×          | √（Mysql中InnoDB解决了这个问题） |
+| 串行化   | ×    | ×          | ×                                |
 
 
 
