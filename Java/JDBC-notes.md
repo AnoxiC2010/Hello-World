@@ -272,7 +272,84 @@ driverClassName=com.mysql.jdbc.Driver
 */
 ```
 
+## 构建JDBC工具类
 
+```java
+public class JDBCUtils {
+
+
+    static String url = null;
+    static String username = null;
+    static String password = null;
+    static String driverClassName = null;
+
+    static {
+
+
+        try {
+            // 加载配置文件
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("jdbc.properties"));
+            // 赋值
+            url = properties.getProperty("url");
+            username = properties.getProperty("username");
+            password = properties.getProperty("password");
+            driverClassName = properties.getProperty("driverClassName");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    
+    
+    // 提供一个方法，和数据库之间建立连接
+    public static Connection getConnection(){
+
+        Connection connection = null;
+
+        ArrayList<Teacher> teachers = new ArrayList<>();
+        try {
+            // 注册驱动
+//            DriverManager.registerDriver(new Driver());
+            // 通过反射注册驱动
+            Class<?> aClass = Class.forName(driverClassName);
+            // 建立连接
+            connection = DriverManager.getConnection(url, username, password);
+        }catch (SQLException ex) {
+            ex.printStackTrace();
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        return connection;
+    }
+    
+    //  提供一个方法，关闭资源
+    public static void releaseSource(Connection connection,Statement statement,ResultSet resultSet) {
+
+        // 关闭资源
+        // 要从下往上关闭
+        try {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (statement != null){
+                statement.close();
+
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }
+
+    } 
+}
+```
 
 
 
@@ -306,7 +383,7 @@ Mysql的url地址的简写形式： `jdbc:mysql:///sid`
 serverTimezone=GMT+8
 ```
 
-url编码问题：
+### url编码问题
 
 ```
 SQL语句中还有中文，JDBC查无结果，但数据库查有结果
@@ -317,7 +394,16 @@ SQL语句过滤条件中含中文
 在url最后添加?useUnicode=true&characterEncoding=UTF-8
 ```
 
+### url配置需要注意一下
 
+```properties
+url=jdbc:mysql://localhost:3306/30sql?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+```
+
+- characterEncoding=utf8 这个是字符集编码的设置
+- useSSL=false 我们去连接Mysql数据库的时候默认使用的是SSL安全认证协议，需要安全证书，但是我们没有，所以配置为false让他关闭安全认证，去除警告日志。
+
+- serverTimezone=Asia/Shanghai 这个是时区的设置
 
 ## 程序详解—Connection
 
@@ -423,6 +509,29 @@ if(num>0){
 }
 ```
 
+增
+
+```java
+public static void main(String[] args) throws SQLException {
+
+
+    // 获取连接
+    Connection connection = JDBCUtils.getConnection();
+    // 获取statement对象
+    Statement statement = connection.createStatement();
+    // 执行sql语句
+    int effectedRows = statement.executeUpdate("insert  into teacher values (7,'长风','开车')");
+
+    if (effectedRows < 1) {
+        System.out.println("插入数据失败！！！");
+    }
+    System.out.println("插入成功！！！");
+    // 关闭资源
+    JDBCUtils.releaseSource(connection,statement,null);
+
+}
+```
+
 
 
 ### CRUD操作-update
@@ -441,7 +550,29 @@ if(num>0){
 }
 ```
 
+改
 
+```java
+public static void main(String[] args) throws SQLException {
+
+    // 获取连接
+    Connection connection = JDBCUtils.getConnection();
+    // 获取statement对象
+    Statement statement = connection.createStatement();
+    // 执行sql语句
+    int effectedRows = statement.executeUpdate("update teacher set major = '开飞机'");
+
+    if (effectedRows < 1) {
+        System.out.println("修改数据失败！！！");
+    }
+    System.out.println("影响的行数：" + effectedRows);
+    // 关闭资源
+    JDBCUtils.releaseSource(connection,statement,null);
+
+}
+```
+
+### 
 
 ### CRUD操作-delete
 
@@ -459,7 +590,29 @@ if(num>0){
 }
 ```
 
+删
 
+```java
+public static void main(String[] args) throws SQLException {
+
+    // 获取连接
+    Connection connection = JDBCUtils.getConnection();
+    // 获取statement对象
+    Statement statement = connection.createStatement();
+    // 执行sql语句
+    int effectedRows = statement.executeUpdate("delete from teacher where id = 7");
+
+    if (effectedRows < 1) {
+        System.out.println("删除数据失败！！！");
+    }
+    System.out.println("删除长风成功！！！");
+    // 关闭资源
+    JDBCUtils.releaseSource(connection,statement,null);
+
+}
+```
+
+### 
 
 ### CRUD操作-read
 
@@ -478,7 +631,27 @@ while(rs.next()){
 }
 ```
 
+查
 
+```java
+public static void main(String[] args) throws SQLException {
+
+    // 获取连接
+    Connection connection = JDBCUtils.getConnection();
+    // 获取statement对象
+    Statement statement = connection.createStatement();
+    // 执行sql语句
+    ResultSet resultSet = statement.executeQuery("select * from teacher");
+
+    while (resultSet.next()) {
+
+        String name = resultSet.getString("name");
+        System.out.println(name);
+    }
+    // 关闭资源
+    JDBCUtils.releaseSource(connection,statement,resultSet);
+}
+```
 
 # 数据库注入问题
 
@@ -495,9 +668,42 @@ String sql = "select * from t_user where name ='"+ name +"' AND PASSWORD = '"+ p
 
 问题:如何规避这种情况呢？
 
+这个问题产生的原因：
+
+其实就是因为我们使用JDBC的时候，假如需要用户输入的数据来作为SQL的参数的话，那么就需要去进行SQL的字符串拼接。
+
+一旦进行SQL字符串拼接，那么就可能会导致你的SQL语句的结构发生变化，产生安全隐患。
+
+```java
+ @Test
+    public void testLogin(){
+
+        login("张三","这个程序真sb' or '1=1");
+
+    }
 
 
-## Tip：PreparedStatement
+    public Boolean login(String username, String password) {
+
+        try {
+            String sql  = "select * from user where username = '"+ username+"' and password = '"+password+"'";
+            System.out.println(sql);
+             resultSet = statement.executeQuery(sql);
+             if (resultSet.next()) {
+                 System.out.println("登录成功。。。");
+                 return true;
+             }else {
+                 return false;
+             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+
+    }
+```
+
+## PrepareStatement解决数据库注入问题
 
 仔细分析一下，数据库注入成功的根本原因是，我们把sql语句中的参数(用户的输入)和sql命令拼接成了一个sql语句，因为一个sql语句中既可以有sql的命令又可以有参数，因此，<span style="color:red">用户的输入也可以被当做sql的语句来解析执行</span>。
 那么，既然知道了sql注入成功的原因，我们就反其道而行之，不让用户输入的参数被当做sql命令解析，而是只把它当做普通字符串来解析。
@@ -511,6 +717,38 @@ prepareStatement很明显的将sql<span style="color:red">命令语句与参数�
 不过，这样一来，<span style="color:red">单次执行</span>PreparedStatement需要与数据库<span style="color:red">通信两次</span>，效率，比之于单词执行Statement要低。
 
 
+
+```java
+public Boolean login2(String username, String password){
+
+    try {
+        // ? 是占位用的
+        String sql = "select * from user where username = ? and password = ?";
+        // 获取一个prepareStatement 预编译的statement
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+        // 设置参数 index 从 1 开始
+        preparedStatement.setString(1, username);
+        preparedStatement.setString(2, password);
+
+        // 执行sql
+        resultSet = preparedStatement.executeQuery();
+
+        if (resultSet.next()) {
+            System.out.println("登录成功。。。");
+            return true;
+        } else {
+            System.out.println("登录失败...");
+            return false;
+        }
+    }catch (SQLException ex) {
+        ex.printStackTrace();
+    }
+    return false;
+}
+```
+
+我们使用PrepareStatement进行操作的时候，其实与数据库通信了两次，效率比之前使用statement的时候要低。
 
 # 使用JDBC进行批处理
 
@@ -600,7 +838,285 @@ st.executeBatch();
 <span style="background:yellow">优点</span>：与数据库通信次数在批量操作时，<span style="color:red">PreparedStatment的通信次数远少于Statment</span>。
 <span style="background:yellow">缺点</span>：<span style="color:red">只能应用在SQL语句相同，但参数不同的批处理中</span>。因此此种形式的批处理经常用于在同一个表中批量插入数据，或批量更新表的数据。
 
+## 对比
+
+- 从代码的便捷性上来说，我们的statement看起来更好，prepareStatement有点繁琐
+
+- 从效率上来说，我们的prepareStatement的效率比statement要高（这个是在Mysql开启了批处理的情况下）
+
+  如何开启呢？
+
+  在url的后面增加一个参数，`rewriteBatchedStatements=true`
+
+- 从使用场景上来说，我们的statement批处理里面可以添加各种不同格式的SQL语句，但是我们的prepareStatement在使用批处理的时候，我们SQL语句的格式必须是一样的，只是参数不一样。如果格式也不一样，那就是不同的prepareStatement了。
 
 
 
+```
+测试表结构
+account | CREATE TABLE `account` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) DEFAULT NULL,
+  `balance` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=40001 DEFAULT CHARSET=utf8
+```
 
+采用两种不同的批处理方式插入10000条数据，比较速度差别
+
+开启rewriteBatchedStatements=true前
+
+| Statement批处理：        | 18247 毫秒 |
+| ------------------------ | ---------- |
+| PrepareStatement批处理： | 17333 毫秒 |
+
+开启rewriteBatchedStatements=true后
+
+| Statement批处理：        | 16637 毫秒毫秒 |
+| ------------------------ | -------------- |
+| PrepareStatement批处理： | 215 毫秒       |
+
+
+
+然后去根据主键查询和根据普通字段查询一条数据，比较查询速度差别
+
+查询第20000个数据
+
+| 主键查询：   | 10 毫秒 |
+| ------------ | ------- |
+| 普通字段查询 | 34 毫秒 |
+
+# JDBC 事务Transaction
+
+- 事务的概念
+  事务指逻辑上的一组操作，组成这组操作的各个单元，要么全部成功，要么全部不成功。
+  例如: A——B转帐100，对应于如下两条sql语句
+
+  ```sql
+  update account set money=money-100 where name=‘a’;
+  update account set money=money+100 where name=‘b’;
+  ```
+
+- 数据库开启事务命令
+  start transaction  开启事务DTL
+  rollback  回滚事务
+  commit   提交事务
+
+  ```
+  Start transaction
+  ….
+  ….
+  commit
+  ```
+
+
+
+首先，我们来看一个例子，假设现在用户A要给数据B转账100元，这个过程反映在数据上，就是两个步骤：
+
+- 首先，A用户的账户数据首先减去100元
+- 然后，B用户的账户数据在增加100元
+
+当这两个步骤都完成的时候，转账的这个过程才算完成
+但是，假设有这样一个场景，当用户A的账户减少100元之后，因为某些突发故障，即你给B用户转入失败。此时，我们再来看用户A和用户B的账户上的数据，你会发现，A账户少了100，B账户的余额未变，也就是说用户A莫名其妙的少了100元。
+
+
+
+使用事务
+
+当JDBC程序向数据库获得一个Connection对象时，默认情况下这个Connection对象会自动向数据库提交commit在它上面发送的SQL语句。若想关闭这种默认提交方式，<span style="color:blue">让多条SQL在一个事务中执行</span>，可使用下列语句：
+JDBC控制事务语句
+
+- Connection.setAutoCommit(false);        start transaction
+- Connection.rollback();  		rollback
+- Connection.commit();  		commit
+
+```
+命令行：
+show variables like ‘%commit%’:
+set autocommit = off
+```
+
+
+
+演示银行转帐案例
+
+在JDBC代码中使如下转帐操作在同一事务中执行。
+
+```sql
+update from account set money=money-100 where name=‘a’;
+update from account set money=money+100 where name=‘b’;
+```
+
+<span style="color:red">设置事务回滚点</span>
+
+- Savepoint sp = conn.setSavepoint();
+- Conn.rollback(sp);
+- Conn.commit();   //<span style="color:red">回滚后必须要提交</span>
+
+
+
+## 事务的特性(ACID)
+
+- <span style="color:red">原子性（Atomicity）</span>
+
+  原子性是指事务是一个不可分割的工作单位，事务中的操作要么都发生，要么都不发生。 
+
+- <span style="color:red">一致性（Consistency）</span>：
+
+  事务必须使数据库从一个一致性状态变换到另外一个一致性状态。
+
+- <span style="background:yellow;color:red">隔离性（Isolation）</span>
+
+  事务的隔离性是多个<span style="color:red">用户并发访问数据库时</span>，数据库为每一个用户开启的事务，不能被其他事务的操作数据所干扰，多个并发事务之间要相互隔离。
+
+- <span style="color:red">持久性（Durability）</span>
+
+  持久性是指一个事务一旦被提交，它对数据库中数据的改变就是永久性的，接下来即使数据库发生故障(软件故障)也不应该对其有任何影响。
+
+
+
+## 事务的隔离级别
+
+数据库中的数据是共享资源，当一个数据库允许多个用户同时访问的时候，数据库系统就必须支持并发控制。
+
+在数据库中，事务是并发控制的基本单位，而对数据库数据并发访问时，事务的隔离性，保证了并发访问数据库时，<span style="color:red">数据的正确性和一致性</span>。
+
+如果不考虑事务的隔离性，就会发生数据不一致的情况，主要有如下3种情况：
+
+- 脏读（dirty reads） 
+  一个事务读取了另一个未提交的并行事务写的数据。 
+- 不可重复读（non-repeatable reads） 
+  一个事务重新读取前面读取过的数据， 发现该数据已经被另一个已提交的事务修改过。 
+- 幻读（phantom read） 
+  一个事务重新执行一个查询，返回一套符合查询条件的行， 发现这些行因为其他最近提交的事务而发生了改变。
+
+
+
+## 事务隔离性的设置语句
+
+数据库共定义了四种隔离级别：
+
+- Serializable：可避免脏读、不可重复读、虚幻读情况的发生。（串行化）
+- Repeatable read：可避免脏读、不可重复读情况的发生。（无法避免虚读）
+- Read committed：可避免脏读情况发生。（无法避免不可重复读）
+- Read uncommitted：最低级别，以上情况均无法保证。(读未提交)
+
+```
+# MySQL命令行客户端查村和设置隔离级别
+# session会话，global全局
+select @@transaction_isolation;# 或 select @@tx_isolation
+set session/global transaction isolation level read uncommitted.
+```
+
+
+
+```
+Innodb的重复读（repeatable read）不允许脏读，不允许非重复读（即可以重复读，Innodb使用多版本一致性读来实现）和不允许幻象读（这点和ANSI/ISO SQL标准定义的有所区别）。
+Mysql数据库的隔离级别 设定为repeatable read，就已经可以防止 脏读，重复读，虚读等问题。
+
+Mysql8 现在更名为 transaction_isolation
+```
+
+
+
+## 事务的隔离性 如果做的不好 会有：
+
+### 脏读
+
+指一个事务读取了另外一个事务未提交的数据。
+这是非常危险的，假设Ａ向Ｂ转帐１００元，对应sql语句如下所示
+
+```sql
+1.update account set money=money+100 while name=‘b’
+2.update account set money=money-100 while name=‘a’;
+```
+
+如果此时银行正在作做报表统计，那么此时，所读取用户
+余额总值明显多出了100元，之后再做统计会发现“少了100
+元，而这100元去了哪里，就说不清楚了。
+
+
+
+### 不可重复读
+
+**（针对一条记录的，同一条记录前后不一样）**
+
+**在<span style="color:red">一个事务内</span>读取表中的某一行数据，多次读取结果不同。**
+
+- 例如银行想查询A帐户余额，第一次查询A帐户为200元，此时A向帐户内存了100元并提交了，银行接着又进行了一次查询，此时A帐户为300元了。银行两次查询不一致，可能就会很困惑，不知道哪次查询是准的。
+
+和脏读的区别是，<span style="color:red">脏读是读取前一事务未提交的脏数据</span>，<span style="color:blue">不可重复读是重新读取了前一事务已提交的数据</span>。
+
+很多人认为这种情况就对了，无须困惑，当然是后面的为准。
+我们可以考虑这样一种情况，比如银行程序需要将查询结果分别输出到电脑屏幕和写到文件中，结果在一个事务中针对输出的目的地，进行的两次查询不一致，导致文件和屏幕中的结果不一致，银行工作人员就不知道以哪个为准了。
+
+
+
+### 虚读
+
+**(幻读，同一张表前后不一样记录数)**
+**是指在一个事务内读取到了别的事务插入的数据，导致前后读取不一致。**
+
+- 如丙存款100元未提交，这时银行做报表统计account表中所有用户的总额为500元，然后丙提交了，这时银行再统计发现帐户为600元了，造成虚读同样会使银行不知所措，到底以哪个为准。
+
+```
+mysql的repeatable read隔离级别可以避免虚读（幻读）。
+```
+
+
+
+# 测试工具JUNIT
+
+Junit这个测试工具可以帮助我们执行一个类里面的任意一个方法，或者是批量执行类里面的方法。而不是像main方法一样，一个类里面只能有一个。
+
+这个测试工具不光是在我们的数据库里面可以用上，在以后的学习中也有大的作用。因为他可以帮助我们测试自己写的接口或者方法是否功能正常。
+
+### 导包
+
+Junit
+
+![image-20210422110219928](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210422110219928.png)
+
+
+
+### 加注解
+
+@Test注解
+
+注意：
+
+  1. @Test修饰的方法必须是public
+  2. @Test修饰的方法不能是static
+  3. @Test修饰的方法不能有返回值
+  4. @Test修饰的方法不能传参
+  5. 软规则（主要是为了给别的工具去做适配的-Maven）
+     - 我们测试类的类名建议是 XXXTest
+     - 我们测试的方法名建议写成 TestXXX
+
+### 执行
+
+![image-20210422110323191](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210422110323191.png)
+
+### 其他注解
+
+- @Before
+
+  在测试方法@Test 执行之前执行
+
+- @After
+
+  在测试方法@Test执行之后执行
+
+- @BeforeClass
+
+  在测试工具类启动的时候执行
+
+- @AfterClass
+
+  在测试完成，类销毁之前执行
+
+  ![image-20210422111139913](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210422111139913.png)
+
+
+
+## 
