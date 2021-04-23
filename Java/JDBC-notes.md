@@ -1186,13 +1186,15 @@ Junit这个测试工具可以帮助我们执行一个类里面的任意一个方
 
 这个测试工具不光是在我们的数据库里面可以用上，在以后的学习中也有大的作用。因为他可以帮助我们测试自己写的接口或者方法是否功能正常。
 
-### 导包
+### 导包(包都能再maven库网站获取)
 
 Junit
 
+`junit-4.12.jar`
+
 ![image-20210422110219928](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210422110219928.png)
 
-
+> 如果去maven库网站下载记得还需要下载依赖包hamcrest-core
 
 ### 加注解
 
@@ -1234,6 +1236,12 @@ Junit
 
 
 
+## Junit中输入流默认读取根路径问题：
+
+在IDEA中使用多moduel时
+
+使用流读取配置文件时需要注意，Junit单元测试默认选的时当前module路径，而不是project路径。要么在当前module路径在放一份配置文件，要么记得读取配置文件时修改路径。
+
 # Apache—DBUtils框架
 
 简介
@@ -1250,6 +1258,14 @@ API介绍(查看QueryRunner的API)
 - <span style="color:red">org.apache.commons.dbutils.DbUtils</span>。   
 
 
+
+DBUtils可以帮助我们更加方便的去执行SQL语句，可以帮助我们自动去解析结果集，解析到JavaBean里面。
+
+框架是什么呢？
+
+框架也是一个软件，但是是一个半成品的软件。也就是需要二次开发才能提供完整的功能的这么一种软件。开发者可以在框架的基础之上进行二次开发，然后去完善这个框架的功能，让他能够正常的去工作。
+
+框架里面有一些已经写好的功能或者是工具类，可以让你在开发的时候更加方便的去使用，框架一般都是把基础的代码给你抽离出来， 然后供你来使用。
 
 ## DbUtils类 
 
@@ -1333,6 +1349,228 @@ ResultSetHandler 接口提供了一个单独的方法：Object handle (java.sql.
 
 
 
+## 使用
+
+- 导包
+
+  commons-dbutils-1.6.jar
+
+  ![image-20210423163803024](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423163803024.png)
+
+- 配置
+
+  无需配置
+
+- 使用
+
+  - DbUtils
+
+    这个里面其实就是封装了一些方法，例如 Connection.close()，statement.close()，Connection.commit()
+
+    可以方便快开发者去调用
+
+  - QueryRunner
+
+    这个类是帮助我们去更加方便的去执行sql语句。
+
+    ```java
+    // 无参构造
+    QueryRunner queryRunner= new QueryRunner();
+    
+    // 有参构造
+    QueryRunner queryRunner= new QueryRunner(Datasource datasource);
+    
+    // 增删改
+    int effectedRows = queryRunner.update(Connection connection, String sql, ResultSetHandler handler, Object... params);
+    
+    int effectedRows = queryRunner.update(String sql, ResultSetHandler handler, Object... params);
+    
+    // 查 返回值要看handler里面的泛型
+    queryRunner.query(Connection connection, String sql, ResultSetHandler handler, Object... params);
+    
+    queryRunner.query(String sql, ResultSetHandler handler, Object... params);
+    ```
+
+  - ResultSetHandler
+
+    - BeanHandler
+
+    - BeanLIistHandler
+
+    - ColumnListHandler
+
+    - ScalarHandler()
+
+      以上需要掌握
+
+    - MapListHandler ...
+
+      ...
+
+    ```java
+    public class DBUtilsTest {
+    
+        QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    
+        // 查询Account这个表
+        @Test
+        public void testSelectAllAccount(){
+    
+           // QueryRunner
+            // 这个类是帮助我们去更方便的执行sql语句的
+    //        Connection connection = DruidUtils.getConnection();
+    //        Statement statement = connection.createStatement();
+    //
+    //        ResultSet resultSet = statement.executeQuery("select * from account");
+            // 解析ResultSet
+    
+    
+            // 这种方式我们不能够自己手动的去控制事务
+    
+    //        QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    //
+    //        Object query = queryRunner.query("select * from account", null);
+    
+    
+    
+            // 这种方式我们可以自己去控制事务的提交与回滚
+    //        QueryRunner queryRunner = new QueryRunner();
+    //        Connection connection = DruidUtils.getConnection();
+    //        connection.setAutoCommit(false);
+    //
+    //        queryRunner.query(connection,"select * from account",null);
+    //        connection.commit();
+    //        connection.rollback();
+    
+        }
+    
+        @Test
+        public void testSelectAllAccount2() {
+    
+            // 利用构造方法传入数据源
+            QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    
+            // 执行sql语句，获取返回值
+            try {
+                List<Account> accounts = (List<Account>) queryRunner.query("select * from account",new MyResultSetHandler());
+                System.out.println(accounts);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+    
+        }
+    
+        //具体使用
+    
+        // 增
+        @Test
+        public void testInsert() throws SQLException {
+    
+            QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    
+            int effectedRows = queryRunner.update("insert into account values (null,?,?,?)","张飞",1000,"将军");
+    
+            System.out.println(effectedRows);
+    
+        }
+    
+        @Test
+        public void testInsert2() throws SQLException {
+    
+            QueryRunner queryRunner = new QueryRunner();
+    
+            Connection connection = DruidUtils.getConnection();
+    
+            int effectedRows = queryRunner.update(connection,"insert into account values (null,?,?,?)","张飞",1000,"将军");
+    
+            System.out.println(effectedRows);
+    
+            connection.close();
+    
+        }
+    
+        // 删
+    
+        @Test
+        public void testDelete() throws SQLException {
+    
+            QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    
+            int effectedRows = queryRunner.update("delete from account where id = ?", 7);
+    
+            System.out.println(effectedRows);
+    
+        }
+    
+    
+        // 改
+        @Test
+        public void testUpdate() throws SQLException {
+    
+            QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    
+            int effectedRows = queryRunner.update("update account set name = ? where id = ?","天明",6);
+    
+            System.out.println(effectedRows);
+        }
+    
+        // 查
+        // 查单个bean--一行记录 BeanHandler
+        // 说明：我们在使用DBUtils去解析数据库返回的结果<ResultSet> 的时候，
+        // 我们的JavaBean的成员变量的名字必须和数据库中表的列名对应上，否则就会封装不进去
+        @Test
+        public void testSelectOne() throws SQLException {
+    
+            QueryRunner queryRunner = new QueryRunner(DruidUtils.getDataSource());
+    
+            Account account = queryRunner.query("select * from account where id = ?", new BeanHandler<Account>(Account.class),4);
+    
+            System.out.println(account);
+        }
+    
+        // 查多个bean-- 多行记录
+        @Test
+        public void testSelectAllAccounts() throws SQLException {
+    
+            List<Account> accounts  = queryRunner.query("select * from account where id in (?,?,?)", new BeanListHandler<Account>(Account.class),1,2,4);
+    
+            System.out.println(accounts);
+        }
+    
+        // 查单列值
+        @Test
+        public void testSelectSingleColumns() throws SQLException {
+    
+            List<String> nameList = queryRunner.query("select name from account", new ColumnListHandler<String>());
+    
+            System.out.println(nameList);
+    
+        }
+    
+        // 查询多列值
+        // 这个结果其实不够好，为什么呢？因为如果你获取到了这个结果，是一个map，需要给别人来使用的话，那么别人不知道你的这个map里面的key叫什么名字，别人去解析你这个map的时候不太方便
+        // 一般我们需要去传递数据的时候，不使用map，如果需要使用map，我们可以用JavaBean来替代
+        @Test
+        public void testSelectMultiColumns() throws SQLException {
+    
+            List<Map<String, Object>> mapList = queryRunner.query("select name,money from account", new MapListHandler());
+    
+            System.out.println(mapList);
+    
+        }
+    
+        // 查询单个值
+        @Test
+        public void testSelectOneValue() throws SQLException {
+    
+            Long count = queryRunner.query("select count(id) from account",new ScalarHandler<>());
+    
+            System.out.println("总行数："  + count);
+        }
+    ```
+
+    
+
 # 数据库连接池
 
 什么是连接池
@@ -1358,11 +1596,100 @@ ResultSetHandler 接口提供了一个单独的方法：Object handle (java.sql.
 
 
 
-编写一个基本的连接池实现连接复用
+```
+因为之前在使用JDBC的时候，我们每一次去操作的都会重新从数据库获取一个连接，这个连接在我们使用完之后就关闭了。这个明显是不利于效率的提升，造成了连接资源的浪费。
 
-![image-20210423091023050](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091023050.png)
+所以我们就想如何反复的利用这个数据库连接呢？
 
-![image-20210423091040157](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091040157.png)
+那就是通过数据库连接池来管理连接，在程序初始化的时候去往一个连接池里面去放入多个连接，那么在使用的时候，我们就可以直接从这个连接池里面去获取连接，在使用完连接以后，我们再把这个连接丢入到连接池里面去，这样连接池里面的连接就能够被反复利用了。
+
+主要是为了提高数据库操作的性能。
+
+tips：以后会遇到别的池子，池化技术其实都是为了提高资源的利用率，进而提高效率。
+```
+
+## 自己实现基本的数据库连接池
+
+```java
+/**
+ * 自己实现的这个数据库连接池有几个问题。
+ * 1. 这个数据库连接池不能自动扩容
+ * 2. 这个数据库连接池没有超时释放资源的机制（实现这套机制挺麻烦的）
+ * 3. 我们的这个数据库连接池没有标准化，也就是只有我们自己能用
+ *      其实我们的JDK给我们制定了自己去实现数据库连接池的这么一个标准（接口）
+ *      这个接口里面定义了你通过什么方法获取数据库连接。
+*  4. 那么这个JDK给我们制定的接口是 javax.sql.Datasource
+ *
+ */
+public class MyConnectionPool {
+
+    // 从头部存放，从尾部取
+    static LinkedList<Connection> connectionPool;
+    // 默认的池子的大小
+    int initSize = 10;
+
+    // 扩容临界大小
+    int legencySize = 5;
+
+    // 每次扩容的大小
+    int addSize = 10;
+
+    public MyConnectionPool(int initSize) {
+        this.initSize = initSize;
+
+        addCapacity(this.initSize);
+
+    }
+
+    public MyConnectionPool() {
+
+       addCapacity(initSize);
+
+    }
+
+
+    // 获取连接 要从数据库连接池里面去取连接
+    public Connection getConnection(){
+
+        if (connectionPool.size() <  legencySize) {
+
+            addCapacity(addSize);
+        }
+
+        Connection connection = connectionPool.removeLast();
+        return connection;
+
+    }
+
+
+    // 释放连接
+    public void releaseConnection(Connection connection) {
+        connectionPool.addFirst(connection);
+    }
+
+
+    public void addCapacity(int size) {
+
+        if (connectionPool == null) {
+            connectionPool = new LinkedList<>();
+        }
+        if (size < 0) {
+            throw new RuntimeException("扩容参数非法,参数是:" + size);
+        }
+        for (int i = 0; i < size; i++) {
+            connectionPool.addFirst(JDBCUtils.getConnection());
+        }
+
+    }
+```
+
+
+
+### 连接池为什么不提供释放资源方法
+
+思考：为什么JDK定义的Datasource接口没有定义释放资源这个方法呢？
+
+因为假如定义了释放资源这个方法，并不能阻止小白用户去先把这个数据库连接关闭（Connection.close() ），再去把这个连接放到连接池里面去。（假如小白用户先把连接关闭，再放到连接池里面去，会产生在连接池里面有死链接，并且会越来越多，这样就造成你的整个连接池坏死。所以为了规避小白这种操作，正确的做法是我们在连接池里面放的连接，我们应该去重写这个连接的close方法，使得close方法的作用是往连接池里面放连接，所以JDK就没有在Datasource这个接口里面去定义一个释放连接的方法）。
 
 
 
@@ -1426,48 +1753,84 @@ Tomcat 的连接池正是采用该连接池来实现的。该数据库连接池�
 
 
 
-```properties
-dbcpconfig.proterties配置文件如下：
+DBCP使用
 
-#连接设置
-driverClassName=com.mysql.jdbc.Driver
-url=jdbc:mysql://localhost:3306/jdbc
-username=root
-password=
+- 导包
 
-#<!-- 初始化连接 -->
-initialSize=10
+  `commons-dbcp-1.4.jar`
 
-#最大连接数量
-maxActive=50
+  `commons-pool-1.6.jar`
 
-#<!-- 最大空闲连接 -->
-maxIdle=20
+  ![image-20210423110856339](C:\Users\AnoxiC2010\Desktop\wdJava30th\SE\DB\Day05_Datasource&DBUtils\note\数据库连接池.assets\image-20210423110856339.png)
 
-#<!-- 最小空闲连接 -->
-minIdle=5
+- 配置
 
-#<!-- 超时等待时间以毫秒为单位 6000毫秒/1000等于60秒 -->
-maxWait=60000
+  创建一个dbcp.properties配置文件
 
+  ```properties
+  #连接设置
+  driverClassName=com.mysql.jdbc.Driver
+  url=jdbc:mysql://localhost:3306/30sql
+  username=root
+  password=123456
+  
+  #<!-- 初始化连接 -->
+  initialSize=10
+  
+  #最大连接数量
+  maxActive=50
+  
+  #<!-- 最大空闲连接 -->
+  maxIdle=20
+  
+  #<!-- 最小空闲连接 -->
+  minIdle=5
+  
+  #<!-- 超时等待时间以毫秒为单位 60000毫秒/1000等于60秒 -->
+  maxWait=60000
+  #JDBC驱动建立连接时附带的连接属性属性的格式必须为这样：[属性名=property;]
+  #注意："user" 与 "password" 两个属性会被明确地传递，因此这里不需要包含他们。
+  connectionProperties=useUnicode=true;characterEncoding=utf8;serverTimezone=Asia/Shanghai;useSSL=false
+  #指定由连接池所创建的连接的自动提交（auto-commit）状态。
+  defaultAutoCommit=true
+  
+  #driver default 指定由连接池所创建的连接的只读（read-only）状态。
+  #如果没有设置该值，则“setReadOnly”方法将不被调用。（某些驱动并不支持只读模式，如：Informix）
+  defaultReadOnly=
+  
+  #driver default 指定由连接池所创建的连接的事务级别（TransactionIsolation）。
+  #可用值为下列之一：（详情可见javadoc。）NONE,READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, SERIALIZABLE
+  defaultTransactionIsolation=READ_UNCOMMITTED
+  ```
 
-#JDBC驱动建立连接时附带的连接属性属性的格式必须为这样：[属性名=property;] 
-#注意："user" 与 "password" 两个属性会被明确地传递，因此这里不需要包含他们。
-connectionProperties=useUnicode=true;characterEncoding=gbk
+- 使用
 
-#指定由连接池所创建的连接的自动提交（auto-commit）状态。
-defaultAutoCommit=true
+  ```java
+  @Test
+  public void testSelectAll() throws SQLException {
+  
+      Connection connection = DBCPUtils.getConnection();
+  
+      Statement statement = connection.createStatement();
+  
+      // 执行SQL语句
+      ResultSet resultSet = statement.executeQuery("select * from account");
+  
+      while (resultSet.next()) {
+          String name = resultSet.getString("name");
+          System.out.println("name:" + name);
+      }
+  
+      // 释放资源
+      JDBCUtils.releaseSource(connection,statement,resultSet);
+  
+  
+  }
+  ```
 
-#driver default 指定由连接池所创建的连接的只读（read-only）状态。
-#如果没有设置该值，则“setReadOnly”方法将不被调用。（某些驱动并不支持只读模式，如：Informix）
-defaultReadOnly=
+### 
 
-#driver default 指定由连接池所创建的连接的事务级别（TransactionIsolation）。
-#可用值为下列之一：（详情可见javadoc。）NONE,READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, SERIALIZABLE
-defaultTransactionIsolation=READ_UNCOMMITTED
-```
-
-
+如果使用ClassLoader方式加载配置文件，需要把配置文件放到src目录下
 
 使用DBCP示例代码：
 
@@ -1495,6 +1858,19 @@ dataSource.setUrl…..
 
 ### C3P0 数据源
 
+- 导包
+
+  `c3p0-0.9.5.2.jar`
+
+  `mchange-commons-java-0.2.15.jar`
+
+  ![image-20210423115047698](C:\Users\AnoxiC2010\Desktop\wdJava30th\SE\DB\Day05_Datasource&DBUtils\note\数据库连接池.assets\image-20210423115047698.png)
+
+  
+
+
+
+
 方式一：自己手动设置参数信息，硬编码
 
 ![image-20210423091953027](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091953027.png)
@@ -1502,6 +1878,13 @@ dataSource.setUrl…..
 
 
 方式二：将c3p0-config.xml文件放置在src下，位置，文件名称均不能变化
+
+```java
+static {
+        dataSource = new ComboPooledDataSource();
+    //括号里可以传参数，参数为配置文件的路径，但是没必要，会默认在src路径下直接寻找c3p0-config.xml文件。
+    }
+```
 
 ![image-20210423092011139](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423092011139.png)
 
@@ -1514,16 +1897,20 @@ c3p0-config.xml文件示例：
 <c3p0-config>
 	<default-config>
 		<property name="driverClass">com.mysql.jdbc.Driver</property>
-		<property name="jdbcUrl">jdbc:mysql://localhost:3306/day16</property>
+        <!--&符号要写成&amp; 大于小于写作&gt;和&lt;-->
+		<property name="jdbcUrl">jdbc:mysql://localhost:3306/test?characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;rewriteBatchedStatements=true</property>
 		<property name="user">root</property>
-		<property name="password">root</property>
-	
+		<property name="password">123456</property>
+		<!-- 扩容的大小-->
 		<property name="acquireIncrement">5</property>
+        <!-- 初始大小-->
 		<property name="initialPoolSize">10</property>
+        <!-- 池子的最小容量-->
 		<property name="minPoolSize">5</property>
+        <!-- 池子的最大容量-->
 		<property name="maxPoolSize">20</property>
 	</default-config>
-	
+<!--用上面的部分就够了-->	
 	<named-config name="mysql">
 		<property name="driverClass">com.mysql.jdbc.Driver</property>
 		<property name="jdbcUrl">jdbc:mysql://localhost:3306/day16</property>
@@ -1551,9 +1938,117 @@ c3p0-config.xml文件示例：
 </c3p0-config>
 ```
 
+使用
+
+```java
+public class C3p0Utils {
+
+    // 维护一个数据库连接池
+    static DataSource dataSource;
+
+    static {
+        dataSource = new ComboPooledDataSource();
+    }
+
+    // 获取连接
+    public static Connection getConnection(){
+
+        Connection connection = null;
+        try {
+            connection = dataSource.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return connection;
+    }
+
+}
+```
+
 
 
 ### Druid数据源
+
+他是阿里巴巴开源的一个数据库连接池，给我们提供了连接池以及连接监控的功能。
+
+- 导包
+
+  `druid-1.2.6.jar`
+
+  ![image-20210423145211272](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423145211272.png)
+
+  
+
+- 配置
+
+  druid.properties
+
+  ```properties
+  driverClassName=com.mysql.jdbc.Driver
+  url=jdbc:mysql://localhost:3306/30sql?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true
+  username=root
+  password=123456
+  ```
+
+- 使用
+
+  ```javascript
+  package com.cskaoyan.druid;
+  
+  import com.alibaba.druid.pool.DruidDataSourceFactory;
+  import org.apache.commons.dbcp.BasicDataSourceFactory;
+  
+  import javax.sql.DataSource;
+  import java.io.FileInputStream;
+  import java.io.FileNotFoundException;
+  import java.io.IOException;
+  import java.sql.Connection;
+  import java.sql.SQLException;
+  import java.util.Properties;
+  
+  public class DruidUtils {
+  
+      // 维护一个数据库连接池
+      static DataSource dataSource;
+  
+      static {
+  
+          try {
+              // 加载配置
+              Properties properties = new Properties();
+              FileInputStream fileInputStream = new FileInputStream("druid.properties");
+              properties.load(fileInputStream);
+  
+              // 创建datasource
+              DruidDataSourceFactory druidDataSourceFactory = new DruidDataSourceFactory();
+              dataSource = druidDataSourceFactory.createDataSource(properties);
+  
+          }catch (Exception ex) {
+              ex.printStackTrace();
+          }
+  
+      }
+  
+      // 获取连接
+      public static Connection getConnection(){
+  
+          Connection connection = null;
+          try {
+              connection = dataSource.getConnection();
+          } catch (SQLException e) {
+              e.printStackTrace();
+          }
+          return connection;
+      }
+  
+  }
+  ```
+
+
+
+
+
+
 
 ![image-20210423092214961](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423092214961.png)
 
