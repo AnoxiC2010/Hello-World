@@ -42,3 +42,39 @@ public class Demo {
 //目前分析是构造器调用导致的栈溢出，而不是引用导致的栈溢出。要确认一下，我认为新的引用应该出现在堆上而不是栈上
 ```
 
+# ConcurrentModificationException
+
+为了避免在多线程情况下, 一个线程在使用iterator遍历Collection集合类, 而另一个线程在对这个Collection集合类进行添加或者删除操作, 导致遍历结果出现问题, 产生了并发修改异常(如果一个线程在做添加和删除, 而另一个线程在做iterator遍历, 那么iterator遍历会立马抛出一个并发修改异常)
+
+在单线程的情况下, 如果在iterator迭代的过程中, 我们使用了源集合类的添加,删除方法, 来修改源集合类, 那么在iterator迭代的过程中`modCount != expectedModCount`
+会不相等, 也会产生并发修改异常
+
+
+
+# SQL语句在Java程序中没有结果，在数据库中有结果
+
+SQL语句过滤条件中含中文
+
+编码问题，因为
+
+因为数据库编码为utf-8，但jdbc的url地址没有指定编码格式
+
+在url最后添加?useUnicode=true&characterEncoding=UTF-8
+
+# ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+
+MySQL数据库死锁
+
+版本MySQL57
+
+条件：
+
+串行化测试MySQL事务,在两个cmd窗口中
+
+```
+start transaction 1		start transaction 2
+qurey1					query1  --both ok
+						update2 --2 is blocked
+update1 + enter	--error shows
+```
+
