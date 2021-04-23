@@ -1092,6 +1092,12 @@ select @@transaction_isolation;# 或 select @@tx_isolation
 # session会话，global全局
 set session/global transaction isolation level read uncommitted.
 # 注意：我们修改了之后要重新去连接数据库
+
+# 不加关键字的话
+SET TRANSACTION ISOLATION LEVEL level;
+* 只对当前会话中下一个即将开启的事务有效
+* 下一个事务执行完后，后续事务将恢复到之前的隔离级别
+* 该语句不能在已经开启的事务中间执行，会报错的
 ```
 
 我们发现Mysql默认的数据库的隔离级别是：**Repeatable read**
@@ -1228,4 +1234,327 @@ Junit
 
 
 
-## 
+# Apache—DBUtils框架
+
+简介
+
+commons-dbutils 是 Apache 组织提供的一个开源 JDBC工具类库，它是<span style="color:red">对JDBC的简单封装</span>，学习成本极低，并且使用dbutils能极大简化JDBC编码的工作量，同时也不会影响程序的性能。因此dbutils成为很多不喜欢<span style="color:red">hibernate</span>的公司的选择之一（mybatis）。
+
+API介绍(查看QueryRunner的API)
+
+- org.apache.commons.dbutils.QueryRunner :DBAssist
+- org.apache.commons.dbutils.ResultSetHandler
+
+工具类
+
+- <span style="color:red">org.apache.commons.dbutils.DbUtils</span>。   
+
+
+
+## DbUtils类 
+
+DbUtils ：提供如关闭连接、装载JDBC驱动程序等常规工作的工具类，里面的所有方法都是静态的。主要方法如下：
+
+- `public static void close(…) throws java.sql.SQLException`：　
+  DbUtils类提供了三个重载的关闭方法。这些方法检查所提供的参数是不是NULL，如果不是的话，它就关闭Connection、Statement和ResultSet
+- `public static void closeQuietly(…)`: 
+  这一类方法不仅能在Connection、Statement和ResultSet为NULL情况下避免关闭，还能隐藏一些在程序中抛出的SQLEeception。
+- `public static void commitAndCloseQuietly(Connection conn)`：
+      用来提交连接，然后关闭连接，并且在关闭连接时不抛出SQL异常。 
+- `public static boolean loadDriver(java.lang.String driverClassName)`：
+  这一方装载并注册JDBC驱动程序，如果成功就返回true。使用该方法，你不需要捕捉这个异常ClassNotFoundException。
+
+
+
+## QueryRunner类 
+
+<span style="color:red">该类简单化了SQL查询，它与ResultSetHandler组合在一起使用可以完成大部分的数据库操作，能够大大减少编码量</span>。
+
+QueryRunner类提供了两个构造方法：
+
+- 默认的构造方法
+- 需要一个 javax.sql.DataSource 来作参数的构造方法。
+
+
+
+### QueryRunner类的主要方法
+
+- ```java
+  public Object query(Connection conn, String sql, Object[] params, ResultSetHandler rsh) throws SQLException
+  ```
+
+  执行一个查询操作，在这个查询中，对象数组中的每个元素值被用来作为查询语句的置换参数。该方法会自行处理 PreparedStatement 和 ResultSet 的创建和关闭。
+
+- ```java
+  public Object query(String sql, Object[] params, ResultSetHandler rsh) throws SQLException
+  ```
+
+  几乎与第一种方法一样；唯一的不同在于它不将数据库连接提供给方法，并且它是从提供给构造方法的数据源(DataSource) 或使用的setDataSource 方法中重新获得 Connection。
+
+- ```java
+  public Object query(Connection conn, String sql, ResultSetHandler rsh) throws SQLException
+  ```
+
+  执行一个不需要置换参数的查询操作。
+
+- ```java
+  public int update(Connection conn, String sql, Object[] params) throws SQLException
+  ```
+
+  用来执行一个更新（插入、更新或删除）操作。
+
+- ```java
+  public int update(Connection conn, String sql) throws SQLException
+  ```
+
+  用来执行一个不需要置换参数的更新操作。
+
+
+
+## ResultSetHandler接口 
+
+该接口用于处理 java.sql.ResultSet，将数据按要求转换为另一种形式。
+
+ResultSetHandler 接口提供了一个单独的方法：Object handle (java.sql.ResultSet .rs)。
+
+
+
+### ResultSetHandler 接口的实现类
+
+- ArrayHandler：把结果集中的<span style="color:red">第一行</span>数据转成对象数组。
+- ArrayListHandler：把结果集中的每一行数据都转成一个数组，再存放到List中。
+- <span style="color:red">BeanHandler</span>：将结果集中的<span style="color:red">第一行</span>数据封装到一个对应的JavaBean实例中。
+- <span style="color:red">BeanListHandler</span>：将结果集中的每一行数据都封装到一个对应的JavaBean实例中，存放到List里。
+- <span style="color:red">ColumnListHandler</span>：将结果集中某一列的数据存放到List中。
+- KeyedHandler(name)：将结果集中的每一行数据都封装到一个Map<列名,列值>里，再把这些map再存到一个map里，其key为指定的key。
+- MapHandler：将结果集中的第一行数据封装到一个Map里，key是列名，value就是对应的值。
+- MapListHandler：将结果集中的每一行数据都封装到一个Map里，然后再存放到List
+- <span style="color:red">ScarlarHandler</span>：将单个值封装，可以用来统计聚合函数count(),max(),min(),avg()等方法返回的值
+
+
+
+# 数据库连接池
+
+什么是连接池
+
+数据库连接池负责分配、管理和释放数据库连接，它允许应用程序<span style="color:red">重复使用一个现有的数据库连接</span>，而不是再重新建立一个；<span style="color:red">释放空闲时间超过最大空闲时间的数据库连接</span>来避免因为没有释放数据库连接而引起的数据库连接遗漏。
+这项技术能明显提高对数据库操作的性能。
+
+
+
+使用数据库连接池优化程序性能
+
+应用程序直接获取链接的缺点
+
+![image-20210423090923522](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423090923522.png)
+
+缺点：用户每次请求都需要向数据库获得链接，而数据库创建连接通常需要消耗相对较大的资源，创建时间也较长。假设网站一天10万访问量，数据库服务器就需要创建10万次连接，极大的浪费数据库的资源，并且极易造成数据库服务器内存溢出、宕机。
+
+
+
+使用数据库连接池优化程序性能
+
+![image-20210423090958422](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423090958422.png)
+
+
+
+编写一个基本的连接池实现连接复用
+
+![image-20210423091023050](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091023050.png)
+
+![image-20210423091040157](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091040157.png)
+
+
+
+
+
+## 编写数据库连接池
+
+编写连接池需实现javax.sql.DataSource接口。<span style="color:red">DataSource接口中定义了两个重载的getConnection方法</span>：
+
+- Connection getConnection() 
+
+实现DataSource接口，并实现连接池功能的步骤：
+
+- 在DataSource构造函数中批量创建与数据库的连接，并把创建的连接加入LinkedList对象中。
+- 实现getConnection方法，让getConnection方法每次调用时，从LinkedList中取一个Connection返回给用户。
+- 当用户使用完Connection，调用Connection.close()方法时，Collection对象应保证将自己返回到LinkedList中,而不要把conn还给数据库。
+- <span style="color:red">Collection保证将自己返回到LinkedList中是此处编程的难点</span>。 
+
+
+
+```
+包装设计模式：
+1、定义一个类，实现与被增强对象所实现的接口
+2、定义一个变量，引用被增强对象
+3、构造方法接收被增强对象
+4、覆盖要被增强的方法
+5、对于不想增强的方法，调用被增强对象的对应方法
+```
+
+
+
+![image-20210423091355256](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091355256.png)
+
+![image-20210423091359560](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091359560.png)
+
+
+
+## 开源数据库连接池
+
+现在很多WEB服务器(Weblogic, WebSphere, Tomcat)都提供了DataSoruce的实现，即连接池的实现。通常我们把DataSource的实现，按其英文含义称之为数据源，数据源中都包含了数据库连接池的实现。
+
+也有一些开源组织提供了数据源的独立实现：
+
+- DBCP 数据库连接池 
+- C3P0 数据库连接池
+
+
+
+实际应用时不需要编写连接数据库代码，直接从数据源获得数据库的连接。程序员编程时也应尽量使用这些数据源的实现，以提升程序的数据库访问性能。
+
+
+
+### DBCP数据源
+
+DBCP 是 Apache 软件基金组织下的开源连接池实现，使用DBCP数据源，应用程序应在系统中增加如下两个 jar 文件：
+
+- Commons-dbcp.jar：连接池的实现
+- Commons-pool.jar：连接池实现的依赖库
+
+Tomcat 的连接池正是采用该连接池来实现的。该数据库连接池既可以与应用服务器整合使用，也可由应用程序独立使用。
+
+
+
+```properties
+dbcpconfig.proterties配置文件如下：
+
+#连接设置
+driverClassName=com.mysql.jdbc.Driver
+url=jdbc:mysql://localhost:3306/jdbc
+username=root
+password=
+
+#<!-- 初始化连接 -->
+initialSize=10
+
+#最大连接数量
+maxActive=50
+
+#<!-- 最大空闲连接 -->
+maxIdle=20
+
+#<!-- 最小空闲连接 -->
+minIdle=5
+
+#<!-- 超时等待时间以毫秒为单位 6000毫秒/1000等于60秒 -->
+maxWait=60000
+
+
+#JDBC驱动建立连接时附带的连接属性属性的格式必须为这样：[属性名=property;] 
+#注意："user" 与 "password" 两个属性会被明确地传递，因此这里不需要包含他们。
+connectionProperties=useUnicode=true;characterEncoding=gbk
+
+#指定由连接池所创建的连接的自动提交（auto-commit）状态。
+defaultAutoCommit=true
+
+#driver default 指定由连接池所创建的连接的只读（read-only）状态。
+#如果没有设置该值，则“setReadOnly”方法将不被调用。（某些驱动并不支持只读模式，如：Informix）
+defaultReadOnly=
+
+#driver default 指定由连接池所创建的连接的事务级别（TransactionIsolation）。
+#可用值为下列之一：（详情可见javadoc。）NONE,READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, SERIALIZABLE
+defaultTransactionIsolation=READ_UNCOMMITTED
+```
+
+
+
+使用DBCP示例代码：
+
+```java
+static{
+	InputStream in = JdbcUtil.class.getClassLoader().
+			getResourceAsStream("dbcpconfig.properties");
+	Properties prop = new Properties();
+	prop.load(in);
+
+	BasicDataSourceFactory factory = new BasicDataSourceFactory();
+	dataSource = factory.createDataSource(prop);
+}
+
+```
+
+![image-20210423091632374](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091632374.png)
+
+```
+OR BasicDataSource dataSource = new BasicDataSource();
+dataSource.setUrl…..
+```
+
+
+
+### C3P0 数据源
+
+方式一：自己手动设置参数信息，硬编码
+
+![image-20210423091953027](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091953027.png)
+
+
+
+方式二：将c3p0-config.xml文件放置在src下，位置，文件名称均不能变化
+
+![image-20210423092011139](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423092011139.png)
+
+会自动配置参数信息，configName为xml文件中的name-config的name属性
+
+```xml
+c3p0-config.xml文件示例：
+
+<?xml version="1.0" encoding="UTF-8"?>
+<c3p0-config>
+	<default-config>
+		<property name="driverClass">com.mysql.jdbc.Driver</property>
+		<property name="jdbcUrl">jdbc:mysql://localhost:3306/day16</property>
+		<property name="user">root</property>
+		<property name="password">root</property>
+	
+		<property name="acquireIncrement">5</property>
+		<property name="initialPoolSize">10</property>
+		<property name="minPoolSize">5</property>
+		<property name="maxPoolSize">20</property>
+	</default-config>
+	
+	<named-config name="mysql">
+		<property name="driverClass">com.mysql.jdbc.Driver</property>
+		<property name="jdbcUrl">jdbc:mysql://localhost:3306/day16</property>
+		<property name="user">root</property>
+		<property name="password">root</property>
+	
+		<property name="acquireIncrement">5</property>
+		<property name="initialPoolSize">10</property>
+		<property name="minPoolSize">5</property>
+		<property name="maxPoolSize">20</property>
+	</named-config>
+	
+	
+	<named-config name="oracle">
+		<property name="driverClass">com.mysql.jdbc.Driver</property>
+		<property name="jdbcUrl">jdbc:mysql://localhost:3306/day16</property>
+		<property name="user">root</property>
+		<property name="password">root</property>
+	
+		<property name="acquireIncrement">5</property>
+		<property name="initialPoolSize">10</property>
+		<property name="minPoolSize">5</property>
+		<property name="maxPoolSize">20</property>
+	</named-config>
+</c3p0-config>
+```
+
+
+
+### Druid数据源
+
+![image-20210423092214961](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423092214961.png)
+
+![image-20210423092221161](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423092221161.png)
