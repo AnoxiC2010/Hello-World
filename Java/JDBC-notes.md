@@ -1870,10 +1870,20 @@ dataSource.setUrl…..
 
 
 
-
 方式一：自己手动设置参数信息，硬编码
 
-![image-20210423091953027](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\JDBC-notes.assets\image-20210423091953027.png)
+```java
+CombopooledDataSource ds = new ComboPooledDatasource();
+ds.setDriverClass("com.mysql.jdbc.Driver");
+ds.setJdbcUrl("jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=UTF-8&useSSL=true&rewriteBatchedStatements=true");
+ds.setUser("root");
+ds.setPassword("123456");
+ds.setMaxPoolSize(40);
+ds.setMinPoolSize(10);
+ds.setInitialPoolSize(30);
+
+Connection conn = ds.getConnection();
+```
 
 
 
