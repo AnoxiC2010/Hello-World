@@ -9009,7 +9009,7 @@ Thread t = new Thread()
 ### 三种线程池
 
 ```java
-//JDK5提供了一Executors来产生线程池，有如下方法：
+//JDK5提供了一Executors来产生线程池，有如下静态方法：
 ExecutorService newCachedThreadPool()
 // 1.会根据需要创建新线程，也可以自动删除，60s处于空闲状态的线程
 // 2.线程数量可变，立马执行提交的异步任务（异步任务：在子线程中执行的任务）
