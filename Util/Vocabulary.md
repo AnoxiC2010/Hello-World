@@ -204,6 +204,17 @@
 | thumbnail                  | 索引图像；（打印预览）略图；拇指甲     |
 | backwards compatibility    | 向后兼容                               |
 | leading                    | 行间距（读作ledding）                  |
+| alias                      | 别名，化名                             |
+| portable                   | 可移植的                               |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
+|                            |                                        |
 |                            |                                        |
 |                            |                                        |
 | end                        |                                        |
