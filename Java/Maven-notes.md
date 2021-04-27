@@ -385,15 +385,69 @@ static {
 
 
 
-# 乱码
+# Maven+IDEA使用问题
 
-```
+Maven版本3.53；IDEA版本2018.3.6
+
+## 乱码
+
+IDEA-run窗口maven test输出中文字符乱码
+
+```xml
+<!--pom.xml-->
+<!--这行处理run窗口显示的字符集-->
 <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <argLine>-Dfile.encoding=UTF-8</argLine>
 </properties>
 ```
 
+build使用运行平台编码警告
+
+```xml
+<!--pom.xml-->
+	<!--
+	这行处理警告,这个可以不管（但如果用win命令行不管这个会往数据库插入乱码的中文字符）
+    [WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+    -->
+<properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+```
+
+WIN命令行运行mvn的命令输出中文字符乱码
+
+（包括 IDEA-Terminal 使用mvn test等命令输出中文字符乱码）
+
+```
+命令行执行：chcp 65001 会暂时修改cmd的输出为UTF-8
+暂时解决中文显示
+但如果不设置<project.build.sourceEncoding>属性为UTF-8,插入数据库的数据还是会乱码
+```
 
 
-cmd乱码 chcp 65001 暂时修改cmd的输出为UTF-8
+
+## 编译环境
+
+maven会把项目语言等级设置为JDK5，编译环境也设为1.5。就算在project structer中修改语言等级为1.8，并在settings-java compiler把1.5改为1.8，maven还会自己在后台再该回去，执行maven生命周期函数会出错。
+
+需要再pom.xml添加以下设置
+
+```xml
+<!--pom.xml-->
+<profiles>
+    <profile>
+        <id>jdk-1.8</id>
+        <activation>
+            <activeByDefault>true</activeByDefault>
+            <jdk>1.8</jdk>
+        </activation>
+        <properties>
+            <maven.compiler.source>1.8</maven.compiler.source>
+            <maven.compiler.target>1.8</maven.compiler.target>
+            <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+        </properties>
+    </profile>
+
+</profiles>
+```
+
