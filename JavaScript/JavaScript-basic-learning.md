@@ -1,3 +1,5 @@
+[TOC]
+
 # JavaScript basic learning
 
 
