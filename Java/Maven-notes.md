@@ -430,6 +430,13 @@ WIN命令行运行mvn的命令输出中文字符乱码
 
 maven会把项目语言等级设置为JDK5，编译环境也设为1.5。就算在project structer中修改语言等级为1.8，并在settings-java compiler把1.5改为1.8，maven还会自己在后台再该回去，执行maven生命周期函数会出错。
 
+```
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/AnoxiC2010/Documents/IdeaProjects//Mybatis01/src/test/java/com/baidu/test/LoginTest.java:[63,13] try-with-resources is not supported in -source 1.5
+  (use -source 7 or higher to enable try-with-resources)
+```
+
 需要再pom.xml添加以下设置
 
 ```xml
@@ -449,5 +456,41 @@ maven会把项目语言等级设置为JDK5，编译环境也设为1.5。就算�
     </profile>
 
 </profiles>
+```
+
+
+
+## resources路径下新建多级目录
+
+在resources路径右键新建directory后如果像在java目录一样连续用`.`作分隔符建多级目录是不行的，这样新建的只是一个包含多个`.`的单个文件夹，在IDEA界面下看不出来错误，但运行测试会发现找不到配置文件。
+
+所以在resources目录下请注意文件夹一级一级的新建。
+
+
+
+## maven识别java路径下的配置文件
+
+默认状态，maven项目中如果把配置文件放在java包里面是不会被识别到的，如果希望这样走捷径可以在pom.xml中作以下配置。就能同时识别resources和java包下的配置文件了，注意按需要修改配置文件后缀名。
+
+```xml
+<!--pom.xml-->
+<!-- 编译的配置 我们可以指定我们的maven工程在编译的时候去哪个路径下找资源文件-->
+<build>
+    <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <includes>
+                <!-- 两个* 表示目录的通配 -->
+                <include>**</include>
+            </includes>
+        </resource>
+        <resource>
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.xml</include>
+            </includes>
+        </resource>
+    </resources>
+</build>
 ```
 
