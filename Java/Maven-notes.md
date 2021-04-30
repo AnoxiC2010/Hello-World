@@ -460,6 +460,109 @@ maven会把项目语言等级设置为JDK5，编译环境也设为1.5。就算�
 
 
 
+## (优)乱码+编译版本良好办法
+
+此前在Maven+IDEA项目中遇到IDEA的maven生命周期函数test等，在run窗口输出中文乱码问题时，pom.xml是在IDEA中新建maven项目时自动生成的,Maven版本3.53；IDEA版本2018.3.6。
+
+但是在尝试按照官方文档用命令行创建maven项目时，自动生成的pom.xml文件如下所示，(我仅改了junit和compiler的版本)。用的Maven版本还是3.53，但通过命令行创建项目无论在IDEA的run窗口,Terminal窗口以及在WIN10命令行窗口（不需要修改命令行的编码）都不会输出中文乱码，重要的是在命令行执行maven命令，测试方法写入数据库的内容也没有乱码（相比前面的方法更优秀）。虽然有少数日志路径还是有乱码，但已经很舒服了。
+
+cmd 创建maven项目
+
+```shell
+mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4 -DinteractiveMode=false
+```
+
+cmd 运行maven打包好的项目
+
+```shell
+cd my-app
+mvn package
+java -cp target/my-app-1.0-SNAPSHOT.jar com.mycompany.app.App
+```
+
+cmd 创建maven项目生成的pom.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.anoxic.app</groupId>
+  <artifactId>m-app</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>m-app</name>
+  <!-- FIXME change it to the project's website -->
+  <url>http://www.anoxic.com</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+      <plugins>
+        <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.22.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>2.5.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.7.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
+
+```
+
+
+
 ## resources路径下新建多级目录
 
 在resources路径右键新建directory后如果像在java目录一样连续用`.`作分隔符建多级目录是不行的，这样新建的只是一个包含多个`.`的单个文件夹，在IDEA界面下看不出来错误，但运行测试会发现找不到配置文件。
