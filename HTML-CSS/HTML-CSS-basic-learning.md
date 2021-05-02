@@ -867,6 +867,127 @@ form表单, 一般用来向后台(后端服务器) 提交数据 → 登录注册
 
 
 
+```html
+<!--
+单行文本输入控件；
+maxlength=""属性限制用户最多能输入字符的数量；
+textarea没办法限制用户键入的文本数；
+placeholder=""属性，多数不同类型的<input>元素都可以使用这个属性为这个控件应该输入什么内容作提示。此属性的值会显示在控件中但比增加到控件的正常内容要浅，一旦单击这个文本域，占位文本就会消失。域为空时，提交表单，占位文本内容不会作为控件的值提交；
+value=""属性提供一个初始值；
+-->
+<input type="text" name="xxx">
+
+<!--
+required布尔属性，用于任何表单控件。
+指示一个域是必要的，如果没有为这个控件指定一个值，就无法正常提交表单。
+-->
+
+<!--
+密码输入控件；
+与文本输入类似，只是会加掩码；
+-->
+<input type="password" name="xxx">
+<!--
+文件输入控件；
+向服务器上传整个文件，要求POST方法；
+-->
+<input type="file" name="xxxc">
+<!--提交按钮,name属性指定按钮显示的名字-->
+<input type="submit">
+<!--
+单选控件，多个关联选项name要一样;
+checked布尔属性，默认选中项；
+-->
+<input type="radio" name="hotornot" value="hot">
+<input type="radio" name="hotornot" value="not">
+<!--
+复选框控件，关联组name要一样；
+checked布尔属性，默认选中项，可以设置多个；
+-->
+<input type="checkbox" name="spice" value="salt">
+<input type="checkbox" name="spice" value="pepper">
+<input type="checkbox" name="spice" value="garlic">
+<!--
+多行文本区，放不下右边会出现滚动条；
+rows高度为多少个字符，cols宽度为多少个字符；
+可以用CSS指定文本区的高度和宽度（更好）；
+开始和结束标记之间的所有文本会成为浏览器文本区中的初始文本；
+-->
+<textarea name="comments" rows="10" cols="48" value="salt"></textarea>
+<!--
+下拉选控件
+option没有value时内容就是值，有value时内容只是描述;
+布尔属性multiple,把菜单变为多选，选项太多会有滚动条；
+ctrl(WIN)或command(MAC)可以选择多个；
+-->
+<select name="characters">
+    <option value="Buckaroo">Buckaroo Banzai</option>
+    <option value="Tommy">Perfect Tommy</option>
+    <option value="Penny">Penny Priddy</option>
+    <option value="Jersey">New Jersey</option>
+</select>
+<!--
+数字输入控件，限制输入数字；
+max和min属性限制允许的数字；
+浏览器会在输入域旁显示增减用的箭头；
+-->
+<input type="number" min="0" max="20">
+<!--
+范围输入控件，类似number，但会显示一个滑动条而不是输入框；
+number和range都有一个可选的step属性，可以用来指定值的间隔数（步长）；
+-->
+<input type="range" min="0" max="20" step="5">
+<!--
+颜色输入控件，可以指定颜色；
+单机控件会弹出颜色选择器，而不必输入颜色名或值；
+当浏览器不支持颜色输入元素，就会得到一个常规文本输入控件；
+-->
+<input type="color">
+<!--
+日期输入控件；
+此控件会创建一个合法的日期格式串，发送到服务器；
+当浏览器不支持日期输入元素，会得到一个常规的文本输入控件；
+-->
+<input type="date">
+<!--
+email输入控件；
+在一些移动浏览器上，开始输入email时会得到一个方便输入email的定制键盘；
+电脑上没什么效果；
+-->
+<input type="email">
+<!--
+tel输入控件；
+在一些移动浏览器上，开始输入tel时会得到一个定制键盘；
+电脑上没什么效果；
+-->
+<input type="tel">
+<!--
+url输入控件；
+在一些移动浏览器上时会得到一个定制键盘；
+电脑上没什么效果；
+-->
+<input type="url">
+<!--
+fieldset为表单元素分组；
+legend为这一组提供一个标签；
+-->
+<fieldset>
+    <legend>the name of this field</legend>
+    <input type="...">
+    ...
+    <...></...>
+</fieldset>
+<!--
+lable元素必须配合id使用，
+有助于提高可访问性的方式关联标签与表单元素；
+用起来麻烦，对屏幕阅读和搜索引擎友好;
+lable标签按配合控件需要放在前后皆可，只要id对应；
+-->
+<lable for="bags">Number of bags:</lable><input type="number" id="bags" name="bags" min="1" max="10">
+```
+
+
+
 #### 提交表单的过程演示
 
 ```html
@@ -1176,7 +1297,32 @@ CSS属性
 
 
 
+开发商特定CSS属性，开发商新特性测试用的
 
+```
+-开发商标识-属性
+-moz-transform
+```
+
+
+
+CSS表格显示
+
+```css
+aaa {
+    display: table;/*块元素用表格显示布局，表*/
+}
+bbb {
+    display: table-row;/*块元素用表格显示布局，行*/
+}
+ccc {
+    display: table-cell;/*块元素用表格显示布局，单元格*/
+}
+```
+
+
+
+CSS过度和变换
 
 
 
@@ -1255,6 +1401,20 @@ CSS属性
 
 
 # 选择器
+
+伪类
+
+伪元素
+
+属性选择器
+
+按兄弟选择
+
+结合选择器
+
+.....
+
+
 
 ## 标签选择器
 
