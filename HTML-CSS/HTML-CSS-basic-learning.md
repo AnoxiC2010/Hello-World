@@ -628,7 +628,7 @@ eg:
 
 标签定义无序列表(圆点,空心点)
 
-属性`type`:<span style="color:red;">\(CSS无法替代，但很少使用)</span>
+属性`type`:<span style="color:red;">\(~~CSS无法替代，但很少使用~~) 打脸了，可以代替了看下面，有了CSS样式这几个属性就废了</span>
 
 - `disc`:默认值。实心圆。
 - `circle` :空心圆。
@@ -641,6 +641,35 @@ Eg:
     <li>Tea</li>
     <li>Milk</li>
 </ul>
+```
+
+<mark>列表的CSS样式</mark>
+
+```css
+/*这下面的设置都可以写在ul/ol里面，li会继承这个属性*/
+li{
+    list-style-type: disc;
+    /*disc默认；circle园；square方；none删除列表标记*/
+}
+li{/*为列表设置定制的标记图像*/
+    list-style-image: url(images/mm.gif);
+}
+
+/*同理有序列表也可以使用CSS样式*/
+li{
+    list-style-type: decimal;
+    /*decimal十进制数；upper-alpha大写字母；lower-alpha小写字母；
+    upper-roman大写罗马数字；lower-roman小写罗马数字
+    ...*/
+}
+
+/*设置文本回绕（换行是从文字开始还是从标记开始）*/
+ul{
+    list-style-position: outside;
+    /*inside标记就像在文字中，换行从标记开始；
+    outside标记和文字分开，换行从文字开始；
+    默认是outside*/
+}
 ```
 
 
@@ -663,7 +692,11 @@ Eg:
 
 一个table标签代表一个表格, 一个tr标签代表一行, 一个td标签代表一行中一个单元格
 
-主要属性
+*注意和CSS表格显示作区分，table表格是真的作表格数据的，而CSS表格显示是把块元素按照表格的样式显示是用来作页面布局的*
+
+
+
+主要属性(这几个都不要使用，用CSS来调整样式，留白也用CSS给table设置border-spacing以及给td设置padding)
 
 - `bgcolor`
 - `border`
@@ -690,6 +723,7 @@ Eg:
 
 ```html
 <table border="1">
+  <caption>the title of this table</caption>
   <thead>
     <tr>
       <th>Month</th>
@@ -717,13 +751,61 @@ Eg:
 </table>
 ```
 
+**`<caption>`设置表格标题**
+
+这个标签写在紧贴`<table>`标签下
+
+可以在给table设置CSS样式`caption-side:bottom;`把默认在上面的标题放到表格下面
+
+
+
+**边框设置问题**
+
+table标签的border-spacing即单元格间距是不为0的，设置单元格边框会发现单元格边框线都被缝隙分隔开，两种处理法
+
+- 可以手动指定`border-spacing: 0;`让单元格边框线重合。效果不太好，边框线被合并后比原来粗了1倍，把边框线改为0.5px或以下会好一点，但是浏览器对px的识别应该不是什么值都可以的。
+- 设置`border-collapse: collapse;`CSS属性折叠合并边框，浏览器会忽略所有边框间距。效果比设置border-spacing好，边框都是单线条。
+
+
+
+**列对齐**
+
+CSS属性 text-align, vertical-align
+
+
+
+**行交替颜色设置**
+
+利用nth-child伪类设置行方向颜色交替
+
+```css
+tr:nth-child(odd){/*奇数行*/
+    background: gold;
+}
+tr:nth-child(even){/*偶数行*/
+    background: green;
+}
+```
+
+
+
+**单元格跨行列问题，下见`<td>`标签**
+
+
+
+**嵌套表格**
+
+就是在一个单元格td中放一个`<table>`作单元格内容，不知道有什么鬼用
+
+
+
 
 
 ### `<tr>`
 
 `<tr>` 标签定义 HTML 表格中的行。
 
-`<tr>` 元素包含一个或多个 <th> 或 <td> 元素。
+`<tr>` 元素包含一个或多个` <th>` 或 `<td>` 元素。
 
 属性
 
@@ -858,6 +940,38 @@ get和post 的区别:
 `<del>`能把HTML中的某些内容标记为要删除的内容。`<ins>`会标记要插入的内容。通常浏览器会分别用一个删除线和下划线指定这些元素的样式，我们也可以用自己的方式指定他们的样式。通过`<del>`和`<ins>`在指定样式的同时还可以指出内容的含义。
 
 `<small>`为极小字体设计的标签，比如底部的copyright等，看起来没用因为字体可以通过CSS设置，但是标签的设计者是希望标签定义结构，所以部分内容在结构上属于极小他们希望有这个语义化的标签指示这个结构，而不是什么都用CSS。与强调标签类似，并不是希望使用强调标签来表示斜体样式，是希望这个强调内容就出现在强调结构中，可以通过调整强调结构的样式改变强调样式，比一定总是斜体，CSS都能做，但是语义化弱，不符合体形分离的思想。
+
+`<header>`
+
+`<footer>`
+
+`<section>`
+
+`<article>`
+
+`<aside>`
+
+`<nav>`
+
+`<time>`
+
+`<video>`
+
+`<audio>`
+
+`<figure>`
+
+`<canvas>`
+
+`<mark>`
+
+`<progress>`
+
+`<meter>`
+
+
+
+
 
 ## 属性
 
