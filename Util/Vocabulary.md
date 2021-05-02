@@ -206,8 +206,8 @@
 | leading                    | 行间距（读作ledding）                  |
 | alias                      | 别名，化名                             |
 | portable                   | 可移植的                               |
-|                            |                                        |
-|                            |                                        |
+| suffice                    | 足够                                   |
+| archetype                  | 典型                                   |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
