@@ -626,7 +626,6 @@ b= 1 + 2;
 
 
 >这句代码有没有问题？
->
 
 ```Java
  byte b = 130;
@@ -635,7 +634,6 @@ b= 1 + 2;
 
 
 > 思考下列程序结果
->
 
 ```Java
     System.out.println('a');
@@ -1303,7 +1301,6 @@ this.成员方法()  super.成员方法()
 ## 子类的方法覆盖（override）
 
 > 子父类中能否拥有同名的方法？
->
 
 - 在父子类中声明两个个一模一样的方法，但是方法体输出不同
   - 创建子类对象，直接调用该方法，结果是什么？
@@ -2773,7 +2770,6 @@ class Outer {
 # 匿名内部类（对象）
 
 > 以往当需要一个子类对象的时候，我们需要分两步走
->
 
 - 定义子类继承（实现）父类（接口）
 - 创建子类对象
@@ -2856,7 +2852,6 @@ class Outer {
 > 匿名内部类实际上是局部内部类的更进一步，简化了局部内部类
 >
 > 那么lambda就是匿名内部类更进一步，语法上更简洁了
->
 
 
 
@@ -3850,7 +3845,7 @@ public String(String original)
 
 
 - ```Java
-//使用指定字符集，将字符编码成字节序列，并将结果存储到一个新的 byte 数组中
+  //使用指定字符集，将字符编码成字节序列，并将结果存储到一个新的 byte 数组中
   getBytes(String charsetName) 
   ```
   
@@ -5269,7 +5264,7 @@ API应用示范
     //该构造函数使用当前日期和时间来初始化对象
     //表示创建对象时的系统时间
     //Date()
-  Date date = new Date();
+    Date date = new Date();
     System.out.println(date);//Fri Mar 19 09:00:48 CST 2021
     
     ```
@@ -5347,7 +5342,7 @@ API应用示范
     //用给定的模式和默认语言环境的日期格式符号构造 SimpleDateFormat
     //注：此构造方法可能不支持所有语言环境。要覆盖所有语言环境，请使用 DateFormat 类中的工厂方法。
     public SimpleDateFormat(String pattern)
-  //Pattern必须用模式字符来写
+    //Pattern必须用模式字符来写
     ```
     
   - pattern的书写格式
@@ -9218,7 +9213,7 @@ class MyTask extends TimerTask {
    b. 一个bit持续多少纳秒
    c. 传输是否可以在两个方向同时进行
    d. 初始连接如何建立,传输结束之后如何如何撤销连接
-这些问题主要涉及，机械，电子，和时序接口等。以及物理层之下的物理传输介质等
+   这些问题主要涉及，机械，电子，和时序接口等。以及物理层之下的物理传输介质等
 2. 数据链路层：将一个原始的传输设施转变成一条没有漏剪检传输错误的传输线路
    为了完成这个任务，数据链路层具备如下功能：
    a. 成帧
@@ -15275,6 +15270,8 @@ public static void main(String[] args) {
     }
 ```
 
+
+
 # List
 
 List接口概述
@@ -19041,3 +19038,97 @@ b. 加密
 b. 数据结构       
 
 … 
+
+
+
+# 集合算法
+
+Collections类提供了很多语义化明了的简单算法，相比自己用循环实现可读性更好。
+
+Collection, List 等等也提供了很多实用的算法。
+
+
+
+Collections类
+
+| <T extends Comparable<? super T>>  void | sort(List<T> list)        根据元素的自然顺序 对指定列表按升序进行排序。 |
+| --------------------------------------- | ------------------------------------------------------------ |
+| static   <T>  void                      | sort(List<T> list,  Comparator<? super T> c)        根据指定比较器产生的顺序对指定列表进行排序。 |
+
+
+
+Comparator接口
+
+| default Comparator<T>                                 | reversed()Returns a comparator that imposes the reverse ordering of this comparator.<br />生成一个比较器，将逆置这个比较器提供的顺序。 |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| static <T extends Comparable<? super T>>Comparator<T> | reverseOrder()Returns a comparator that imposes the reverse of the natural ordering.<br />生成一个比较器，逆置Comparable接口提供的顺序。 |
+
+
+
+```java
+List<Strign> staff = new LinkedList<>();
+//fill collection
+
+//按自然顺序排序，假定列表元素实现了Comparable接口
+Collectios.sort(staff)
+
+//传入比较器排序
+staff.sort(Comparator.comparingDouble(Employee::getSalary));
+
+/*
+逆序
+Collections.reverseOrder()返回一个比较器b.compareTo(a).
+此方法将根据元素类型的compareTo方法给定的顺序，按照逆序对列表元素进行排序。Comparator.reverseOrder()就是直接调用Collections.reverseOrder(),两个方法完全相同。
+*/
+staff.sort(Comparator.reverseOrder());
+//或
+staff.sort(Comparator.comparingDouble(Employee::getSalary).reversed());
+```
+
+
+
+> Java实现对数组列表的排序，是直接将所有元素转入一个数组，对数组进行排序，然后再将排序后的序列复制回列表。
+
+
+
+随机混排列表中元素的顺序。
+
+Collections类
+
+| static void | shuffle(List<?> list)        使用默认随机源对指定列表进行置换。 |
+| ----------- | ------------------------------------------------------------ |
+| static void | shuffle(List<?> list,  Random rnd)        使用指定的随机源对指定列表进行置换。 |
+
+如果提供的列表没有实现RandomAccess接口，shuffle方法将元素复制到数组中，然后打乱数组元素的顺序，最后再将打乱顺序后的元素复制回列表。
+
+
+
+Collections类的二分查找实现
+
+这个参数集合要实现List接口，如果集合没有采用Comparable接口的compareTo方法惊醒排序，就还要提供一个比较器对象。
+
+返回值大于等于0，表示匹配对象的索引；返回负值，表示没有匹配的元素。
+
+| static   <T>  int | binarySearch(List<? extends Comparable<? super T>> list,  T key)       使用二分搜索法搜索指定列表，以获得指定对象。 |
+| ----------------- | ------------------------------------------------------------ |
+| static   <T>  int | binarySearch(List<? extends  T> list, T key, Comparator<? super T> c)        使用二分搜索法搜索指定列表，以获得指定对象。 |
+
+```
+i = Collections.binarySearch(c, element);
+i = Collections.binarySearch(c, element, comparator);
+```
+
+可以利用返回值计算应该将element插入到集合的哪个位置，以保持集合的有序性。如果给binarySearch方法提供的是一个链表，它将自动地变为线性查找。
+
+插入位置为：
+
+```java
+insertionPoint = -i - 1;
+//这个位置计算参考源码反推。
+//源码是找到了element在List中应该插入的index，返回-(index+1)，这个+1是为了规避0，所以加多少都行，反推时减回来就行了
+if (i < 0) {
+	c.add(-i - 1, element);
+}
+//这个操作将把元素插入到正确的位置上。
+```
+
