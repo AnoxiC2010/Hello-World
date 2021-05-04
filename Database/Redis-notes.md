@@ -185,6 +185,29 @@ Redis支持五种数据结构。哪五种呢？
 
 使用场景：可以利用INCR命令，来统计网站的访问数，也可以统计在线人数。当然String这种数据结构，有很多使用场景，他是我们使用Redis最多的一种数据结构。
 
+```java
+String set = jedis.set("1", "一号机");
+//返回状态码 OK 成功
+
+Long incr = jedis.incr("3");
+Long incr = jedis.incrBy("3", 10);
+//返回新值 或 错误：redis.clients.jedis.exceptions.JedisDataException: ERR value is not an integer or out of range
+
+String setex = jedis.setex("3", 3, "33");
+//返回状态码 OK 成功
+
+Long kawaii = jedis.setnx("3", "kawaii");
+//返回 1 成功 ， 0 不成功
+
+String mset = jedis.mset("4", "四驱车", "5", "五环歌");
+//返回状态码 成功 ok
+
+List<String> mget = jedis.mget("4", "5");
+//返回 List<String>形式的 值集
+```
+
+
+
 ### 4.2 List
 
 ![image-20210504112107121](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Database\Redis-notes.assets\image-20210504112107121.png)
@@ -213,6 +236,36 @@ List这种数据结构其实有点类似于我们之前学过的 `栈`，特点�
 - LSET 设置指定的位置的元素的值 （修改） 输⼊的index是从0开始，显示的标号是从1开始的。
 
 使用场景：消息队列。消息的最新排行榜
+
+```java
+//注：list下标左边从0开始，右边从-1开示
+
+Long lpush = jedis.lpush("老师", "长风", "景甜", "天明");
+//返回list更新后的元素数量
+
+Long llen = jedis.llen("老师");
+//返回list的元素数量
+ 
+String lpop = jedis.lpop("老师");
+//弹出并返回list的首部(左一)
+
+String element0 = jedis.lindex("老师", 0);
+//返回index位置的元素，不删除这个元素
+
+List<String> 老师 = jedis.lrange("老师", 0, -1);
+//List<String>形式返回list从start到end的元素
+
+Long linsert = jedis.linsert("老师", BinaryClient.LIST_POSITION.BEFORE, "景甜", "大雄");
+//返回 -1失败，或 元素个数 插入成功， pivot是指名插入位置参照的元素，不是序号
+
+Long lpushx = jedis.lpushx("老师", "静香");
+//返回0 失败，或者 元素数量 成功
+
+Long lrem = jedis.lrem("老师", 2, "大雄");
+//返回删除的元素数量 或 0 没有可删的
+```
+
+
 
 ### 4.3 Hash
 
@@ -299,6 +352,51 @@ List这种数据结构其实有点类似于我们之前学过的 `栈`，特点�
 使用场景：
 
 ​	二维表可以用来存储我们的Java对象，存对象的时候key：对象的名字，field：对象成员变量的名字，value：成员变量的值
+
+```
+Long hset = jedis.hset("熊猫", "name", "团团");
+//返回1 成功
+
+String hget = jedis.hget("熊猫", "name");
+//返回 域值 或 null(不存在这个域)
+
+Boolean hexists = jedis.hexists("熊猫", "name");
+//返回 true 存在这个域， false 不存在这个域
+
+Long hlen = jedis.hlen("熊猫");
+//返回key中储存的field的数量，不存在的key会返回0
+
+Map<String, String> hgetAll = jedis.hgetAll("熊猫");
+//以 Map<String, String>的形式返回hashes里的域和值
+//key不存在返回空Map {}
+
+Set<String> hkeys = jedis.hkeys("熊猫");
+//Set<String>的形式返回key中储存的field的集
+//key不存在返回空集 []
+
+ List<String> hvals = jedis.hvals("熊猫");
+ // List<String>的形式返回key中所有域的值的列表
+ //key不存在返回空列表 []
+ 
+ Long hincrBy = jedis.hincrBy("熊猫", "age", 1);
+ //返回这个域修改后的新值 或报错如果域值不是数字 redis.clients.jedis.exceptions.JedisDataException: ERR hash value is not an integer
+//field不存在 或 key不存在 都会直接创建
+
+List<String> hmget = jedis.hmget("熊猫", "name", "age");
+//List<String>的形式返回多个域的值的列表
+//不存在的域返回的列表元素值为null
+
+Map<String, String> hmsetFields = new HashMap<>();
+hmsetFields.put("height", "180");
+hmsetFields.put("weight", "80");
+String hmset = jedis.hmset("熊猫", hmsetFields);
+//返回 OK 成功，用Map<String,String>的形式设置多个域
+
+Long hsetnx = jedis.hsetnx("熊猫", "nickname", "圆圆");
+//返回0 失败，1 成功
+
+ 
+```
 
 
 
@@ -392,8 +490,57 @@ List这种数据结构其实有点类似于我们之前学过的 `栈`，特点�
 
 1. 求共同好友
 2. 好友推荐
-
 3. 统计网站的独立IP
+
+```java
+Long sadd = jedis.sadd("校草", "景甜", "雪茄", "长风");
+//返回成功插入到集中的元素的数量
+
+Set<String> smembers = jedis.smembers("校草");
+//Set<String>的形式返回这个key中的元素
+//keyu不存在返回空集 []
+
+Boolean sismember = jedis.sismember("校草", "天明");
+//返回true 是 或 false 不是 这个集的成员
+
+Long scard = jedis.scard("校草");
+//返回集合中元素数量
+
+String spop = jedis.spop("校草");
+//移除并返回集合中的⼀个随机元素
+
+String srandmember = jedis.srandmember("校草");
+List<String> srandmember2 = jedis.srandmember("校草", 2);
+//随机返回集中的1个或多个元素（不删除）
+
+Set<String> sinter = jedis.sinter("校草", "学霸");
+//Set<String>的形式返回多个集的交集
+//没有交集返回空集 []
+
+Long sinterstore = jedis.sinterstore("校草学霸", "校草", "学霸");
+//将交集结果保存到目标集，返回值为交集元素数量
+
+
+Set<String> sunion = jedis.sunion("校草", "学霸");
+//返回并集
+
+Long sunionstore = jedis.sunionstore("校草和学霸", "校草", "学霸");
+//把并集并保存到目标集，返回值是并集的元素数量
+
+Set<String> sdiff = jedis.sdiff("校草", "学霸");
+//返回差集
+
+Long sdiffstore = jedis.sdiffstore("校草非学霸", "校草", "学霸");
+//把差集保存到指定集，返回值是差集的元素数量
+
+Long smove = jedis.smove("校草", "学霸", "雪茄");
+//将元素从src集移动到dst集，返回1成功，0不成功
+
+Long srem = jedis.srem("学霸", "珠珠", "景甜");
+//移除key集中的一个或多个元素，返回值为被移除的元素数量
+```
+
+
 
 ### 4.5 SortSET
 
@@ -499,6 +646,60 @@ List这种数据结构其实有点类似于我们之前学过的 `栈`，特点�
 
 1. 可以很方便的去统计排名（实时积分排行榜）
 2. 主播排行榜
+
+
+
+```
+Long zadd = jedis.zadd("积分", 1, "LGD");
+Map<String, Double> params = new HashMap<>();
+params.put("IG", 2D);
+params.put("VG", 3D);
+Long zaddmulti = jedis.zadd("积分", params);
+//将⼀个或多个 member 元素及其 score 值加⼊到有序集 key 当中
+
+Long zcard = jedis.zcard("积分");
+//返回key的基数（member数）
+
+Set<String> zrange = jedis.zrange("积分", 0, -1);
+//Set<String>形式返回有序集 key 中，指定区间内的成员
+
+Double zscore = jedis.zscore("积分", "LGD");
+//返回指定memeber的score值
+
+Long zcount = jedis.zcount("积分", 1, 3);
+//返回score在[min,max]之间的member的数量
+
+Double zincrby = jedis.zincrby("积分", 10, "LGD");
+//为这个member的score值加上增量，返回这个score的新值
+
+Set<String> zrangeByScore = jedis.zrangeByScore("积分", 1, 3);
+//Set<String>形式返回score值在[min,max]之间的member
+//参数还可以设置偏移量限制结果集
+
+Long zrank = jedis.zrank("积分", "LGD");
+//返回这个member的排名，从0开始
+
+
+Set<String> zrevrange = jedis.zrevrange("积分", 0, -1);
+//返回有续集指定区间的member，按score从大到小排列
+
+Set<String> zrevrangeByScore = jedis.zrevrangeByScore("积分", 3, 2);
+//按score在[max,min]区间的member，从大到小排列
+
+Long zrevrank = jedis.zrevrank("积分", "LGD");
+//返回这个member的排名，从大到小的排名
+
+Long zrem = jedis.zrem("积分", "LGD", "OG");
+//返回成功移除的元素的数量，忽略不存在的移除目标
+
+Long zremrangeByRank = jedis.zremrangeByRank("积分", 0, 2);
+//移除指定排名区间内的所有member，返回移除的member数量
+
+Long zremrangeByScore = jedis.zremrangeByScore("积分", 2, 3);
+//移除指定score区间的所有member，返回移除的数量
+```
+
+
 
 ## 5. Java客户端
 
