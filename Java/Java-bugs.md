@@ -78,3 +78,12 @@ qurey1					query1  --both ok
 update1 + enter	--error shows
 ```
 
+
+
+# 路径空格警告
+
+IDEA
+
+使用类加载器.getResource("").getPath();获取到的路径会把空格替换为%。导致new File(path).exist()是false。
+
+不要在路径中使用空格
