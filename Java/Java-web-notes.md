@@ -1428,7 +1428,10 @@ public class ThirdServlet extends HttpServlet {
 
 IDEA会复制tomcat的配置文件，利用这些配置文件，重新开一个新的tomcat，利用这个新的tomcat来部署资源（了解）
 
-`<Context path="/app" docBase="D:\ideaProjects\30th\servlet\out\artifacts\servlet_war_exploded" />`
+```xml
+<!--在IDEA的CATALINA的localhost文件夹下生成的xml虚拟映射文件-->
+<Context path="/app" docBase="D:\ideaProjects\30th\servlet\out\artifacts\servlet_war_exploded" />
+```
 
 ![image-20210507110045472](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210507110045472-1620397058777.png)
 
@@ -1789,7 +1792,49 @@ ServletConfig对象中维护了ServletContext对象的引用，开发人员在�
 </context-param>
 ```
 
+ServletContext应用
 
+获取WEB应用的初始化参数。(多个serlvet获取相同参数)
+多个Servlet通过ServletContext对象实现数据共享。
+实现Servlet的转发（request）。
+
+...
+
+```java
+统计特定网页被客户端访问的次数
+public class Counter {
+	private int count;
+	public Counter(int count){
+		this.count = count;
+	}
+	public Counter(){
+		this(0);
+	}
+	public int getCount() {
+		return count;
+	}
+	public void setCount(int count) {
+		this.count = count;
+	}
+	public void add(int step){
+		count+=step;
+	}
+}
+----------------------------------------------
+public void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		ServletContext context = getServletContext();
+		Counter counter = (Counter) context.getAttribute("counter");
+		if(counter==null){
+			counter = new Counter(1);
+			context.setAttribute("counter", counter);
+		}
+ 
+		response.getOutputStream().write(("count:"+counter.getCount()).getBytes());
+		counter.add(1);
+	}
+
+```
 
 如果一个servlet在运行时产生了某些数据，需要和另外的servlet进行数据的共享，那么我们可以使用ServletContext进行数据的共享
 
@@ -1964,6 +2009,29 @@ public class PathServlet extends HttpServlet {
 
 
 
+资源文件的路径获取或者流获取
+
+```
+资源文件通常有两种方式：
+对于简单的资源文件，即包含key=value的形式，我们一般采用properties，这些文件的扩展名一般为*.properties。
+对于较复杂的资源文件，采用XML格式。
+通常资源文件放在src目录或者WEB-INF目录下。
+在web工程中，要获得某个文件的路径，我们一般都采取相对于web工程“/”的相对路径。
+如果在src下放置properites配置文件，要读取的话：
+
+一种方式是采用ServeltContext的方法来获取某个文件的绝对路径。
+Context.getRealpath("") 是应用目录
+context.getResource("") 是应用目录
+以上可以直接传入文件相对应用目录的相对地址即可，如：
+context.getResourceAsStream("/WEB-INF/classes/db.properties")可读取类加载路径的文件，参数开头的/加和不加经测试都一样，应该是方法内部做了处理，去掉了拼接时重复的/
+
+1、加载src下的属性资源文件
+InputStream in= ServletDemo.getClass().getClassLoader().getResourceAsStream("db.properties");
+2、加载与servlet同包中的资源属性文件
+InputStream in=ServletDemo.getClass().getClassLoader().getResourceAsStream("com/baidu/db.properties");
+1和2中的引号内传入的路径参数开始也都可以加/或者不加，实测都一样，方法内部应该也是在拼接路径时做了去重的处理。
+```
+
 
 
 # IDEA创建Java Web项目
@@ -2027,5 +2095,641 @@ public class PathServlet extends HttpServlet {
 - Artifacts方面
 
   Project Structure -> Artifacts -> Output Layout -> WEB-INF -> new directory lib -> right click to add copy of library
+
+  
+
+
+
+# ServletRequest
+
+ServeletRequest其实就是对于请求报文的封装。
+
+请求报文如果使用HTTP协议，那么就是HTTP协议的请求报文
+
+如果你使用的是AJP协议，那么就是AJP协议的请求报文  （协议其实就是指报文具有的格式）
+
+
+
+HttpServletRequest其实就是对于HTTP请求报文的封装。
+
+
+
+一般情况下，99%的情况下发送的请求都是HTTP请求，所以呢，你可以认为ServletRequest就等价于HttpServletRequest
+
+
+
+其实就是对于请求报文的封装，那么肯定可以获取请求报文的各个部分。
+
+
+
+request常用方法
+
+获得客户机信息
+getRequestURL方法返回客户端发出请求时的完整URL。
+getRequestURI方法返回请求行中的资源名部分。
+//getQueryString 方法返回请求行中的参数部分。
+getRemoteAddr方法返回发出请求的客户机的IP地址
+getRemoteHost方法返回发出请求的客户机的完整主机名
+getRemotePort方法返回客户机所使用的网络端口号
+getLocalAddr方法返回WEB服务器的IP地址。
+getLocalName方法返回WEB服务器的主机名
+getMethod得到客户机请求方式
+
+
+
+获得客户机请求头
+getHeader(name)方法 
+getHeaders(String name)方法 
+getHeaderNames方法 
+
+
+
+获得客户机请求参数(客户端提交的数据)
+getParameter(name)方法
+getParameterValues（String name）方法
+getParameterNames方法 
+
+
+
+```
+Accept-Encoding   PropertyDescriptor
+
+有许多web浏览器不发送带有“content-type”头信息的字符编码限定符，而由读取http请求的代码来决定字符的编码方式。
+
+默认情况下，如果客户端请求未定义编码限定符，容器（如tomcat）会用“ISO-8859-1”去创建request reader和解析POST的数据
+注意：自从Tomcat5.x开始，GET和POST方法提交的信息，tomcat采用了不同的方式来处理编码，对于POST请求，Tomcat会仍然使用request.setCharacterEncoding方法所设置的编码来处理，如果未设置，则使用默认的iso-8859-1编码。
+而GET请求则不同，Tomcat对于GET请求并不会考虑使用request.setCharacterEncoding方法设置的编码，而会永远使用iso-8859-1编码
+
+ <form action="" method="get">
+    username:<input type="text" name="username"/><br/>
+    passowrd1:<input type="text" name="password"/><br/>
+    password2:<input type="text" name="password"/><br/>
+    <input type="submit" value="提交"/>
+    </form>
+    
+<!-- checkbox radio 只要一个都不选，浏览器根本不会传值给服务器,即报文中不会出现他们的name字段-->
+
+```
+
+
+
+## 获取请求报文
+
+```java
+@WebServlet("/request1")
+public class RequestServlet1 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //获取请求报文的各个部分
+        String method = request.getMethod();
+        //requestURI和requestURL地区别在于后者比前者多了访问协议、主机、端口号等
+        String requestURI = request.getRequestURI();
+        String requestURL = request.getRequestURL().toString();
+        String protocol = request.getProtocol();
+        System.out.println(method + " " + requestURI + " " + protocol);
+        System.out.println(method + " " + requestURL + " " + protocol);
+        //如何获取请求头呢？
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()){
+            String headerName = headerNames.nextElement();
+            String headerValue = request.getHeader(headerName);
+            System.out.println(headerName + ":" + headerValue);
+        }
+        //请求体暂时不处理
+    }
+}
+```
+
+
+
+## 获取客户机和主机的信息
+
+```java
+@WebServlet("/request2")
+public class RequestServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+       //获取主机的信息
+        //课程的最后会做一个黑名单，指定的ip地址拦截 小黑屋 账号
+        String localAddr = request.getLocalAddr();
+        int localPort = request.getLocalPort();
+
+        //获取客户机信息
+        String remoteAddr = request.getRemoteAddr();
+        int remotePort = request.getRemotePort();
+        System.out.println("客户机：" + remoteAddr + "使用端口号：" + remotePort + "访问了主机" + localAddr + ":" + localPort);
+    }
+}
+```
+
+
+
+## 获取请求参数
+
+场景：
+
+比如前端页面登录、注册、提交了很多的表单数据，**首先需要将这些数据获取到**，保存到数据库
+
+POST http://localhost:8080/app/register HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 63
+Cache-Control: max-age=0
+sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="90", "Microsoft Edge";v="90"
+sec-ch-ua-mobile: ?0
+Upgrade-Insecure-Requests: 1
+Origin: http://192.168.7.114:8080
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Referer: http://192.168.7.114:8080/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+
+**username=admin&password=aaa&gender=male&hobby=study&hobby=sleep**
+
+提交的参数以key=value&key=value的形式进行提交
+
+可以自己去拿到请求体，自己去解析，但是非常繁琐，没必要
+
+**request给我们已经封装好了，我们其实只需要去调用对应的方法即可完成获取数据的工作**
+
+**value = request.getParameter(key);**
+
+```java
+@WebServlet("/register")
+public class RegisterServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //获取请求参数
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        String gender = request.getParameter("gender");
+        //String hobby = request.getParameter("hobby");
+        //如果需要获取多个值，那么需要使用另外一个方法
+        String[] hobbies = request.getParameterValues("hobby");
+        System.out.println(username);
+        System.out.println(password);
+        System.out.println(gender);
+        //System.out.println(hobby);
+        System.out.println(Arrays.toString(hobbies));
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+
+
+## 获取请求参数2
+
+如果前端页面提交的参数非常多，一个一个获取非常麻烦，有没有简便的方法
+
+```java
+@WebServlet("/register2")
+public class RegisterServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //获取请求参数
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()){
+            String parameterKey = parameterNames.nextElement();
+            String[] parameterValues = request.getParameterValues(parameterKey);
+            if(parameterValues.length == 1){
+                System.out.println(parameterKey + ":" + parameterValues[0]);
+            }else {
+                System.out.println(parameterKey + ":" + Arrays.toString(parameterValues));
+            }
+        }
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+
+
+
+
+## 封装请求参数到一个Java对象（Java Bean）
+
+反射。
+
+Class.forName.newInstance();----- 实例化一个对象
+
+class--------所有的属性值、所有的方法
+
+
+
+set方法将参数进行赋值呢？
+
+
+
+比如页面提交的参数为username、password、gender、hobby
+
+java对象里面的属性值为username、password、gender、hobby
+
+首先先取出每个参数的键值对username=xxx
+
+会到该对象中去寻找一个叫做setUsername的方法，将xxx值注入到该方法中，
+
+
+
+先介绍一个工具类BeanUtils，第三方的jar包，肯定不在jdk中，导包
+
+![image-20210508094513064](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210508094513064.png)
+
+这个报错的原因，大家可以记住，有且只有一个原因
+
+**运行时没有找到jar包。tomcat只会到一个地方去寻找jar包，如果找不到，则直接报错。会到WEB-INF/lib目录下寻找jar包，如果找到， 没问题；如果找不到，那么报错ClassNotFoundException**。
+
+
+
+两方面去解决：
+
+1
+
+![image-20210508095015840](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210508095015840.png)
+
+web蓝点目录下面的所有文件会原封不动地复制到部署根目录里面去；WEB-INF目录下的文件也会同步过去
+
+
+
+2.
+
+![image-20210508095809808](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210508095809808.png)
+
+
+
+```java
+@WebServlet("/register3")
+public class RegisterServlet3 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+       //使用Beanutils来封装数据到java对象中
+        //使用方式：会将第二个参数map里面的参数迭代出来，然后封装到第一个对象中
+        User user = new User();
+        try {
+            //它是如何做到的呢？其实也是利用反射，利用set方法来完成赋值
+            //思路：map-----》  username---xxx   password----xxx
+            //会到user中找一个setUsername的方法   setPassword
+            //  beanutils  dbutils
+            BeanUtils.populate(user, request.getParameterMap());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        System.out.println(user);
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+
+
+
+
+另外我们可以参考BeanUtils封装数据的方式，自己手动尝试去写一个工具类
+
+
+
+## 获取请求参数中文乱码
+
+浏览器是什么编码就以什么编码传送数据 
+解决：request.setCharacterEncoding(“UTF-8”);//POST有效
+
+请求体里的中文有乱码问题，要在获取参数之前给request设置setCharacterEncoding
+
+请求行里的中文不会乱码，不需要设置request的编码
+
+
+
+当我们使用post请求方式提交表单数据时，发现中文的确是有乱码问题的。
+
+User{usnername='??????', password='asdasd', gender='male', hobby=[study, sleep]}
+
+
+
+```
+void setCharacterEncoding(java.lang.String env)
+                          throws java.io.UnsupportedEncodingException
+```
+
+Overrides the name of the character encoding **used in the body of this request.** **This method must be called prior to reading request parameters or reading input using getReader().**
+
+- **Parameters:**
+
+  `env` - a `String` containing the name of the character encoding.
+
+- **Throws:**
+
+  `java.io.UnsupportedEncodingException` - if this is not a valid encoding
+
+
+
+使用注意事项：
+
+**1.只针对请求体有效**
+
+**2.必须要求在读取请求参数之前调用**
+
+
+
+和锟斤拷烫烫烫
+
+
+
+## 如何获取请求行中的参数
+
+请求行中的参数依然可以使用getParamter来获取
+
+这个API既可以获取请求行，又可以获取请求体里面的参数
+
+但是
+
+参数的格式必须要求是key=value型数据
+
+key:value不可以的
+
+不仅可以获取到请求行中的参数，并且没有中文乱码问题
+
+```java
+@WebServlet("/register4")
+public class RegisterServlet4 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("utf-8");
+        User user = new User();
+        try {
+            ReflectionUtils.toBean(user, request.getParameterMap());
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        System.out.println(user);
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String username = request.getParameter("username");
+        System.out.println(username);
+    }
+}
+```
+
+
+
+## 网络路径写法
+
+**1.全路径**，比如http://localhost:8080/app/servlet1这种写法，就是全路径
+
+如果直接写全路径，那么其实不是特别的推荐，因为主机端口号部分是可变化的部分，需要经常改动。
+
+
+
+企业中的环境
+
+软件公司
+
+​	自研产品：公司有自己独立的产品线
+
+​	外包：没有自己独立的产品线，外接别人的项目来赚钱。比如alibaba，huawei会招聘很多外包工作人员。外包人员其实也可以分为两种，一种就是驻场外包（你和阿里巴巴的工作人员一起工作，同工不同酬；学到很多东西；华为外包）；直接在外包公司里面工作
+
+
+
+开发流程：
+
+1.项目的立项：公司的很多部分一起商讨，软件具有什么样的功能，第一版上线什么功能
+
+2.项目的开发：
+
+​		项目组：组长  项目主管 负责整个项目的进度
+
+​						产品经理   需求 文档
+
+​						UI  用户最先看到的界面
+
+​						前端开发人员   psd--------html、css、js等静态资源页面
+
+​						服务端开发人员   java、go、node、python  前后端分离  数据库相关工作也需要服务器开发人员去完成
+
+​						DBA 数据库管理员   数据库方面造诣很深
+
+​						测试 提bug  找bug
+
+​						运维人员  运维网站的运行
+
+​						安全测试人员	安全性测试
+
+​		
+
+​					项目开发：一般情况下是在每个人的个人电脑上进行，环境 localhost
+
+​					合并，成员的代码进行合并，测试（测试的目的是为了能够将正式上线之后的代码潜在bug找出来，测试的环境应当尽可能和正式环境保持一致，linux，测试环境不会在你个人电脑上面，环境localhost合适吗，主机端口号  域名需要全部更换一遍）
+
+​					正式上线：会有一个专门的域名，这个电脑和测试的电脑也不是一个。环境 又要变一次
+
+结论：
+
+全路径可以写，但是对于可变的部分一定要求以配置文件的形式配置下来，可以直接从配置文件中去获取
+
+
+
+**2.相对路径**
+
+相对当前页面的一个相对路径
+
+比如当前页面http://localhost:8080/app/form.html，提交到的路径http://localhost:8080/app/servlet1
+
+相对路径应该怎么写呢？如何从当前路径出发到达目标路径
+
+servlet1即可
+
+但是相对路径会过分依赖于当前页面所在的路径，如果当前页面路径发生变化，那么最终提交的路径也会变化。
+
+
+
+3.  **/应用名/资源路径**
+
+比如http://localhost:8080/app/register4
+
+/app/register4即可
+
+比较推荐的
+
+
+
+## 转发
+
+要比了解要稍微多一些。
+
+不到掌握的程度。
+
+转发：一个servlet处理完逻辑之后，转发交给另外一个servlet或者页面
+
+一个servlet处理完，跳转至另外一个页面，那其实就是页面的跳转，涉及到页面跳转，这部分不是重点
+
+vue、java  前后端分离的架构
+
+页面的跳转全部都是由前端来实现
+
+服务器主要负责给前端页面提供数据即可
+
+关于这部分转发的内容，今后工作中绝对不会涉及到，但是在学习EE知识过程中，我们需要用到该技术进行页面的跳转
+
+
+
+应用场景：
+
+一个servlet处理完逻辑之后，将请求进一步交给另外页面来处理，比如登录注册成功之后，跳转至一个页面
+
+
+
+```java
+@WebServlet("/register5")
+public class RegisterServlet5 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //比如这里去写获取请求参数的逻辑，然后将这些请求参数进行保存
+        //保存的方式可以为保存到文本文件中、数据库中
+        //需要跳转到一个页面
+        //需要传入一个地址（需要转向的页面所在的路径，网络路径）
+        //全路径写法不可以，因为会自动前应用名补在前面  /app/http://localhost:8080/app/success.html
+        // 相对路径写法  OK 相对于当前servlet的url
+        //  /开头的路径   /资源路径即可   应用名直接忽略即可
+        request.getRequestDispatcher("/success.html").forward(request, response);
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+其中**关于/开头的路径**，之前说到要加应用名
+
+但是在本案例中，缺又不加，如何记忆呢？
+
+什么情况下是/应用名/资源路径，什么情况下是/资源路径呢？
+
+路径的执行主体是浏览器，那么就需要加/应用名/资源路径，form的action、a标签的href、img的src等等
+
+路径的执行主体是服务器，那么就直接/资源路径即可，**转发**
+
+
+
+注意： dopost请求不能转发给doget， 不同的请求方法之间不能转发
+
+```
+报错：Message HTTP method POST is not supported by this URL
+```
+
+
+
+## request域共享空间
+
+Context域共享空间、request域共享空间
+
+本质：只要拿到同一个对象，那么就可以去操纵这个对象里面的map，进而就可以进行数据的共享
+
+context对象很大，只要在当前应用下，不管任何servlet，拿到的都是同一个对象，所以全部都可以共享context域
+
+
+
+request对象（频繁刷新浏览器多次，那么会向服务器发送多个请求，request对象是一个还是多个？）
+
+多个，每发送一次请求，就会生成一个对应的request和reponse
+
+即便刷新同一个页面，其实都不是同一个request对象，既然都不是同一个request对象，那么可以共享数据吗？不可以
+
+只有转发的两个组件之间可以进行共享。
+
+
+
+开发人员通过request对象在实现转发时，把数据通过request对象带给其它web资源处理。
+setAttribute方法 
+getAttribute方法  
+removeAttribute方法
+getAttributeNames方法
+
+
+
+使用场景：
+
+context域很大，request域很小；假设如果两个组件只是在一个请求中需要共享该数据，出了这个请求，那么数据就不再需要了，那么完全没有必要放在context域；直接放在request域即可，当请求响应之后，request就被销毁，数据也就清了。
+
+
+
+应用如果卸载，context、request都被销毁
+
+请求被响应了，request就销毁了，但是context依然在
+
+
+
+
+
+# RequestDispather
+
+表示请求分发器，它有两个方法：
+forward():把请求转发给目标组件
+public void forward(ServletRequest request,ServletResponse response)
+             throws ServletException,java.io.IOException
+include():包含目标组件的响应结果
+public void include(ServletRequest request,ServletResponse response)
+             throws ServletException,java.io.IOException
+得到RequestDispatcher对象
+1、ServletContext对象的getRequestDispather(String path1)
+Path1 必须即以”/”开头，若用相对路径会抛出异常IllegalArgumentException
+
+```
+当前的servlet1 : @WebServlet("/test/testServlet1")
+转发到servlet2 : @WebServlet("/testServlet2")
+正确 : request.getRequestDispatcher("/testServlet2")
+ServletContext对象获取的getRequestDispatcher方法，只能使用/开始的基于应用目录的绝对路径
+```
+
+```
+HTTP Status 500 – Internal Server Error
+Message Path [test/testServlet2] does not start with a "/" character
+
+Exception
+java.lang.IllegalArgumentException: Path [test/testServlet2] does not start with a "/" character
+```
+
+2、ServletRequest对象的getRequestDispatcher(String path2)
+path2可以用绝对路径也可以用相对路径
+
+- 相对路径->是相对当前servlet的路径
+
+  ```
+  当前的servlet1 : @WebServlet("/test/testServlet1")
+  转发到servlet2 : @WebServlet("/testServlet2")
+  错误 : request.getRequestDispatcher("testServlet2")
+  正确 : request.getRequestDispatcher("../testServlet2")
+  ```
+
+- 绝对路径
+
+  ```
+  当前的servlet1 : @WebServlet("/test/testServlet1")
+  转发到servlet2 : @WebServlet("/testServlet2")
+  正确 : request.getRequestDispatcher("/testServlet2")
+  ```
 
   
