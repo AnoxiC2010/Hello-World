@@ -1452,6 +1452,14 @@ IDEA会复制tomcat的配置文件，利用这些配置文件，重新开一个�
 
 ## 9 Servlet生命周期
 
+Servlet是一个供其他Java程序（Servlet引擎）调用的Java类，它不能独立运行，它的运行完全由Servlet引擎来控制和调度。
+
+针对客户端的多次Servlet请求，通常情况下，服务器只会创建一个Servlet实例对象，也就是说Servlet实例对象一旦创建，它就会驻留在内存中，为后续的其它请求服务，直至web容器退出(或应用停止)，servlet实例对象才会销毁。
+
+在Servlet的整个生命周期内，Servlet的init方法只被调用一次。而对一个Servlet的每次访问请求都导致Servlet引擎调用一次servlet的service方法。对于每次访问请求，Servlet引擎都会创建一个新的HttpServletRequest请求对象和一个新的HttpServletResponse响应对象，然后将这两个对象作为参数传递给它调用的Servlet的service()方法，service方法再根据请求方式分别调用doXXX方法。 
+
+
+
 Servlet从出生到死亡整个过程
 
 在servlet被创建的时候，会调用init方法
@@ -1473,13 +1481,6 @@ servlet的三个生命周期函数会在指定的阶段会被调用
 
 
 ```java
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import java.io.IOException;
 @WebServlet("/life")
 public class LifeCycleServlet extends GenericServlet {
 
@@ -1507,6 +1508,25 @@ public class LifeCycleServlet extends GenericServlet {
     }
 }
 ```
+
+
+
+如果在`<servlet>`元素中配置了一个`<load-on-startup>`元素，那么WEB应用程序在启动时，就会装载并创建Servlet的实例对象、以及调用Servlet实例对象的init()方法。
+	举例：
+
+```xml
+<servlet>
+    <servlet-name>invoker</servlet-name>
+    <servlet-class>
+        org.apache.catalina.servlets.InvokerServlet
+    </servlet-class>
+    <load-on-startup>2</load-on-startup>
+</servlet>
+```
+
+用途：为web应用写一个InitServlet，这个servlet配置为启动时装载，为整个web应用创建必要的数据库表和数据。
+
+> 从提高Servlet容器运行性能的角度出发，Servlet规范为Servlet规定了不同的初始化情形。如果有些Servlet专门负责在web应用启动阶段为web应用完成一些初始化操作，则可以让它们在web应用启动时就被初始化。对于大多数Servlet，只需当客户端首次请求访问时才被初始化。假设所有的Servlet都在web应用启动时被初始化，那么会大大增加Servlet容器启动web应用的负担，而且Servlet容器有可能加载一些永远不会被客户访问的Servlet，白白浪费容器的资源。
 
 
 
@@ -1688,6 +1708,17 @@ tomcat其实是有给我们提供一个缺省servlet的，但是如果你在应�
 
 了解的部分。
 
+在Servlet的配置文件中，可以使用一个或多个<init-param>标签为 某个servlet配置一些初始化参数。
+
+例如：
+
+获得字符集编码
+获得数据库连接信息
+
+
+
+当servlet配置了初始化参数后，web容器在创建servlet实例对象时，会自动将这些初始化参数封装到ServletConfig对象中，并在调用servlet的init方法时，将ServletConfig对象传递给servlet。进而，程序员通过ServletConfig对象就可以得到当前servlet的初始化参数信息。
+
 ```xml
 <servlet>
     <servlet-name>jsp</servlet-name>
@@ -1741,9 +1772,24 @@ public class ConfigServlet extends HttpServlet {
 }
 ```
 
-简单了解即可。一般情况下我们不会自己去写。但是如果你看别人的代码，你知道是啥意思即可
+简单了解即可。一般情况下我们不会自己去写。
 
 ## 15 Context域共享数据
+
+WEB容器在启动时，它会为每个WEB应用程序都创建一个对应的ServletContext对象，它代表当前web应用。
+
+ServletConfig对象中维护了ServletContext对象的引用，开发人员在编写servlet时，可以通过ServletConfig.getServletContext方法获得ServletContext对象。
+
+由于一个WEB应用中的所有Servlet共享同一个ServletContext对象，因此Servlet对象之间可以通过ServletContext对象来实现通讯。ServletContext对象通常也被称之为context域对象。
+
+```xml
+<context-param>
+    <param-name>encode</param-name>
+    <param-value>GBK</param-value>
+</context-param>
+```
+
+
 
 如果一个servlet在运行时产生了某些数据，需要和另外的servlet进行数据的共享，那么我们可以使用ServletContext进行数据的共享
 
@@ -1968,3 +2014,18 @@ public class PathServlet extends HttpServlet {
 
 - Edit Configurations for Tomcat to Deploy Artifact
 
+
+
+## 导入jar包
+
+首先项目里有个lib目录已经add to Library了
+
+- Facets方面
+
+  把这个lib目录拖到WEB-INF中即可
+
+- Artifacts方面
+
+  Project Structure -> Artifacts -> Output Layout -> WEB-INF -> new directory lib -> right click to add copy of library
+
+  
