@@ -87,3 +87,52 @@ IDEA
 使用类加载器.getResource("").getPath();获取到的路径会把空格替换为%。导致new File(path).exist()是false。
 
 不要在路径中使用空格
+
+# IDEA和Tomcat环境中 代码运行矛盾
+
+tomcat8.5
+
+IDEA2018
+
+字符串编码矛盾
+
+IDEA下
+
+```java
+public class Demo {
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        String s = "testServlet2 : 顺便中文乱码测试";
+        System.out.println(s);//不乱
+        String r = new String(s.getBytes(), "utf-8");
+        System.out.println(r);//不乱，说明默认编码为utf-8
+        r = new String(s.getBytes(), "gbk");
+        System.out.println(r);//乱
+        r = new String(r.getBytes("gbk"), "utf-8");
+        System.out.println(r);//不乱
+    }
+}
+```
+
+Tomcat下
+
+```java
+@WebServlet("/testServlet2")
+public class TestServlet2 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("TestServlet2.doGet");
+        resp.setCharacterEncoding("gbk");
+        String s = "testServlet2 : 顺便中文乱码测试";
+        System.out.println(s);
+         String r = new String(s.getBytes(), "gbk");
+        System.out.println(r);//不乱，说明默认编码为gbk
+        String r = new String(s.getBytes(), "utf-8");
+        System.out.println(r);//乱
+        r = new String(r.getBytes("utf-8"), "gbk");
+        System.out.println(r);//乱
+        resp.getWriter().println(r);
+    }
+
+}
+```
+
