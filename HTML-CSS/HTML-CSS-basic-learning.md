@@ -1887,6 +1887,40 @@ overflow 属性规定当内容溢出元素框时发生的事情
 
 
 
+# 转义字符
+
+```
+´	&acute;	©	&copy;	>	&gt;	µ	&micro;	®	&reg;
+&	&amp;	°	&deg;	¡	&iexcl;		&nbsp;	»	&raquo;
+¦	&brvbar;	÷	&divide;	¿	&iquest;	¬	&not;	§	&sect;
+•	&bull;	½	&frac12;	«	&laquo;	¶	&para;	¨	&uml;
+¸	&cedil;	¼	&frac14;	<	&lt;	±	&plusmn;	×	&times;
+¢	&cent;	¾	&frac34;	¯	&macr;	“	&quot;	™	&trade;
+€	&euro;	£	&pound;	¥	&yen;				
+„	&bdquo;	…	&hellip;	·	&middot;	›	&rsaquo;	ª	&ordf;
+ˆ	&circ;	“	&ldquo;	—	&mdash;	’	&rsquo;	º	&ordm;
+†	&dagger;	‹	&lsaquo;	–	&ndash;	‚	&sbquo;	”	&rdquo;
+‡	&Dagger;	‘	&lsquo;	‰	&permil;		&shy;	˜	&tilde;
+≈	&asymp;	⁄	&frasl;	←	&larr;	∂	&part;	♠	&spades;
+∩	&cap;	≥	&ge;	≤	&le;	″	&Prime;	∑	&sum;
+♣	&clubs;	↔	&harr;	◊	&loz;	′	&prime;	↑	&uarr;
+↓	&darr;	♥	&hearts;	−	&minus;	∏	&prod;	
+♦	&diams;	∞	&infin;	≠	&ne;	√	&radic;	
+≡	&equiv;	∫	&int;	‾	&oline;	→	&rarr;		
+α	&alpha;	η	&eta;	μ	&mu;	π	&pi;	θ	&theta;
+β	&beta;	γ	&gamma;	ν	&nu;	ψ	&psi;	υ	&upsilon;
+χ	&chi;	ι	&iota;	ω	&omega;	ρ	&rho;	ξ	&xi;
+δ	&delta;	κ	&kappa;	ο	&omicron;σ	&sigma;	ζ	&zeta;
+ε	&epsilon;	λ	&lambda;	φ	&phi;	τ	&tau;		
+Α	&Alpha;	Η	&Eta;	Μ	&Mu;	Π	&Pi;	Θ	&Theta;
+Β	&Beta;	Γ	&Gamma;	Ν	&Nu;	Ψ	&Psi;	Υ	&Upsilon;
+Χ	&Chi;	Ι	&Iota;	Ω	&Omega;	Ρ	&Rho;	Ξ	&Xi;
+Δ	&Delta;	Κ	&Kappa;	Ο	&Omicron;Σ	&Sigma;	Ζ	&Zeta;
+Ε	&Epsilon;	Λ	&Lambda;	Φ	&Phi;	Τ	&Tau;	ς	&sigmaf;
+```
+
+
+
 # 字体
 
 Google Web Fonts
