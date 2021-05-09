@@ -779,6 +779,178 @@ Redis默认给我们提供了8中不同的内存淘汰策略（5.0这个版本�
 
 不活跃的旧数据，有助于提升查询性能
 
+## <mark>事务</mark>
+
+WATCH : 监视的keys在EXEC之前一旦有一个被修改了，整个事务被取消，EXEC返回nil-reply表示事务失败。
+
+MULTI : 开启事务
+
+EXEC : 提交事务
+
+DISCARD : 清空事务队列，结束事务状态为常规状态，释放被监视的keys如果有的话。
+
+UNWATCH : 释放监视的keys，如果执行了EXEC或DISCARD就没有必要在手动释放了。当客户端断开连接时， 该客户端对键的监视也会被取消。
+
+
+
+WATCH 乐观锁：
+
+```
+WATCH mykey
+val = GET mykey
+val = val + 1
+MULTI
+SET mykey $val
+EXEC
+```
+
+如果在 WATCH 执行之后， EXEC 执行之前， 有其他客户端修改了被监视一个或多个key的值， 那么当前客户端的事务就会失败。 程序需要做的， 就是不断重试这个操作， 直到没有发生碰撞为止。
+
+这种形式的锁被称作乐观锁， 它是一种非常强大的锁机制。 并且因为大多数情况下， 不同的客户端会访问不同的键， 碰撞的情况一般都很少， 所以通常并不需要进行重试。
+
+
+
+
+
+关于回滚问题
+
+在exec之前出错其实是不执行，exec之后有命令失败了其他的照旧执行。算是有回滚还是没回滚呢。
+
+当然这种设计的原因是不要以拖累数据库性能为代价来替程序员错误的编程背锅是有道理的。
+
+# Jedis
+
+[Jedis wiki]([Home · redis/jedis Wiki (github.com)](https://github.com/redis/jedis/wiki))
+
+## 简单用法
+
+导包 :  Jedis 和 Apache Commons Pool2
+
+Maven配置
+
+```xml
+<dependency>
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version>2.9.0</version>
+    <type>jar</type>
+    <scope>compile</scope>
+</dependency>
+```
+
+基本示例：
+
+Jedis资源连接池，可以静态保存这个池子，它是线程安全的。
+
+连接池配置见[Commons Pool2's configuration]( http://commons.apache.org/proper/commons-pool/apidocs/org/apache/commons/pool2/impl/GenericObjectPoolConfig.html)
+
+```java
+JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost");
+
+// Jedis implements Closeable. Hence, the jedis instance will be auto-closed after the last statement.
+try (Jedis jedis = pool.getResource()) {
+    /// ... do stuff here ... for example
+    jedis.set("foo", "bar");
+    String foobar = jedis.get("foo");
+    jedis.zadd("sose", 0, "car"); jedis.zadd("sose", 0, "bike"); 
+    Set<String> sose = jedis.zrange("sose", 0, -1);
+}
+//池中的jedis资源的close方法是归还连接
+/// ... when closing your application:
+pool.close();
+
+//也可以传统地在finally中关闭
+
+//Jedis jedis = new Jedis(参数或没有);//这样获得的jedis的close方法是真的关闭连接了。
+```
+
+
+
+## 主从派发设置
+
+Redis的设计天然应对主从派发。
+
+Redis网络种可以后很多Redis服务器，“主”或者“从”。但对于客户端没什么区别，"从的确"也能接受写入请求，不同在于"从"的写入变动不会复制派发到网络中，但所有的"从"都会同步"主"的数据并最终都被"主"的数据覆盖。如此一来把"读去"派给"从"，"主"负责"写入"就有意义了。一个Redis服务器有"主"了之后也不妨碍自己可以成为其他服务器的"主"。
+
+从属身份设置
+
+- 在每个Redis服务器的配置文件中分别设置
+
+  ```properties
+  # slaveof <masterip> <masterport>
+  ```
+
+- 对现存Jedis实例调用slaveOf方法，传入IP(或"localhost")和端口号为参数
+
+  ```java
+  jedis.slaveof("localhost", 6379);  //  if the master is on the same PC which runs your code
+  jedis.slaveof("192.168.1.35", 6379); 
+  ```
+
+注意：自Redis2.6，从属默认为只读，对其写入的请求会报错。可以修改这个配置让从属也能写入且不报错，但从属内的变动不会复制派发，这些变动可能被过度写入，Jedis实例管理混乱会有种隐藏风险。
+
+
+
+易主设置
+
+主体宕机，从现有从属种提拔一个作为新主体，新主体先解除自身从属身份，其他从属变更从属关系到新主体
+
+```java
+slave1jedis.slaveofNoOne();//解除自身从属身份
+slave2jedis.slaveof("192.168.1.36", 6379); //变更从属关系到新主体
+```
+
+
+
+## 事务
+
+```java
+jedis.watch (key1, key2, ...);//开启监视
+Transaction t = jedis.multi();//开启事务
+t.set("foo", "bar");//执行队列
+...
+t.exec();//提交事务
+```
+
+执行队列有返回值的话
+
+```java
+Transaction t = jedis.multi();
+t.set("fool", "bar"); 
+Response<String> result1 = t.get("fool");
+
+t.zadd("foo", 1, "barowitch"); 
+t.zadd("foo", 0, "barinsky"); 
+t.zadd("foo", 0, "barikoviev");
+Response<Set<String>> sose = t.zrange("foo", 0, -1);   // get the entire sortedset
+t.exec();                                              // dont forget it
+
+String foolbar = result1.get();                       // use Response.get() to retrieve things from a Response
+int soseSize = sose.get().size();                      // on sose.get() you can directly call Set methods!
+
+// List<Object> allResults = t.exec();                 // you could still get all results at once, as before
+```
+
+注意:
+
+exect()提交前Response还没有结果（是一种Future任务），提交前Response.get()结果会报错。可以使用最后一行的方式获取所有的结果列表（包括返回的结果或状态码）。
+
+Redis不允许在事务过程中使用事务中间状态的结果，会报错，原因同上。
+
+```java
+// this does not work! Intra-transaction dependencies are not supported by Redis!
+jedis.watch(...);
+Transaction t = jedis.multi();
+if(t.get("key1").equals("something"))
+    t.set("key2", "value2");
+else 
+    t.set("key", "value");
+```
+
+但是类似setnx等条件执行语句在事务间是支持的。
+
+<mark>TODO : 这里有疑问，事务间t.get()不行，就不能用jedis.get()吗？</mark>
+
 
 
 # 中文乱码
@@ -787,11 +959,11 @@ redis-cli客户端SET输入和GET输出中文乱码
 
 redis-cli --raw 能让GETshu'c
 
-## 8. 常见面试题
+# 常见面试题
 
 
 
-### 什么是Redis持久化？Redis有哪几种持久化方式？优缺点是什么？
+## 什么是Redis持久化？Redis有哪几种持久化方式？优缺点是什么？
 
 答：
 
@@ -855,7 +1027,7 @@ AOF：
 
  
 
-### Redis支持的数据类型？
+## Redis支持的数据类型？
 
 ​    String，Hash，Set，List，Zset(SortSet)
 
@@ -867,7 +1039,7 @@ AOF：
 
  
 
-### Redis的架构模式有哪些？讲讲各自的特点
+## Redis的架构模式有哪些？讲讲各自的特点
 
 1， 单机版
 
@@ -1005,9 +1177,9 @@ Redis 的复制（replication）功能允许用户根据一个 Redis 服务器�
 
  
 
-### 什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免？
+## 什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免？
 
-#### 缓存穿透：
+### 缓存穿透：
 
 ​    
 
@@ -1019,7 +1191,7 @@ Redis 的复制（replication）功能允许用户根据一个 Redis 服务器�
 
  
 
-#### 缓存雪崩：
+### 缓存雪崩：
 
 ​    缓存雪崩是指缓存中数据大批量到过期时间，而查询数据量巨大，引起数据库压力过大甚至down机。和缓存击穿不同的是，缓存击穿指并发查同一条数据，缓存雪崩是不同数据都过期了，很多数据都查不到从而查数据库。
 
@@ -1033,7 +1205,7 @@ Redis 的复制（replication）功能允许用户根据一个 Redis 服务器�
 
  
 
-#### 缓存击穿
+### 缓存击穿
 
 ​     缓存击穿是指缓存中没有但数据库中有的数据（一般是缓存时间到期），这时由于并发用户特别多，同时读缓存没读到数据，又同时去数据库去取数据，引起数据库压力瞬间增大，造成过大压力
 
@@ -1049,7 +1221,7 @@ Redis 的复制（replication）功能允许用户根据一个 Redis 服务器�
 
  
 
-### Mysql中有2000w条数据，而redis中只有20w条数据，如何保证redis中存的都是热点数据？
+## Mysql中有2000w条数据，而redis中只有20w条数据，如何保证redis中存的都是热点数据？
 
 相关知识：redis 内存数据集大小上升到一定大小的时候，就会施行数据淘汰策略（回收策略）。redis 提供 6种数据淘汰策略：
 
@@ -1069,7 +1241,7 @@ no-enviction（驱逐）：禁止驱逐数据
 
  
 
-### Redis是单线程还是单进程? Redis如何控制并发问题？
+## Redis是单线程还是单进程? Redis如何控制并发问题？
 
 Redis为单进程单线程模式，采用队列模式将并发访问变为串行访问。Redis本身没有锁的概念，Redis对于多个客户端连接并不存在竞争，但是在Jedis客户端对Redis进行并发访问时会发生连接超时、数据转换错误、阻塞、客户端关闭连接等问题，这些问题均是
 
@@ -1083,7 +1255,7 @@ Redis为单进程单线程模式，采用队列模式将并发访问变为串行
 
  
 
-### Redis有哪些常用的命令?了解Watch命令吗？
+## Redis有哪些常用的命令?了解Watch命令吗？
 
 watch 用于在进行事务操作的最后一步也就是在执行exec 之前对某个key进行监视
 
@@ -1091,7 +1263,7 @@ watch 用于在进行事务操作的最后一步也就是在执行exec 之前对
 
 一般在MULTI 命令前就用watch命令对某个key进行监控.如果想让key取消被监控，可以用unwatch命令
 
-### 如何使用Redis实现分布式锁?思路是什么？
+## 如何使用Redis实现分布式锁?思路是什么？
 
 最简单的一种：
 
