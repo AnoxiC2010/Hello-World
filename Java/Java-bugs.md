@@ -1,6 +1,6 @@
 # Java Bugs
 
-# java.util.NoSuchElementException: No line found
+## java.util.NoSuchElementException: No line found
 
 有多个Scanner对象的情况下，关闭一个后导致其他Scanner对象无法读取。即使是调用了两个不同的方法，它们各自都创建了Scanner对象，先执行的方法关闭了Scanner资源后，后调用的方法中的Scanner也无法读取。
 
@@ -20,17 +20,17 @@ The "standard" input stream. This stream is already open and ready to supply inp
 
 
 
-# java.io.FileNotFoundException: C:\D\aaa (Access is denied)
+## java.io.FileNotFoundException: C:\D\aaa (Access is denied)
 
 我创建字节输入流的时候，文件路径传了文件夹，导致这个错误，传入正确的文件路径即可。(Access is denied)让我误以为是C盘没有权限，又是已管理员运行程序又是重启，对比之前的正常代码才发现是文件夹的问题。
 
-# java.lang.IllegalThreadStateException
+## java.lang.IllegalThreadStateException
 
 一个线程重复start，抛出异常但该线程会继续执行到结束。但重复start的错误代码所在主线程之后的代码不会执行。
 
 
 
-# java.lang.StackOverflowError
+## java.lang.StackOverflowError
 
 ```
 public class Demo {
@@ -42,7 +42,7 @@ public class Demo {
 //目前分析是构造器调用导致的栈溢出，而不是引用导致的栈溢出。要确认一下，我认为新的引用应该出现在堆上而不是栈上
 ```
 
-# ConcurrentModificationException
+## ConcurrentModificationException
 
 为了避免在多线程情况下, 一个线程在使用iterator遍历Collection集合类, 而另一个线程在对这个Collection集合类进行添加或者删除操作, 导致遍历结果出现问题, 产生了并发修改异常(如果一个线程在做添加和删除, 而另一个线程在做iterator遍历, 那么iterator遍历会立马抛出一个并发修改异常)
 
@@ -51,7 +51,7 @@ public class Demo {
 
 
 
-# SQL语句在Java程序中没有结果，在数据库中有结果
+## SQL语句在Java程序中没有结果，在数据库中有结果
 
 SQL语句过滤条件中含中文
 
@@ -61,7 +61,7 @@ SQL语句过滤条件中含中文
 
 在url最后添加?useUnicode=true&characterEncoding=UTF-8
 
-# ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+## ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
 
 MySQL数据库死锁
 
@@ -80,7 +80,7 @@ update1 + enter	--error shows
 
 
 
-# 路径空格警告
+## 路径空格警告
 
 IDEA
 
@@ -88,17 +88,16 @@ IDEA
 
 不要在路径中使用空格
 
-# IDEA和Tomcat环境中 代码运行矛盾
+# <mark>IDEA和Tomcat环境中 代码运行矛盾</mark>
 
-tomcat8.5
+WIN10 - IDEA 2018.3.6 - tomcat 8.5.37 - Project SDK 1.8.0_281
 
-IDEA2018
+## 字符串编码矛盾
 
-字符串编码矛盾
-
-IDEA下
+IDEA下 run窗口输出
 
 ```java
+//正常，
 public class Demo {
     public static void main(String[] args) throws UnsupportedEncodingException {
         String s = "testServlet2 : 顺便中文乱码测试";
@@ -106,14 +105,14 @@ public class Demo {
         String r = new String(s.getBytes(), "utf-8");
         System.out.println(r);//不乱，说明默认编码为utf-8
         r = new String(s.getBytes(), "gbk");
-        System.out.println(r);//乱
+        System.out.println(r);//乱(正常)
         r = new String(r.getBytes("gbk"), "utf-8");
-        System.out.println(r);//不乱
+        System.out.println(r);//不乱(正常)
     }
 }
 ```
 
-Tomcat下
+IDEA 启动tomcat后 run/debug窗口输出
 
 ```java
 @WebServlet("/testServlet2")
@@ -127,12 +126,61 @@ public class TestServlet2 extends HttpServlet {
          String r = new String(s.getBytes(), "gbk");
         System.out.println(r);//不乱，说明默认编码为gbk
         String r = new String(s.getBytes(), "utf-8");
-        System.out.println(r);//乱
+        System.out.println(r);//乱(正常，其实从乱码的表现来看，和demo比已经不正常了，但是这里必须乱码是肯定的)
         r = new String(r.getBytes("utf-8"), "gbk");
-        System.out.println(r);//乱
+        System.out.println(r);//乱(反常)！！！！
         resp.getWriter().println(r);
     }
+}
+```
 
+
+
+## 反射方法矛盾
+
+IDEA中
+
+```java
+//User Bean的set方法，参数是数组
+public void setHobby(String[] hobby) {
+    this.hobby = hobby;
+}
+
+//在IDEA的测试demo中
+public static void main(String[] args) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
+    Class<User> userClass = User.class;
+    User user = userClass.newInstance();
+
+    Method setHobby = userClass.getDeclaredMethod("setHobby", String[].class);
+    String[] hobby = new String[]{"sleep", "play"};
+
+    setHobby.invoke(user, hobby);//不可以，参数数量错误
+    setHobby.invoke(user, new Object[]{hobby});//可以
+    setHobby.invoke(user, (Object)hobby);//可以
+
+    System.out.println(Arrays.toString(user.getHobby()));
+}
+```
+
+IDEA启动tomcat之后在servlet中
+
+```java
+//@WebServlet("/login")
+public class LoginServlet extends HttpServlet {
+    @Override//在IDEA的tomcat环境中
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+        Class<User> userClass = User.class;
+        User user = userClass.newInstance();
+
+        Method setHobby = userClass.getDeclaredMethod("setHobby", String[].class);
+        String[] hobby = new String[]{"sleep", "play"};
+
+        setHobby.invoke(user, hobby);//可以，这是什么鬼！！！！！
+        setHobby.invoke(user, new Object[]{hobby});//不可以，这是什么鬼！！！！
+        setHobby.invoke(user, (Object)hobby);//可以
+
+        System.out.println(Arrays.toString(user.getHobby()));
+    }
 }
 ```
 
