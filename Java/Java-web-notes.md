@@ -1761,16 +1761,14 @@ tomcat其实是有给我们提供一个缺省servlet的，但是如果你在应�
 
 ```java
 public class ConfigServlet extends HttpServlet {
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-    }
-
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         //首先拿到servletConfig对象
         ServletConfig servletConfig = getServletConfig();
         String name = servletConfig.getInitParameter("name");
         System.out.println(name);
         //config对象的方法即可
+
+//可以直接String name = getInitParameter("name");获得init中的参数
     }
 }
 ```
@@ -2496,6 +2494,28 @@ public class RegisterServlet4 extends HttpServlet {
 
 
 
+## URL含中文字符乱码
+
+//URL的编解码方式是不同的，有中文的话需要单独处理
+
+java.net.URLDecoder;
+
+| static String | decode(String s, String enc)使用指定的编码机制对 application/x-www-form-urlencoded 字符串解码。 |
+| ------------- | ------------------------------------------------------------ |
+
+java.net.URLEncoder;
+
+| static String | encode(String s, String enc)使用指定的编码机制将字符串转换为 application/x-www-form-urlencoded  格式。 |
+| ------------- | ------------------------------------------------------------ |
+
+```java
+//这样处理过的URL解决了中文乱码问题
+String requestURI = request.getRequestURI();
+requestURI = URLDecoder.decode(requestURI, "UTF-8");
+```
+
+
+
 ## 网络路径写法
 
 **1.全路径**，比如http://localhost:8080/app/servlet1这种写法，就是全路径
@@ -2837,5 +2857,1017 @@ context域很大，request域很小；假设如果两个组件只是在一个请
 应用如果卸载，context、request都被销毁
 
 请求被响应了，request就销毁了，但是context依然在
+
+
+
+
+
+# ServletResponse
+
+其实就是服务器为了方便最终响应报文的输出，也为了方便我们开发者的使用，给我们提供了一个ServetResponse对象
+
+只需要去调用该对象的某些方法，然后往这个对象里面塞入数据
+
+最终Connector会读取对象里面的数据，然后生成响应报文
+
+商场购物，给你提供了一个小推车，你只需要将你想买的商品放入小推车中，最终去结算就ok了
+
+## 常用方法（掌握）
+
+既然是为了方便我们设置响应报文
+
+有哪些方法可以设置响应报文（每学完一个知识点，回去看一下HTTP和tomcat）
+
+设置状态码 setStatus(int sc)
+
+设置响应头 setHeader(String name, String value)
+
+设置响应体 getWriter() / getOutputStream()
+
+```java
+@WebServlet("/response1")
+public class ResponseServlet1 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //设置响应状态码
+        response.setStatus(404);
+        //设置响应头
+        response.setHeader("Content-Type", "text/html");
+        //设置响应体
+        response.getWriter().println("<h1 style='color:red'>File Not Found</h1>");
+    }
+}
+```
+
+
+
+
+
+## 向客户端输出字符数据（掌握）
+
+用OutputStream(字节流)发送数据：
+1、response.getOutputStream().write(“中国”.getBytes());//以默认本地编码发送数据
+2、response.getOutputStream().write("中国".getBytes("UTF-8"));//以UTF-8编码发送数据，浏览器(默认用GB2312)会出现乱码
+画图描述出现该问题的原因。
+解决办法：
+
+- 2.1通过更改浏览器的编码方式：IE/”查看”/”编码”/”UTF-8”(不可取)
+- 2.2通过设置响应头告知客户端编码方式：response.setHeader(“Content-type”, “text/html;charset=UTF-8”);//告知浏览器数据类型及编码
+- 2.3通过meta标签模拟请求头:out.write(“<meta  charset=utf-8' />".getBytes());
+- 2.4通过以下方法：response.setContentType("text/html;charset=UTF-8");
+  总结：程序以什么编码输出，就需要告知客户端以什么编码显示。
+
+```
+字节数据编码GBK,
+字符数据用ISO-8859-1
+小细节：输出字符“97”用response.getOutputStream().write(97);出现的问题？
+```
+
+
+
+
+
+用PrintWriter(字符流)发送数据：
+
+response.getWriter().println是用于向响应体里面写入数据，响应体里面的数据会出现在浏览器的正文
+
+示例：response.getWriter().write(“中国” );有没有乱码？
+
+原因：以默认编码发送数据 ISO-8859-1（没有中国二字编码），此时会发生乱码
+解决办法：
+setCharacterEncoding(“UTF-8”);//更改编码为UTF-8
+response.setHead(“Context-type”,”text/html;charset=UTF-8”);//告诉客户端编码方式
+注意：不要忘记告诉客户端的编码方式。
+由于经常改动编码，response提供了一种更简单的方式
+response. setContentType(“text/html;charset=UTF-8”);其作用相当于以上两条代码。
+
+```
+//注意：设置 setCharacterEncoding 应该在     response.getWriter()之前，
+否则拿到的PrintStream输出流还是使用默认编码集来编码。
+```
+
+
+
+
+
+## 中文乱码问题
+
+```
+void setCharacterEncoding(java.lang.String charset)
+```
+
+Sets the character encoding (MIME charset) of the response being sent to the client
+
+```java
+@WebServlet("/response2")
+public class ResponseServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+       //出现？？？？乱码，表示的是编码格式压根不支持中文
+        //整个流程：编解码两个步骤
+        //编码：服务器将中文进行编码，形成指定格式的数组  ISO-8859-1
+        //解码：浏览器拿到数据之后，对数据进行解码，使用一个编码格式 GBK
+        //为什么浏览器默认使用的是GBK呢？1.平台 操作系统 2.浏览器使用的语言有关 GBK
+        //如何去设置编码格式呢？ request
+        //设置gbk没有真正地去解决这个问题；1.海外的华人 浏览中文的网站  平台不是简体中文 浏览器使用的也不是中文语言
+        //其实浏览器是支持多编码格式的，只是会采用一个默认的编码格式，如果服务器告诉浏览器使用某个编码格式，也是ok的
+        //真正的方式：1.服务器设置一个编码格式  2.将编码格式告诉给浏览器,如何告诉
+        response.setCharacterEncoding("utf-8");
+        response.getWriter().println("你好！！！！");
+    }
+}
+```
+
+如何将编码格式告诉给浏览器
+
+肯定需要通过响应报文
+
+
+
+响应头
+
+```java
+//其实这一行代码有两层含义：1.发送一个Content-Type响应头，将编码格式告诉给浏览器  2.其实也设置了服务器的编码格式，所以respnse.setCharacterEncoding就没有必要再去写了
+response.setHeader("Content-Type","text/html;charset=utf-8");
+```
+
+其实还有另外一种写法：
+
+```java
+//其实EE规范还给我们设置Content-Type头设置了一个简易的API
+response.setContentType("text/html;charset=utf-8");
+```
+
+响应体
+
+```java
+@WebServlet("/response3")
+public class ResponseServlet3 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //这个方法仅表示设置响应体的编码格式
+        response.setCharacterEncoding("utf-8");
+        response.getWriter().println("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <title>Title</title>\n" +
+                "</head>\n" +
+                "<body>");
+        response.getWriter().println("你好！！！！");
+
+        response.getWriter().println("</body>\n" +
+                "</html>");
+    }
+}
+```
+
+
+
+思考：
+
+为什么request设置了setCharacterEncoding就可以了，而response仅设置setCharacterEncoding却不可以
+
+两者本质上来说是一致的
+
+
+
+## 输出字节数据（掌握）
+
+最常用的用法就是输出文件等二进制数据到客户端
+
+![image-20210510111622975](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210510111622975.png)
+
+两者的行为应该是差不多的
+
+File和Servlet这两个输出流的区别应该在于写出的目的地不同，写出的过程应该是完全相同的
+
+接下来，大家在使用ServletOutputStream的时候，整个过程和FileOutputStream完全相同的
+
+```java
+@WebServlet("/stream")
+public class StreamServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //如果希望将二进制文件等数据传输给客户端，那么可以使用字节流
+        ServletOutputStream outputStream = response.getOutputStream();
+        //比较陌生，但是实际上它的使用和我们之前学习的FileOutputStream是一样的
+        //提供文件的输入流
+        ServletContext servletContext = getServletContext();
+        String realPath = servletContext.getRealPath("WEB-INF/2.html");
+        FileInputStream inputStream = new FileInputStream(new File(realPath));
+        int length = 0;
+        byte[] bytes = new byte[1024];
+        while ((length = inputStream.read(bytes)) != -1){
+            outputStream.write(bytes, 0, length);
+        }
+        //关闭流 ServletOutputStream可以关闭，也可以不关闭，如果不关闭，tomcat会帮助你关闭
+        //自己创建的FileInputStream 那么应该关闭
+        inputStream.close();
+        outputStream.close();
+    }
+}
+```
+
+即便文件是存放在WEB-INF目录下面的，那么服务器也是可以将该文件响应给客户端的，只要服务器愿意
+
+
+
+思考题：
+
+如果希望大家能够在当前应用下实现一个缺省Servlet，应该如何实现？
+
+1.缺省servlet的标志是url-pattern为/，一旦设置了缺省servlet，那么当前应用下的所有静态资源文件均无法正常显示了，那么需要大家做一个事情，仍然能够访问到对应的静态资源文件
+
+要求是输入任意的资源文件均可以做出对应的响应。 有显示出来，没有显示404
+
+
+
+提示：
+
+路径相关的写法：
+
+```java
+@WebServlet("/url")
+public class URLSummaryServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //获取资源路径
+        String requestURI = request.getRequestURI();
+        StringBuffer requestURL = request.getRequestURL();
+        String servletPath = request.getServletPath();
+        String contextPath = request.getContextPath();
+        // URL = http:主机：端口号  + URI
+        System.out.println(requestURI);
+        System.out.println(requestURL);
+        // URI =  contextPath + servletPath
+        System.out.println(servletPath);
+        //应用名
+        System.out.println(contextPath);
+    }
+}
+```
+
+## 定时刷新页面
+
+使用场景：
+
+1.要求浏览器能够自动显示出时间，并且每秒钟会自动刷新
+
+```java
+@WebServlet("/refresh")
+public class RefreshServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //显示出最新的时间，每秒钟自动刷新一次
+        //设置一个refresh响应头即可  数字表示秒数，表示每隔多少秒刷新当前页面
+        response.setHeader("refresh", "1");
+        //如果希望改一下时间显示的格式  2021-05-10 11:38:00
+        String formatDate = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss").format(new Date());
+        response.getWriter().println(formatDate);
+    }
+}
+```
+
+2.要求经过几秒钟以后跳转到另外一个页面
+
+比如登录成功之后跳转到另外一个登录成功页面
+
+```java
+@WebServlet("/refresh2")
+public class RefreshServle2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //表示经过多少秒之后跳转到指定的url路径 网络路径  Http://localhost:8080/app/form.html  /开头路径
+        response.setHeader("refresh", "3;url=" + request.getContextPath() + "/success.html");
+    }
+}
+```
+
+## 重定向
+
+通过response实现请求重定向。
+请求重定向指：一个web资源收到客户端请求后，通知客户端去访问另外一个web资源，这称之为请求重定向。
+地址栏会变，并发送2次请求，增加服务器负担（重定向到本服务器时，建议使用转发或者包含）
+实现方式
+response.sendRedirect()
+实现原理：
+
+HTTP状态码
+
+302/307状态码和location头即可实现重定向
+301 302 303 307
+
+
+
+bing.com
+
+服务器会返回一个重定向状态码，同时还会搭配一个Location响应头（路径），浏览器会紧接着再次向Location发送一次请求
+
+```java
+@WebServlet("/redirect")
+public class RedirectServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //根据定义，我们自己实现重定向
+//        response.setStatus(302);
+//        response.setHeader("Location", request.getContextPath() + "/success.html");
+        //但是其实没有必要自己去写，因为EE同样给我们封装好了一个简易的写法
+        response.sendRedirect(request.getContextPath() + "/success.html");
+    }
+}
+```
+
+
+
+```
+RFC1945(http://tools.ietf.org/html/rfc1945#page-34)，也就是HTTP1.0在介绍302时说，如果客户端发出POST请求后，收到服务端的302状态码，那么不能自动的向新的URI发送重复请求，必须跟用户确认是否该重发，因为第二次POST时，环境可能已经发生变化，POST操作会不符合用户预期。但是，很多浏览器（user agent我描述为浏览器以方便介绍）在这种情况下都会把POST请求变为GET请求。
+303规定post请求重定向为get请求
+307规定post请求重定向仍然为post请求
+```
+
+
+
+重定向
+
+重定向机制的运作流程
+1、用户在浏览器端输入特定URL，请求访问服务器端的某个组件
+2、服务器端的组件返回一个状态码为302的响应结果。
+3、当浏览器端接收到这种响应结果后，再立即自动请求访问另一个web组件
+4、浏览器端接收到来自另一个web组件的响应结果。
+
+HttpServeltResponse的sendRedirect(String location)用于重定向
+
+
+
+```java
+public class Check1Servlet extends HttpServlet {
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+        PrintWriter out = response.getWriter();
+        String username = request.getParameter("username");
+        String message = null;
+        if(username==null)
+            message="Please input username:";
+        else
+            message="Hello,"+username;
+        request.setAttribute("msg", message);
+        out.println("Output from check1Servlet before redirecting1");
+        System.out.println("Output from check1Servlet before redirecting1");
+        response.sendRedirect(request.getContextPath()+"/servlet/Output1Servlet?msg="+message);//ok
+        //response.sendRedirect("/servlet/Output1Servlet?msg="+message);//wrong
+        //response.sendRedirect("http://localhost:8080"+request.getContextPath()+"/servlet/Output1Servlet?msg="+message);//ok
+        //response.sendRedirect("http://www.itcast.cn");//ok
+        out.println("Output from check1Servlet before redirecting2");
+        System.out.println("Output from check1Servlet before redirecting2");
+    }
+}
+
+```
+
+特点
+Servlet源组件生成的响应结果不会被发送到客户端(了解 )
+      response.sendRedirect(String location)方法一律返回状态码为302的响应结果。
+如果源组件在进行重定向之前，已经提交了响应结果，会抛出IllegalStateException。为了避免异常，不应该在源组件中提交响应结果。
+      //Cannot call sendRedirect() after the response has been committed
+在Servlet源组件重定向语句后面的代码也会执行。
+源组件和目标组件不共享同一个ServletRequest对象。
+对于sendRedirect(String location)方法的参数，如果以“/”开头，表示相对于当前服务器根路径的URL (不是当前应用的根目录)。以“http"//”开头，表示一个完整路径。
+http://localhost/
+目标组件不必是同一服务器上的同一个web应用的组件，它可以是任意一个有效网页。
+
+```java
+java.lang.IllegalStateException: Cannot call sendRedirect() after the response has been committed
+```
+
+
+
+## 页面跳转之间的区别
+
+转发、定时跳转、重定向 这三种方法均可以用来进行页面的跳转
+
+联系：都是用来进行页面跳转的
+
+区别：
+
+1.重定向的状态码是302，其他两种状态码是200
+
+2.转发是发送了一次请求，其他都是发送两次请求
+
+3.转发可以共享request域，其他是不可以共享的
+
+4.转发只可以在当前应用下，另外两种技术没有任何限制
+
+5.转发是request对象介导的，其他两种是response介导的
+
+
+
+```java
+@WebServlet("/login")
+public class LoginServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //获取请求参数
+        response.setContentType("text/html;charset=utf-8");
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        if("admin".equals(username) && "admin".equals(password)){
+            //表示登录成功
+            response.getWriter().println("登录成功，即将跳转至个人主页......");
+            //发送一个refresh响应头，高速浏览器去重新发起新的请求
+            //response.setHeader("refresh", "3;url=" + request.getContextPath() + "/success.html");
+            response.sendRedirect(request.getContextPath() + "/success.html");
+        }
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+## response细节
+
+getOutputStream和getWriter方法分别用于得到输出二进制数据、输出文本数据的ServletOuputStream、Printwriter对象。
+getOutputStream和getWriter这两个方法互相排斥，调用了其中的任何一个方法后，就不能再调用另一方法。  会抛异常。
+Servlet程序向ServletOutputStream或PrintWriter对象中写入的数据将被Servlet引擎从response里面获取，Servlet引擎将这些数据当作响应消息的正文，然后再与响应状态行和各响应头组合后输出到客户端。 
+Serlvet的service方法结束后，Servlet引擎将检查getWriter或getOutputStream方法返回的输出流对象是否已经调用过close方法，如果没有，Servlet引擎将调用close方法关闭该输出流对象。
+
+```java
+java.lang.IllegalStateException: getWriter() has already been called for this response
+```
+
+ 
+
+说明：
+
+凡是关于页面相关的技术，比如转发、跳转、重定向还有后面的jsp等，
+
+对大家的要求是了解即可
+
+## 下载（使用场景不多）
+
+首先对于浏览器来说，浏览器具有如下行为：
+
+对于自己可以处理的文件，执行打开操作；对于自己无法处理的文件，那么执行下载操作，比如访问zip文件等。
+
+指的是针对浏览器可以打开的部分文件，如果我希望浏览器可以执行下载操作，可以通过设置一个响应头，告知浏览器去执行下载而不是打开。
+
+比如图片，正常情况下是会执行打开操作的，但是设置一个下载响应头，那么浏览器就会执行下载操作，而不是打开。
+
+
+
+```java
+@WebServlet("/down")
+public class DownloadServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //当访问/down的时候，会把2.jpeg下载到本地
+        //下载首先也要拿到文件的流，只需要加一个响应头就可以实现下载
+        //response.setHeader("Content-Disposition", "attachment;filename=2.jpeg");
+        ServletOutputStream outputStream = response.getOutputStream();
+        String realPath = getServletContext().getRealPath("2.jpeg");
+        FileInputStream inputStream = new FileInputStream(new File(realPath));
+        int length = 0;
+        byte[] bytes = new byte[1024];
+        while ((length = inputStream.read(bytes)) != -1){
+            outputStream.write(bytes, 0, length);
+        }
+        inputStream.close();
+        outputStream.close();
+    }
+}
+```
+
+使用场景：
+
+后台管理系统的导出数据功能
+
+
+
+最后一步需要使用下载响应头
+
+
+
+使用第三方的jar包来将数据写入到excel中，最后一步，需要设置该响应头，将文件下载到本地硬盘上面来。
+
+
+
+```html
+<a href="/response_war_exploded/stream">通过servlet访问图片</a>
+<a href="/response_war_exploded/down">下载图片</a>
+```
+
+关于显示图片和下载图片的代码非常类似，可不可以将两个servlet进行合并呢？
+
+里面的代码其实也可以合并
+
+
+
+如何把多个servlet合并到一个servlet？
+
+为什么要这么做？
+
+软件设计里面，原则：高内聚、低耦合。功能上接近的代码应该尽可能放在一起。无关的代码应该尽可能分开
+
+比如项目已一，电商，后台，管理员模块、用户模块、商品模块、订单模块
+
+每个模块里面又有很多的功能点，比如管理员的新增、查询、修改、删除等功能，每个功能点都对应一个servlet，那么整个项目servlet将会非常多，后续进行查找，可以将相关的放置再一起，比如新建一个AdminServlet专门用来处理管理员模块的功能
+
+
+
+
+
+如何合并呢？
+
+1.一个servlet设置多个url-pattern
+
+2.通过修改地址来实现
+
+/response_war_exploded/pic/down 下载图片
+
+/response_war_exploded/pic/view  显示图片
+
+设置一个url-pattern为  /pic/*即可
+
+
+
+# FileUpload
+
+本地硬盘上面的文件上传到服务器的电脑上面，在服务器的电脑上面保存下来。
+
+比如微信头像修改
+
+选择本地的一张图片、上传到微信服务器上面去了
+
+接下来今后在此访问头像，那么显示的都是上传修改之后的头像
+
+
+
+将文件的二进制数据传输给服务器。
+
+如何传输呢？
+
+HTTP请求报文，文件只能放在请求报文的请求体中
+
+
+
+java开发者来说，服务器怎么去处理？
+
+你需要去拿到请求体里面的数据，然后做对应的处理，比如保存到本地硬盘上面
+
+
+
+需要我们java开发者关注的事情其实很少
+
+1.首先请求报文的生成、构建不需要我们去做，浏览器会帮助我们将文件的数据放置到请求报文的请求体中
+
+2.请求报文到达服务器之后，服务器会帮我们把请求报文解析成request对象，所以此时请求体里面的数据也会在request对象中
+
+**3.需要java开发者去做的事情，根据request给我们提供的方法，获取到请求体部分，然后去做对应的处理（比如本地IO流等）**
+
+
+
+
+
+## 文件上传概述
+
+实现web开发中的文件上传功能，需完成如下二步操作：
+在web页面中添加上传输入项
+在servlet中读取上传文件的数据，并保存到服务器硬盘中。
+如何在web页面中添加上传输入项?
+`<input type="file">`标签用于在web页面中添加文件上传输入项，设置文件上传输入项时须注意：
+1、必须要设置input输入项的name属性，否则浏览器将不会发送上传文件的数据。
+２、必须把form的enctype属值设为multipart/form-data.设置该值后，浏览器在上传文件时，将把文件数据附带在http请求消息体中，并使用ＭＩＭＥ协议对上传的文件进行描述，以方便接收方对上传数据进行解析和处理。
+3、表单的提交方式要是post
+
+
+
+如何在Servlet中读取文件上传数据，并保存到本地硬盘中?
+Request对象提供了一个getInputStream方法，通过这个方法可以读取到客户端提交过来的数据。但由于用户可能会同时上传多个文件，在servlet端编程直接读取上传数据，并分别解析出相应的文件数据是一项非常麻烦的工作，示例。
+为方便用户处理文件上传数据，Apache 开源组织提供了一个用来处理表单文件上传的一个开源组件（ Commons-fileupload ），该组件性能优异，并且其API使用极其简单，可以让开发人员轻松实现web文件上传功能，因此在web开发中实现文件上传功能，通常使用Commons-fileupload组件实现。
+使用Commons-fileupload组件实现文件上传，需要导入该组件相应的支撑jar包：Commons-fileupload和commons-io。commons-io 不属于文件上传组件的开发jar文件，但Commons-fileupload 组件从1.1 版本开始，它工作时需要commons-io包的支持。
+
+
+
+实现步骤
+１、创建DiskFileItemFactory对象，设置缓冲区大小和临时文件目录
+２、使用DiskFileItemFactory 对象创建ServletFileUpload对象，并设置上传文件的大小限制。
+３、调用ServletFileUpload.parseRequest方法解析request对象，得到一个保存了所有上传内容的List对象。
+４、对list进行迭代，每迭代一个FileItem对象，调用其isFormField方法判断是否是上传文件
+True 为普通表单字段，则调用getFieldName、getString方法得到字段名和字段值
+False 为上传文件，则调用getInputStream方法得到数据输入流，从而读取上传数据。
+编码实现文件上传
+
+
+
+核心API—DiskFileItemFactory
+
+DiskFileItemFactory 是创建 FileItem 对象的工厂，这个工厂类常用方法：
+public DiskFileItemFactory(int sizeThreshold, java.io.File repository) 
+构造函数
+
+public void setSizeThreshold(int sizeThreshold) 
+设置内存缓冲区的大小，默认值为10K。当上传文件大于缓冲区大小时， fileupload组件将使用临时文件缓存上传文件。
+
+public void setRepository(java.io.File repository) 
+指定临时文件目录，默认值为System.getProperty("java.io.tmpdir").
+
+
+
+核心API—ServletFileUpload
+
+ServletFileUpload 负责处理上传的文件数据，并将表单中每个输入项封装成一个 FileItem 对象中。常用方法有：
+boolean isMultipartContent(HttpServletRequest request) 
+判断上传表单是否为multipart/form-data类型
+List parseRequest(HttpServletRequest request)
+解析request对象，并把表单中的每一个输入项包装成一个fileItem 对象，并返回一个保存了所有FileItem的list集合。 
+setFileSizeMax(long fileSizeMax)
+设置单个上传文件的最大值bytes
+setSizeMax(long sizeMax) 
+设置上传文件总量的最大值(多个文件同时上传时文件最大值的总和)
+setHeaderEncoding(java.lang.String encoding)
+设置编码格式，解决上传文件名乱码问题
+
+
+
+核心API—FileItem
+
+FileItem 用来表示文件上传表单中的一个上传文件对象或者普通表单对象
+boolean  isFormField() 判断FileItem是一个文件上传对象还是普通表单对象
+如果判断是一个普通表单对象
+String   getFieldName()  获得普通表单对象的name属性
+String  getString(String encoding) 获得普通表单对象的value属性
+如果判断是一个文件上传对象
+String  getName() 获得上传文件的文件名（有些浏览器会携带客户端路径）
+InputStream getInputStream()  获得上传文件的输入流
+delete()  在关闭FileItem输入流后，删除临时文件
+
+
+
+上传文件的存放问题
+
+文件存放位置
+为保证服务器安全，上传文件应保存在应用程序的WEB-INF目录下，或者不受WEB服务器管理的目录。
+为防止多用户上传相同文件名的文件，而导致文件覆盖的情况发生，文件上传程序应保证上传文件具有唯一文件名。
+为防止单个目录下文件过多，影响文件读写速度，处理上传文件的程序应根据可能的文件上传总量，选择合适的目录结构生成算法，将上传文件分散存储。
+
+
+
+## 文件上传准备工作
+
+1.form表单 method=post
+
+2.input type=file
+
+```html
+<form action="/app/upload" method="post">
+    <input type="file" name="image"><br>
+    <input type="submit">
+</form>
+```
+
+紧接着点击提交，会发送请求
+
+![image-20210510160637934](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210510160637934.png)
+
+关注两个东西：
+
+1.请求体里面的内容，没有上传文件，只是上传了文件的名称
+
+2.Content-Length：12 进一步验证我们的猜想，的确上传了文件的名称，没有上传文件的内容
+
+
+
+实际上，表单默认情况下是以key=value形式来进行提交数据，但是这种形式是无法进行文件上传的。
+
+需要将参数的传递格式改一下。需要设置一个enctype=multipart/form-data
+
+
+
+继续处理：
+
+需要大家去从request中获取到请求体部分。
+
+```java
+package com.cskaoyan.upload;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+@WebServlet("/upload")
+public class UploadServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //需要去从request中获取到请求体
+        ServletInputStream inputStream = request.getInputStream();
+        // 需要将图片保存在本地硬盘上面 输出流
+        //比如放置在部署目录image目录下
+        String realPath = getServletContext().getRealPath("image/2.jpeg");
+        File file = new File(realPath);
+        //下面的代码是为了保障父级目录一定会存在
+        if(!file.getParentFile().exists()){
+            //凡是该文件的上级所有目录，如果不存在，都会递归创建
+            file.getParentFile().mkdirs();
+        }
+        FileOutputStream outputStream = new FileOutputStream(file);
+        //IO流场景
+        int length = 0;
+        byte[] bytes = new byte[1024];
+        while ((length = inputStream.read(bytes)) != -1){
+            outputStream.write(bytes, 0, length);
+        }
+        inputStream.close();
+        outputStream.close();
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+遇到了另外一个问题。
+
+
+
+## 遇到的问题
+
+### 问题一：仅上传文件名，不上传文件内容
+
+```html
+<form action="/app/upload" enctype="multipart/form-data" method="post">
+    <input type="file" name="image"><br>
+    <input type="submit">
+</form>
+```
+
+
+
+### 问题二：二进制文件损坏
+
+怎么去排查呢？为什么呢？
+
+从另外一个角度去查找。
+
+利用文本文件来排查。
+
+
+
+![image-20210510162224403](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210510162224403.png)
+
+文件上传之后，会出多来一部分符号。
+
+这些字符直接写入到二进制文件里面，然后导致了文件的损坏。
+
+
+
+### 问题三：为什么会有这个东西？如何去解决？
+
+如果在上传文件的同时，还引入了表单数据
+
+```
+------WebKitFormBoundarypApeFoIUwqbxbdpd
+Content-Disposition: form-data; name="username"
+
+admin
+------WebKitFormBoundarypApeFoIUwqbxbdpd
+Content-Disposition: form-data; name="image"; filename="1.txt"
+Content-Type: text/plain
+
+hello
+------WebKitFormBoundarypApeFoIUwqbxbdpd--
+```
+
+全部数据都进入到了文件中，并且这些符号并不是毫无意义，其实是利用这些符号进行区域的分割.
+
+
+
+如何去解决呢?
+
+可以通过去分割webkitformboundary这种形式来进行分割数据,取出来里面的参数.
+
+实际操作难度是非常大的
+
+市面上已经存在了很成熟的解决方案。
+
+使用jar包
+
+### 问题四:之前获取请求参数的方法也用不了
+
+无法获取到请求参数.
+
+原因:进能够获取key=value型数据,引入文件上传之后,此时数据格式也不再是key=value型了.
+
+
+
+
+
+总结以下:
+
+一切的根源在于引入了`enctype=multipart/form-data`
+
+如果没有引入,此时请求参数是以key=value型进行提交的,获取请求参数是正常的,但是无法进行文件的上传,只会上传文件的名称
+
+引入,可以上传文件了,但是此时二进制文件会损坏,文本文件会多出来一部分内容,获取请求参数的方法获取不到请求参数,归根结底原因在于为了能够上传文件,那么必须要改变请求体里面参数的数据格式,利用这些符号来进行分割各个部分.
+
+## Commons-FileUpload组件（了解即可）
+
+**引入组件之前的部分，是需要大家重点去掌握的，引入组件之后，其实只是要求大家能够根据API官方文档去解决实际应用中文件上传的功能即可。**
+
+[官方网站](http://commons.apache.org/proper/commons-fileupload/)
+
+```java
+@WebServlet("/upload2")
+public class UploadServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html;charset=utf-8");
+        boolean multipartContent = ServletFileUpload.isMultipartContent(request);
+        if(!multipartContent){
+            //如果没有包含上传的文件，直接返回即可
+            response.getWriter().println("没有包含上传的文件");
+            return;
+        }
+        // 先创建一个DiskFileItemFactory
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        File repository = (File) getServletContext().getAttribute("javax.servlet.context.tempdir");
+        factory.setRepository(repository);
+        //该对象就是处理、解析请求的各个部分的核心组件对象
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        //这一步其实就是将前端页面里面提交的每一项封装成一个FileItem
+        //前端页面每出现一个input，那么就会有一个FileItem
+        try {
+            List<FileItem> items = upload.parseRequest(request);
+            for (FileItem item : items) {
+                //因为上传的文件处理逻辑和表单的处理逻辑不同，所以你应该分出来
+                if(item.isFormField()){
+                    processFormField(item);
+                }else {
+                    processUploadedFile(item);
+                }
+            }
+        } catch (FileUploadException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void processUploadedFile(FileItem item) {
+        String fieldName = item.getFieldName();
+        String fileName = item.getName();
+        String contentType = item.getContentType();
+        boolean isInMemory = item.isInMemory();
+        long sizeInBytes = item.getSize();
+        System.out.println(fieldName + ":" + fileName + ":" + contentType + ":" + isInMemory + ":" + sizeInBytes);
+        //还需要将文件保存在本地硬盘上面
+        String realPath = getServletContext().getRealPath("image/" + fileName);
+        File file = new File(realPath);
+        if(!file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+        try {
+            item.write(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //处理表单数据的逻辑，只希望拿到对应的键值对即可
+    private void processFormField(FileItem item) {
+        //表单的name属性以及它对应的值
+        String fieldName = item.getFieldName();
+        String value = item.getString("utf-8");//不传如编码方式会中文乱码
+        System.out.println(fieldName + ":" + value);
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+
+
+### 中文乱码问题
+
+1.表单中文
+
+​	如果乱码，那么不能够使用之前的request.setCharacterEncoding来设置了，原因其实在于请求体的数据结构发生了改变
+
+request.setCharacterEncoding仅对key=value生效。
+
+
+
+获取表单中的键值对时，不要用item.getString()，中文会乱码，使用带参数的方法传入正确的编码后就不会乱码。
+
+org.apache.commons.fileupload
+
+```
+public interface FileItem
+extends FileItemHeadersSupport
+```
+
+| `String` | `getFieldName()`Returns the name of the field in the multipart form corresponding to this file item. |
+| -------- | ------------------------------------------------------------ |
+| `String` | `getString(String encoding)`Returns the contents of the file item as a String, using the specified encoding. |
+
+
+
+2.文件名中文
+
+也是有乱码问题的。
+
+request.setCharacterEncoding可以解决文件名中文乱码问题
+
+或
+
+ServletFileUpload对象.setHeaderEncoding(String encoding)
+
+
+
+
+
+### 设置文件上传大小限制
+
+```java
+upload.setFileSizeMax(1024); //单位是byte
+//需要在List<FileItem> items = upload.parseRequest(request);之前设置文件大小限制
+```
+
+## 封装数据到JavaBean
+
+```java
+ServletFileUpload upload = new ServletFileUpload(factory);
+//解析请求
+Map<String, String> paramsMap = new HashMap<>();
+User user = new User();
+List<FileItem> items = null;
+try {
+    items = upload.parseRequest(request);
+    items.forEach(item->{
+        if (item.isFormField()) {
+            processFormField(item, paramsMap);
+        } else {
+            processUploadField(item, paramsMap);
+        }
+    });
+    BeanUtils.populate(user, paramsMap);
+} catch (Exception e) {
+    e.printStackTrace();
+}
+```
+
+
+
+假设用户，注册、基本信息、用户名、密码等、此外还有头像，头像保存在用户里面应该保存什么？路径
+
+这个头像路径是给浏览器用的，应该是/appname开头的网络地址
+
+
+
+# 乱码总结
+
+[URL含中文字符乱码](##URL含中文字符乱码)
+
+[post提请求交参数乱码](##获取请求参数中文乱码)
+
+[响应中文乱码](##中文乱码问题)
+
+[文件上传表单中文参数乱码](###设置文件上传大小限制)
+
+[文件上传中文文件名乱码](###设置文件上传大小限制)
+
 
 
