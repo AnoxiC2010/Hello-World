@@ -912,7 +912,7 @@ t.set("foo", "bar");//执行队列
 t.exec();//提交事务
 ```
 
-执行队列有返回值的话
+执行队列的命令有返回值的话
 
 ```java
 Transaction t = jedis.multi();
@@ -947,7 +947,7 @@ else
     t.set("key", "value");
 ```
 
-但是类似setnx等条件执行语句在事务间是支持的。
+但是类似setnx等条件执行语句在事务间是支持的。可以使用eval/ LUA脚本自定义命令。
 
 <mark>TODO : 这里有疑问，事务间t.get()不行，就不能用jedis.get()吗？</mark>
 
