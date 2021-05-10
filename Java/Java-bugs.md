@@ -88,6 +88,12 @@ IDEA
 
 不要在路径中使用空格
 
+# Java的诡异运行结果
+
+当代码运行结果和自我预测的结果不一致时，一定是我的认知浅薄。
+
+但这些细微之处都太秃废精力，好像躺下...求包养...在这个宇宙online虚拟机中，迟早都会被垃圾回收掉的，这短暂的生命周期里，就没有个对象考虑收留下吗，我会翻跟头，会喷火，养的好的话还会升级，解锁新技能...
+
 # <mark>IDEA和Tomcat环境中 代码运行矛盾</mark>
 
 WIN10 - IDEA 2018.3.6 - tomcat 8.5.37 - Project SDK 1.8.0_281
@@ -110,11 +116,18 @@ public class Demo {
         System.out.println(r);//不乱(正常)
     }
 }
+/*
+testServlet2 : 顺便中文乱码测试
+testServlet2 : 顺便中文乱码测试
+testServlet2 : 椤轰究涓枃涔辩爜娴嬭瘯
+testServlet2 : 顺便中文乱码测试
+*/
 ```
 
 IDEA 启动tomcat后 run/debug窗口输出
 
 ```java
+//使用UTF-8这个错误编码在中间环节编解码一次，输出反常
 @WebServlet("/testServlet2")
 public class TestServlet2 extends HttpServlet {
     @Override
@@ -132,6 +145,73 @@ public class TestServlet2 extends HttpServlet {
         resp.getWriter().println(r);
     }
 }
+/*Debug Output窗口输出：
+TestServlet2.doGet
+testServlet2 : 顺便中文乱码测试
+testServlet2 : 顺便中文乱码测试
+testServlet2 : ??????????????
+testServlet2 : 顺锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟?
+*/
+```
+
+```java
+//使用iso-8859-1这个错误编码在中间环节编解码一次，输出正常，和在IDEA普通demo中的结果一样
+@WebServlet("/testServlet2")
+public class TestServlet2 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("TestServlet2.doGet");
+        resp.setCharacterEncoding("gbk");
+        String s = "testServlet2 : 顺便中文乱码测试";
+        System.out.println(s);
+         String r = new String(s.getBytes(), "gbk");
+        System.out.println(r);//不乱，说明默认编码为gbk
+        String r = new String(s.getBytes(), "iso-8859-1");
+        System.out.println(r);//乱(正常，其实从乱码的表现来看，和demo比已经不正常了，但是这里必须乱码是肯定的)
+        r = new String(r.getBytes("iso-8859-1"), "gbk");
+        System.out.println(r);//乱(反常)！！！！
+        resp.getWriter().println(r);
+    }
+}
+/*Debug Output窗口输出：
+TestServlet2.doGet
+testServlet2 : 顺便中文乱码测试
+testServlet2 : 顺便中文乱码测试
+testServlet2 : ??±?????????????
+testServlet2 : 顺便中文乱码测试
+*/
+```
+
+以上结果看来问题出新在new String(byte[] bytes, String charsetName)方法，查看源码
+
+```
+/**
+     * Constructs a new {@code String} by decoding the specified array of bytes
+     * using the specified {@linkplain java.nio.charset.Charset charset}.  The
+     * length of the new {@code String} is a function of the charset, and hence
+     * may not be equal to the length of the byte array.
+     * 说给这个构造的bytes[]和charsetName不一致时，行为就暧昧不明了，结果就不能按常理预料了，所以没事别瞎搞就没这些个幺蛾子了，再深入的还得往底层看...先躺下了
+     * <p> The behavior of this constructor when the given bytes are not valid
+     * in the given charset is unspecified.  The {@link
+     * java.nio.charset.CharsetDecoder} class should be used when more control
+     * over the decoding process is required.
+     *
+     * @param  bytes
+     *         The bytes to be decoded into characters
+     *
+     * @param  charsetName
+     *         The name of a supported {@linkplain java.nio.charset.Charset
+     *         charset}
+     *
+     * @throws  UnsupportedEncodingException
+     *          If the named charset is not supported
+     *
+     * @since  JDK1.1
+     */
+public String(byte bytes[], String charsetName)
+            throws UnsupportedEncodingException {
+        this(bytes, 0, bytes.length, charsetName);
+    }
 ```
 
 
