@@ -208,7 +208,7 @@
 | portable                   | 可移植的                               |
 | suffice                    | 足够                                   |
 | archetype                  | 典型                                   |
-|                            |                                        |
+| alleviate                  | 减轻，缓和                             |
 |                            |                                        |
 |                            |                                        |
 |                            |                                        |
@@ -218,16 +218,6 @@
 |                            |                                        |
 |                            |                                        |
 | end                        |                                        |
-
-啊呀<small>copyright</small>
-
-<del>hello</del>
-
-<ins>world</ins>
-
-<progress value=22 max= 100></progress>
-
-<meter>90</meter>
 
 
 
