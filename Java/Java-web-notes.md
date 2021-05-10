@@ -2576,7 +2576,124 @@ servlet1即可
 
 
 
+## 转发和包含
+
+一个Servlet对象无法获得另一个Servelt对象的引用；如果需要多个Servet组件共同协作(数据传递)，只能使用Servelt规范为我们提供的两种方式：
+请求转发：Servlet(源组件)先对客户请求做一些预处理操作，然后把请求转发给其他web组件(目标组件)来完成包括生成响应结果在内的后续操作。
+包含：Servelt(源组件)把其他web组件(目标组件)生成的响应结果包含到自身的响应结果中。
+转发和包含的共同点
+源组件和目标组件处理的都是同一个客户请求，源组件和目标组件共享同一个ServeltRequest和ServletResponse对象
+目标组件都可以为Servlet、JSP或HTML文档
+都依赖 javax.servlet.RequestDispatcher接口
+
+
+
+**RequestDispather**
+
+表示请求分发器，它有两个方法：
+forward():把请求转发给目标组件
+public void forward(ServletRequest request,ServletResponse response)
+             throws ServletException,java.io.IOException
+include():包含目标组件的响应结果
+public void include(ServletRequest request,ServletResponse response)
+             throws ServletException,java.io.IOException
+得到RequestDispatcher对象
+1、ServletContext对象的getRequestDispather(String path1)
+Path1 必须即以”/”开头，若用相对路径会抛出异常IllegalArgumentException
+
+```
+当前的servlet1 : @WebServlet("/test/testServlet1")
+转发到servlet2 : @WebServlet("/testServlet2")
+正确 : request.getRequestDispatcher("/testServlet2")
+ServletContext对象获取的getRequestDispatcher方法，只能使用/开始的基于应用目录的绝对路径
+```
+
+```
+HTTP Status 500 – Internal Server Error
+Message Path [test/testServlet2] does not start with a "/" character
+
+Exception
+java.lang.IllegalArgumentException: Path [test/testServlet2] does not start with a "/" character
+```
+
+2、ServletRequest对象的getRequestDispatcher(String path2)
+path2可以用绝对路径也可以用相对路径
+
+- 相对路径->是相对当前servlet的路径
+
+  ```
+  当前的servlet1 : @WebServlet("/test/testServlet1")
+  转发到servlet2 : @WebServlet("/testServlet2")
+  错误 : request.getRequestDispatcher("testServlet2")
+  正确 : request.getRequestDispatcher("../testServlet2")
+  ```
+
+- 绝对路径
+
+  ```
+  当前的servlet1 : @WebServlet("/test/testServlet1")
+  转发到servlet2 : @WebServlet("/testServlet2")
+  正确 : request.getRequestDispatcher("/testServlet2")
+  ```
+
+
+
+
+```
+1.请求数据
+2.控制台与网页显示数据
+3.Include包含网页时，设置头信息无效
+4.request.getContextPath();
+5.重定向原理及实现
+```
+
+
+
+
+
 ## 转发
+
+dispatcher.forward(request,response)的处理流程：
+1、清空用于存放响应正文数据的缓冲区
+2、如果目标组件为Servlet或JSP，tomcat就调用它们，把它们产生的响应结果发送到客户端；如果目标组件为文件系统中的静态HTML文档，tomcat就读取文档中的数据并把它发送给客户端。
+特点：
+1、由于forward()方法先清空用于存放响应正文数据的缓冲区，因此源组件生成的响应结果（无论转发前后）不会被发送到客户端，只有目标组件生成的响应结果才会被送到客户端。
+2、如果源组件在进行请求转发之前，已经提交了响应结果（如调用了response的flush或close方法），那么forward（）方法会抛出IllegalStateException。为了避免该异常，不应该在源组件中提交响应结果。
+
+```java
+public class CheckServlet extends HttpServlet {
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+        String username = request.getParameter("username");
+        String message = null;
+        if(username==null){
+            message = "Please input username!";
+        }else{
+            message = "Hello,"+username;
+        }
+        request.setAttribute("msg",message);
+
+        RequestDispatcher dispatcher = getServletContext().getRequestDispatcher("/upload.html");
+        PrintWriter out = response.getWriter();
+        out.println("Output from CheckServlet before forwarding request.1");
+        System.out.println("Output form CheckServlet before forwarding request.2");
+        dispatcher.forward(request, response);
+        out.println("Output from CheckServlet after forwarding request.1");
+        System.out.println("Output form CheckServlet after forwarding request.2");
+
+    }
+    -------------------------------------------------------------------------------
+        public class OutputServlet extends HttpServlet {
+
+            public void doGet(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
+                String message = (String) request.getAttribute("msg");
+                response.getWriter().println(message);
+            }
+```
+
+
 
 要比了解要稍微多一些。
 
@@ -2642,6 +2759,47 @@ public class RegisterServlet5 extends HttpServlet {
 
 
 
+## 包含
+
+include()方法的处理流程：
+1、如果目标组件为Servlet或JSP，就执行它们，并把它们产生的响应正文添加到源组件的响应结果中；如果目标组件为HTML文档，就直接把文档的内容添加到源组件的响应结果中。
+特点：
+1、源组件与被包含的目标组件的输出数据都会被添加到响应结果中。
+2、在目标组件中对响应状态代码或者响应头所做的修改都会被忽略。
+
+```java
+public class MainServlet extends HttpServlet {
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        ServletContext context= getServletContext();
+        RequestDispatcher headDispatcher = context.getRequestDispatcher("/header.html");
+        RequestDispatcher greetDispatcher = context.getRequestDispatcher("/servlet/GreetServlet");
+        RequestDispatcher footDispatcher = context.getRequestDispatcher("/footer.html");
+        headDispatcher.include(request, response);
+        greetDispatcher.include(request, response);
+        footDispatcher.include(request, response);
+        out.close();
+    }
+
+}
+--------------------------------------------
+    public class GreetServlet extends HttpServlet {
+        public void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+            response.getWriter().write("greet<hr/>");
+        }
+    }
+```
+
+
+
+## 请求范围
+
+web应用范围内的共享数据作为ServeltContext对象的属性而存在(setAttribute)，只要共享ServletContext对象也就共享了其数据。
+请求范围内的共享数据作为ServletRequest对象的属性而存在(setAttribute)，只要共享ServletRequest对象也就共享了其数据。
+
 ## request域共享空间
 
 Context域共享空间、request域共享空间
@@ -2681,55 +2839,3 @@ context域很大，request域很小；假设如果两个组件只是在一个请
 请求被响应了，request就销毁了，但是context依然在
 
 
-
-
-
-# RequestDispather
-
-表示请求分发器，它有两个方法：
-forward():把请求转发给目标组件
-public void forward(ServletRequest request,ServletResponse response)
-             throws ServletException,java.io.IOException
-include():包含目标组件的响应结果
-public void include(ServletRequest request,ServletResponse response)
-             throws ServletException,java.io.IOException
-得到RequestDispatcher对象
-1、ServletContext对象的getRequestDispather(String path1)
-Path1 必须即以”/”开头，若用相对路径会抛出异常IllegalArgumentException
-
-```
-当前的servlet1 : @WebServlet("/test/testServlet1")
-转发到servlet2 : @WebServlet("/testServlet2")
-正确 : request.getRequestDispatcher("/testServlet2")
-ServletContext对象获取的getRequestDispatcher方法，只能使用/开始的基于应用目录的绝对路径
-```
-
-```
-HTTP Status 500 – Internal Server Error
-Message Path [test/testServlet2] does not start with a "/" character
-
-Exception
-java.lang.IllegalArgumentException: Path [test/testServlet2] does not start with a "/" character
-```
-
-2、ServletRequest对象的getRequestDispatcher(String path2)
-path2可以用绝对路径也可以用相对路径
-
-- 相对路径->是相对当前servlet的路径
-
-  ```
-  当前的servlet1 : @WebServlet("/test/testServlet1")
-  转发到servlet2 : @WebServlet("/testServlet2")
-  错误 : request.getRequestDispatcher("testServlet2")
-  正确 : request.getRequestDispatcher("../testServlet2")
-  ```
-
-- 绝对路径
-
-  ```
-  当前的servlet1 : @WebServlet("/test/testServlet1")
-  转发到servlet2 : @WebServlet("/testServlet2")
-  正确 : request.getRequestDispatcher("/testServlet2")
-  ```
-
-  
