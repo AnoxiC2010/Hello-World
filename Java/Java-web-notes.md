@@ -2039,7 +2039,7 @@ InputStream in=ServletDemo.getClass().getClassLoader().getResourceAsStream("com/
 - Project Structure -> Facets -> + web
 
 - Project Structure -> Artifacts -> + Web Application: Exploded -> From Modules
-- Project Structure -> Modules -> Dependencies -> + Lrbrary -> Tomcat
+- Project Structure -> Modules -> Dependencies -> + Library -> Tomcat
 - Edit Configurations -> + Tomcat -> Local -> Deployment -> + Artifact
 
 
@@ -3713,10 +3713,10 @@ hello
 @WebServlet("/upload2")
 public class UploadServlet2 extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/html;charset=utf-8");
+        response.setContentType("text/html;charset=utf-8");		
         boolean multipartContent = ServletFileUpload.isMultipartContent(request);
         if(!multipartContent){
-            //如果没有包含上传的文件，直接返回即可
+            //如果没有包含上传的文件，直接返回即可,其实这个只能判断是不是multi/form-data，不能判断是不是没有上传，判断没有上传需要在后面判断item.getSize()方法看看文件大小是否为0
             response.getWriter().println("没有包含上传的文件");
             return;
         }
@@ -3828,28 +3828,472 @@ upload.setFileSizeMax(1024); //单位是byte
 
 ## 封装数据到JavaBean
 
+拓展性内容。理解起来有点困难，但是大家心态放平。不是说要求全部掌握，尽自己所能，掌握多少是多少
+
+假设用户，注册、基本信息、用户名、密码等、此外还有头像，头像保存在用户里面应该保存什么？路径
+
 ```java
-ServletFileUpload upload = new ServletFileUpload(factory);
-//解析请求
-Map<String, String> paramsMap = new HashMap<>();
-User user = new User();
-List<FileItem> items = null;
-try {
-    items = upload.parseRequest(request);
-    items.forEach(item->{
-        if (item.isFormField()) {
-            processFormField(item, paramsMap);
-        } else {
-            processUploadField(item, paramsMap);
+@WebServlet("/upload3")
+public class UploadServlet3 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("utf-8");
+        response.setContentType("text/html;charset=utf-8");
+        boolean multipartContent = ServletFileUpload.isMultipartContent(request);
+        if(!multipartContent){
+            //如果没有包含上传的文件，直接返回即可
+            response.getWriter().println("没有包含上传的文件");
+            return;
         }
-    });
-    BeanUtils.populate(user, paramsMap);
-} catch (Exception e) {
-    e.printStackTrace();
+        // 先创建一个DiskFileItemFactory
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        File repository = (File) getServletContext().getAttribute("javax.servlet.context.tempdir");
+        factory.setRepository(repository);
+        //该对象就是处理、解析请求的各个部分的核心组件对象
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        //这一步其实就是将前端页面里面提交的每一项封装成一个FileItem
+        //前端页面每出现一个input，那么就会有一个FileItem
+        User user = new User();
+        try {
+            //针对uploadHandler处理器进行设置，文件上传大小的限制
+            // bytes
+            //upload.setFileSizeMax(1024);
+            List<FileItem> items = upload.parseRequest(request);
+
+            for (FileItem item : items) {
+                //因为上传的文件处理逻辑和表单的处理逻辑不同，所以你应该分出来
+                if(item.isFormField()){
+                    processFormField(item, user);
+                }else {
+                    processUploadedFile(item, user);
+                }
+            }
+        } catch (FileUploadException e) {
+            e.printStackTrace();
+        }
+        System.out.println(user);
+
+    }
+
+    private void processUploadedFile(FileItem item, User user) {
+        String fieldName = item.getFieldName();
+        String fileName = item.getName();
+        String contentType = item.getContentType();
+        boolean isInMemory = item.isInMemory();
+        long sizeInBytes = item.getSize();
+        System.out.println(fieldName + ":" + fileName + ":" + contentType + ":" + isInMemory + ":" + sizeInBytes);
+        //还需要将文件保存在本地硬盘上面
+        //比如，针对用户上传的头像，接下来上传成功，肯定希望再次去访问它，所以应该保存网络路径
+        String realPath = getServletContext().getRealPath("image/" + fileName);
+        File file = new File(realPath);
+        if(!file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+        try {
+            item.write(file);
+            user.setImage(realPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //处理表单数据的逻辑，只希望拿到对应的键值对即可
+    private void processFormField(FileItem item, User user) {
+        //表单的name属性以及它对应的值
+        String fieldName = item.getFieldName();
+        String value = null;
+        try {
+            value = item.getString("utf-8");
+            if("username".equals(fieldName)){
+                user.setUsername(value);
+            }else if("password".equals(fieldName)){
+                user.setPassword(value);
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        System.out.println(fieldName + ":" + value);
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+## 封装数据优化
+
+可以使用BeanUtils，需要一个map
+
+```java
+@WebServlet("/upload4")
+public class UploadServlet4 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("utf-8");
+        response.setContentType("text/html;charset=utf-8");
+        boolean multipartContent = ServletFileUpload.isMultipartContent(request);
+        if(!multipartContent){
+            //如果没有包含上传的文件，直接返回即可
+            response.getWriter().println("没有包含上传的文件");
+            return;
+        }
+        // 先创建一个DiskFileItemFactory
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        File repository = (File) getServletContext().getAttribute("javax.servlet.context.tempdir");
+        factory.setRepository(repository);
+        //该对象就是处理、解析请求的各个部分的核心组件对象
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        //这一步其实就是将前端页面里面提交的每一项封装成一个FileItem
+        //前端页面每出现一个input，那么就会有一个FileItem
+        Map<String, Object> params = new HashMap<>();
+        try {
+            //针对uploadHandler处理器进行设置，文件上传大小的限制
+            // bytes
+            //upload.setFileSizeMax(1024);
+            List<FileItem> items = upload.parseRequest(request);
+
+            for (FileItem item : items) {
+                //因为上传的文件处理逻辑和表单的处理逻辑不同，所以你应该分出来
+                if(item.isFormField()){
+                    processFormField(item, params);
+                }else {
+                    processUploadedFile(item, params);
+                }
+            }
+        } catch (FileUploadException e) {
+            e.printStackTrace();
+        }
+        User user = new User();
+        try {
+            BeanUtils.populate(user, params);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        System.out.println(user);
+    }
+
+    private void processUploadedFile(FileItem item, Map<String, Object> params) {
+        String fieldName = item.getFieldName();
+        String fileName = item.getName();
+        String contentType = item.getContentType();
+        boolean isInMemory = item.isInMemory();
+        long sizeInBytes = item.getSize();
+        System.out.println(fieldName + ":" + fileName + ":" + contentType + ":" + isInMemory + ":" + sizeInBytes);
+        //还需要将文件保存在本地硬盘上面
+        //比如，针对用户上传的头像，接下来上传成功，肯定希望再次去访问它，所以应该保存网络路径
+        String relativePath = "/image/" + fileName;
+        String realPath = getServletContext().getRealPath(relativePath);
+        File file = new File(realPath);
+        if(!file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+        try {
+            item.write(file);
+            //这里面不能存取绝对路径，为什么呢？
+            //你微信上传了一个照片，你是希望能够访问到该头像的  网络请求 传入一个相对路径
+            //图片存放在部署根目录的image目录下的  /应用名        /image/xxxx
+            params.put(fieldName, relativePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //处理表单数据的逻辑，只希望拿到对应的键值对即可
+    private void processFormField(FileItem item, Map<String, Object> params) {
+        //表单的name属性以及它对应的值
+        String fieldName = item.getFieldName();
+        String value = null;
+        try {
+            value = item.getString("utf-8");
+            params.put(fieldName, value);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        System.out.println(fieldName + ":" + value);
+    }
+}
+```
+
+## 进一步优化
+
+one more step
+
+比如用户上传头像
+
+比如商城发布商品
+
+90%以上的代码在进行用户头像上传以及商品发布的时候是一样的
+
+设置一个工具类，进行代码的复用
+
+```java
+public class FileUploadUtils {
+
+    public static Map<String, Object> parseRequest(HttpServletRequest request){
+        // 先创建一个DiskFileItemFactory
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        File repository = (File) request.getServletContext().getAttribute("javax.servlet.context.tempdir");
+        factory.setRepository(repository);
+        //该对象就是处理、解析请求的各个部分的核心组件对象
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        //这一步其实就是将前端页面里面提交的每一项封装成一个FileItem
+        //前端页面每出现一个input，那么就会有一个FileItem
+        Map<String, Object> params = new HashMap<>();
+        try {
+            //针对uploadHandler处理器进行设置，文件上传大小的限制
+            // bytes
+            //upload.setFileSizeMax(1024);
+            List<FileItem> items = upload.parseRequest(request);
+
+            for (FileItem item : items) {
+                //因为上传的文件处理逻辑和表单的处理逻辑不同，所以你应该分出来
+                if(item.isFormField()){
+                    processFormField(item, params);
+                }else {
+                    processUploadedFile(item, params, request);
+                }
+            }
+        } catch (FileUploadException e) {
+            e.printStackTrace();
+        }
+        return params;
+    }
+
+    private static void processUploadedFile(FileItem item, Map<String, Object> params, HttpServletRequest request) {
+        String fieldName = item.getFieldName();
+        String fileName = item.getName();
+        String contentType = item.getContentType();
+        boolean isInMemory = item.isInMemory();
+        long sizeInBytes = item.getSize();
+        System.out.println(fieldName + ":" + fileName + ":" + contentType + ":" + isInMemory + ":" + sizeInBytes);
+        //还需要将文件保存在本地硬盘上面
+        //比如，针对用户上传的头像，接下来上传成功，肯定希望再次去访问它，所以应该保存网络路径
+        String relativePath = "/image/" + fileName;
+        String realPath = request.getServletContext().getRealPath(relativePath);
+        File file = new File(realPath);
+        if(!file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+        try {
+            item.write(file);
+            //这里面不能存取绝对路径，为什么呢？
+            //你微信上传了一个照片，你是希望能够访问到该头像的  网络请求 传入一个相对路径
+            //图片存放在部署根目录的image目录下的  /应用名        /image/xxxx
+            params.put(fieldName, relativePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //处理表单数据的逻辑，只希望拿到对应的键值对即可
+    private static void processFormField(FileItem item, Map<String, Object> params) {
+        //表单的name属性以及它对应的值
+        String fieldName = item.getFieldName();
+        String value = null;
+        try {
+            value = item.getString("utf-8");
+            params.put(fieldName, value);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        System.out.println(fieldName + ":" + value);
+    }
+}
+```
+
+```java
+@WebServlet("/upload5")
+public class UploadServlet5 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("utf-8");
+        response.setContentType("text/html;charset=utf-8");
+        boolean multipartContent = ServletFileUpload.isMultipartContent(request);
+        if(!multipartContent){
+            //如果没有包含上传的文件，直接返回即可
+            response.getWriter().println("没有包含上传的文件");
+            return;
+        }
+
+        Map<String, Object> params = FileUploadUtils.parseRequest(request);
+        User user = new User();
+        try {
+            BeanUtils.populate(user, params);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
 }
 ```
 
 
+
+## 文件重名问题
+
+使用组件来进行文件上传的时候，组件默认情况是会忽略文件名相同的文件
+
+微信头像上传的时候，帅哥.jpg
+
+如何去解决文件的重名问题呢？
+
+改名。
+
+没有统一的标准。
+
+1.微信id  wxid  wxid + timestamp 形成文件名
+
+2.当前的时间戳 随即编号
+
+3.完全随即
+
+```java
+String uuid = UUID.randomUUID().toString();
+String fileName = item.getName();
+fileName = uuid + "-" + fileName;
+```
+
+
+
+## 目录内文件数过多的问题
+
+如果电脑性能不是特别好，某个盘符下面文件数非常多，硬盘转圈的声音，目录也在转圈
+
+比如有100万个文件
+
+
+
+
+
+网络请求也是相同
+
+访问某个文件，这个文件在该目录内，同时还有100多w其他的文件，就需要从100w个数据中找到对应的数据
+
+
+
+如何能够提升网络请求速度
+
+
+
+微信---每天用户会提交10亿张图片
+
+分流
+
+按照某种规则，创建很多目录
+
+1.按年月日来划分目录，一年12目录，每个月30小目录，也是可行的
+
+也是具有不稳定性的
+
+节假日、重大节日，某一天的图片量可能仍然是超过平时一周的图片量
+
+不均匀
+
+
+
+如何让文件存放均匀一些呢？
+
+散列
+
+hashcode
+
+文件名-----hashcode----------0x 0 	1	2	3	6	7	A	F	----file
+
+```java
+public class FileUploadUtils {
+
+    public static Map<String, Object> parseRequest(HttpServletRequest request){
+        // 先创建一个DiskFileItemFactory
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        File repository = (File) request.getServletContext().getAttribute("javax.servlet.context.tempdir");
+        factory.setRepository(repository);
+        //该对象就是处理、解析请求的各个部分的核心组件对象
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        //这一步其实就是将前端页面里面提交的每一项封装成一个FileItem
+        //前端页面每出现一个input，那么就会有一个FileItem
+        Map<String, Object> params = new HashMap<>();
+        try {
+            //针对uploadHandler处理器进行设置，文件上传大小的限制
+            // bytes
+            //upload.setFileSizeMax(1024);
+            List<FileItem> items = upload.parseRequest(request);
+
+            for (FileItem item : items) {
+                //因为上传的文件处理逻辑和表单的处理逻辑不同，所以你应该分出来
+                if(item.isFormField()){
+                    processFormField(item, params);
+                }else {
+                    processUploadedFile(item, params, request);
+                }
+            }
+        } catch (FileUploadException e) {
+            e.printStackTrace();
+        }
+        return params;
+    }
+
+    private static void processUploadedFile(FileItem item, Map<String, Object> params, HttpServletRequest request) {
+        String fieldName = item.getFieldName();
+        String uuid = UUID.randomUUID().toString();
+        String fileName = item.getName();
+        fileName = uuid + "-" + fileName;
+        String contentType = item.getContentType();
+        boolean isInMemory = item.isInMemory();
+        long sizeInBytes = item.getSize();
+        System.out.println(fieldName + ":" + fileName + ":" + contentType + ":" + isInMemory + ":" + sizeInBytes);
+        //还需要将文件保存在本地硬盘上面
+        //比如，针对用户上传的头像，接下来上传成功，肯定希望再次去访问它，所以应该保存网络路径
+        String basePath = "/image";
+        int hashCode = fileName.hashCode();
+        String hexString = Integer.toHexString(hashCode);
+        char[] chars = hexString.toCharArray();
+        for (char aChar : chars) {
+            basePath = basePath + "/" + aChar;
+        }
+        String relativePath = basePath  + "/" + fileName;
+        String realPath = request.getServletContext().getRealPath(relativePath);
+        File file = new File(realPath);
+        if(!file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+        try {
+            item.write(file);
+            //这里面不能存取绝对路径，为什么呢？
+            //你微信上传了一个照片，你是希望能够访问到该头像的  网络请求 传入一个相对路径
+            //图片存放在部署根目录的image目录下的  /应用名        /image/xxxx
+            params.put(fieldName, relativePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //处理表单数据的逻辑，只希望拿到对应的键值对即可
+    private static void processFormField(FileItem item, Map<String, Object> params) {
+        //表单的name属性以及它对应的值
+        String fieldName = item.getFieldName();
+        String value = null;
+        try {
+            value = item.getString("utf-8");
+            params.put(fieldName, value);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        System.out.println(fieldName + ":" + value);
+    }
+}
+```
+
+
+
+## 案例
+
+upload页面进行数据的上传，上传成功之后要求可以在另外一个页面进行数据的回显，图片要求可以显示出来
 
 假设用户，注册、基本信息、用户名、密码等、此外还有头像，头像保存在用户里面应该保存什么？路径
 
@@ -3868,6 +4312,641 @@ try {
 [文件上传表单中文参数乱码](###设置文件上传大小限制)
 
 [文件上传中文文件名乱码](###设置文件上传大小限制)
+
+
+
+
+
+# 会话技术
+
+会话，现实生活中就是交谈、对话。
+
+web访问过程中，会话的含义是指从打开浏览器页面开始，然后浏览网站的多个页面，然后最后结束，整个过程我们称之为一个会话。
+
+web访问过程中，每个用户都会产生一些数据，比如我添加的购物车商品、我的用户名，希望服务器可以给用户去存储一些数据，但是呢HTTP协议其实是一个无状态协议，决定了HTTP不能够给用户去存储数据的，矛盾的地方。需要去引入相应的会话技术，然后去解决这个问题。
+
+代码演示HTTP协议无状态性
+
+```java
+@WebServlet("/status")
+public class NonStatusServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //把HTTP请求报文打印一遍
+        //通过这个案例，我们不同用户访问当前页面，它的请求报文是完全相同的
+        //HTTP协议无状态性的一个体现，所有用户的HTTP请求报文都是完全相同的
+        //有没有疑惑？购物车如何实现的呢？服务器如何给我保存数据的呢？
+        //我在购物车里面添加了商品，下次访问发现这些商品还在
+        System.out.println(request.getMethod() + " " + request.getRequestURI() + " " + request.getProtocol());
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()){
+            String s = headerNames.nextElement();
+            System.out.println(s + ":" + request.getHeader(s));
+        }
+        System.out.println("================");
+    }
+}
+```
+
+
+
+## HTTP协议的状态性是如何保障服务器存储数据的呢
+
+既然HTTP协议是无状态性，那么服务器又是如何给客户端保存相应的数据的呢？
+
+但是我们在实际访问过程中，我们发现其实并没有相关的问题
+
+原因就在于其实HTTP协议引入了相关的会话技术。
+
+**对于标准的HTTP协议来说，的确是无状态性；的确没法帮助用户去存储一些数据**
+
+**我们是在HTTP协议的基础上引入了相关的会话技术，来让HTTP协议有了状态，能够帮助用户去保存相关数据。**
+
+会话技术可以分为两大类
+
+一类是客户端技术
+
+一类是服务器技术
+
+## Cookie
+
+客户端技术。数据的产生是在服务器上面的，数据产生之后，数据会伴随着**HTTP响应报文的响应头**传输给客户端，客户端会随即将该数据进行保存，接下来当客户端再次访问服务器时，那么他就会把该数据带回给服务器（**会以HTTP请求头的形式携带回来**），服务器通过取出来这个值，就可以知道来自于哪个客户端。
+
+
+
+![image-20210511112630228](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210511112630228.png)
+
+
+
+**cookie会话技术的本质：**
+
+**其实就是在HTTP协议中加入了cookie相关的请求头（cookie:key=value）和响应头(set-Cookie:key=value)**
+
+
+
+注意：cookie中不能有空格
+
+### 案例一
+
+用户登录，登录成功可以显示用户的用户名，使用cookie来实现
+
+```java
+@WebServlet("/login")
+public class LoginServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //先拿到用户提交过来的请求参数
+        response.setContentType("text/html;charset=utf-8");
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        //不做判断，都表示登录成功
+        //另外一个页面来显示用户名，所以也就是两个servlet之间进行username共享
+        //context域能不能用？不可以   usnermae-----xxxx
+        //request域可以用来进行用户名的共享 太小了，如果第三个页面也需要用
+        //你需要做的事情：发送一个set-Cookie：name=xxxx响应头
+        //再另外一个servlet中，需要去解析出Cookie：name=xxx请求头里面的数据
+        //利用之前学习的response以及request关于响应头、请求头相关api的确可以完成
+        //但是太过于复杂，
+        //EE规范同样给我们提供了非常方便的方法，我们只需要去按照这个规则去调用即可
+        //如果你希望发送一个set-Cookie响应头，那么你只需要去设置如下代码
+        Cookie cookie = new Cookie("username", username);
+        response.addCookie(cookie);
+        response.getWriter().println("登录成功，即将跳转至个人主页");
+        response.setHeader("refresh", "2;url=" + request.getContextPath() + "/info");
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+```java
+@WebServlet("/info")
+public class InfoServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html;charset=utf-8");
+        //如何去获取cookie呢，只需要去调用如下代码就可以解析Cookie请求头
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null){
+            for (Cookie cookie : cookies) {
+                if("username".equals(cookie.getName())){
+                    String value = cookie.getValue();
+                    response.getWriter().println("欢迎您, " + value);
+                }
+            }
+        }
+    }
+}
+```
+
+### 案例二
+
+显示用户的上次访问时间
+
+```java
+@WebServlet("/last")
+public class LastLoginServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //cookie值里面不能有空格
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null){
+            for (Cookie cookie : cookies) {
+                if("lastLogin".equals(cookie.getName())){
+                    String value = cookie.getValue();
+                    //这个方法可以将long类型的字符串转成long类型的数字
+                    long l = Long.parseLong(value);
+                    Date date = new Date(l);
+                    response.getWriter().println(date);
+                }
+            }
+        }
+
+        Cookie cookie = new Cookie("lastLogin", System.currentTimeMillis() + "");
+        response.addCookie(cookie);
+    }
+}
+```
+
+### 设置存活时间
+
+默认情况下，cookie其实是存在于浏览器的内存中，只是开启浏览器的这段时间内是有效的
+
+如果关闭浏览器，再重新打开，那么cookie失效
+
+
+
+可以设置一个正数的时间，表示cookie在硬盘存活多少秒
+
+```java
+cookie.setMaxAge(180);//单位 秒
+```
+
+
+
+如果设置的是负数，其实和没有设置是一样的，默认的情况，也就是存在于浏览器的内存中
+
+
+
+### 设置路径
+
+如果没有设置，那么表示的是当访问当前域名下所有资源都会携带cookie，如果希望访问指定路径才会携带cookie，则可以设置一个path
+
+比如设置访问html页面时携带cookie，访问js、css这些不去携带cookie
+
+```java
+@WebServlet("/path1")
+public class PathServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Cookie cookie = new Cookie("path", "path2");
+        //希望访问path2的时候才会携带cookie
+        cookie.setPath(request.getContextPath() + "/path2");
+        response.addCookie(cookie);
+    }
+}
+```
+
+```java
+@WebServlet("/path2")
+public class PathServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+### 删除cookie
+
+并没有提供一个专门用来删除cookie的方法，如果想删除cookie，其实就是设置MaxAge=0
+
+**注意：删除cookie的行为不是服务器去删除，而是服务器去给客户端发送一个消息，让客户端去删除。**
+
+
+
+对cookie执行任意操作设置之后，都需要再次去调用response.addCookie()，因为cookie存储在客户端的，只是去给客户端发送一个信号，让客户端去做某些事情。
+
+
+
+删除cookie时，还有一个注意点：
+
+**如果cookie设置了path，接下来在删除的时候，需要再把path再写一遍**
+
+```java
+@WebServlet("/path2")
+public class PathServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //希望在path2里面把"path", "path2"这个 cookie给删除
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null){
+            for (Cookie cookie : cookies) {
+                if("path".equals(cookie.getName())){
+                    System.out.println(cookie.getValue());
+                    cookie.setMaxAge(0);
+                    cookie.setPath(request.getContextPath() + "/path2");
+                    response.addCookie(cookie);
+                }
+            }
+        }
+    }
+}
+```
+
+### 设置域名
+
+关于cookie的域名，有一个大的前提
+
+cookie其实是不允许设置无关域名的cookie的，比如当前域名叫做localhost，你设置了一个域名为baidu.com的cookie，这是不允许的，浏览器也不会允许你设置成功，会拦截
+
+
+
+域名：baidu.com
+
+account.baidu.com属于baidu的吗，别人可以申请到这个域名吗？别人不可以申请到，这个域名还是属于baidu.com
+
+register.account.baidu.com 同理  也是属于baidu的，别人也是申请不到的
+
+如果你设置了一个父域名的cookie，那么当你访问子域名的资源时，该cookie会自动携带过去
+
+比如你设置了一个baidu.com域名的cookie，接下来当你访问account.baidu.com时，浏览器依然会携带cookie过去
+
+继承。
+
+
+
+注意：如果不setDomain 只有当前域名如aaa.com可以，sub.aaa.com不可以；但如果setDomain为aaa.com后aaa.com和sub.aaa.com都可以。
+
+```java
+@WebServlet("/domain2")
+public class DomainServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Cookie cookie = new Cookie("attribute", "aaa");
+        //注意：如果你设置该域名。那么一定不能在localhost、127.0.0.1主机下访问
+        //执行这个servlet时，不可以通过localhost:8080/app/domain2来执行
+        //应该通过http://aaa.com:8080/app/info
+        cookie.setDomain("aaa.com");
+        response.addCookie(cookie);
+    }
+}
+```
+
+### cookie的优缺点
+
+优点：
+
+1.cookie很小，很轻便
+
+2.cookie存储在客户端，可以很大程度减轻服务器的压力
+
+
+
+缺点：
+
+1.cookie很小，存储的数据容量有限制
+
+2.cookie的值只能是字符串，如果希望存储object，还需要转成字符串
+
+3.cookie数据存储在客户端，安全性要稍低
+
+
+
+如果有一小部分数据需要存储，并且数据也不是特别的敏感，那么就可以放在cookie中存储
+
+
+
+## Session
+
+服务器技术。当用户访问服务器时，服务器会给用户开辟一块内存空间，这个内存空间其实就专门用来给当前客户端来使用，接下来如果当前客户端需要进行数据的存取，那么你存取这个内存空间即可。
+
+### 概述
+
+客户端是如何和内存空间绑定关联在一起的？
+
+这块内存空间，应该是独一无二的，可以给这块内存空间设定一个ID编号，然后接下来将该ID编号通过cookie的形式返回给客户端
+
+客户端会将该ID保存，当下次再次访问服务器时，会把该ID携带回来，服务器通过去查找该ID，那么就可以知道这块内存空间在哪
+
+### session使用（session域）
+
+1.如何创建session？
+
+​	servletRequest里面给我们封装好了一个方法，我们只需要去调用即可
+
+​	
+
+```
+HttpSession getSession()
+```
+
+Returns the current session associated with this request, or if the request does not have a session, creates one.
+
+- **Returns:**
+
+  the `HttpSession` associated with this request
+
+- **See Also:**
+
+  [`getSession(boolean)`](http://tomcat.apache.org/tomcat-8.5-doc/servletapi/javax/servlet/http/HttpServletRequest.html#getSession(boolean))
+
+**总结一下：如果当前request有关联的sesison对象，那么直接返回，如果没有，那么创建一个**
+
+
+
+其实除了上面这个午参数的形式，还有一个有参数的形式
+
+```
+HttpSession getSession(boolean create)
+```
+
+Returns the current `HttpSession` associated with this request or, if there is no current session and `create` is true, returns a new session.
+
+If `create` is `false` and the request has no valid `HttpSession`, this method returns `null`.
+
+总结一下：**如果当前request有关联的session对象，那么直接返回**；如果没有，并且create是true，那么创建一个；如果此时create是false，那么直接返回null
+
+
+
+2.session的使用
+
+session的执行流程和context，session域。
+
+session对象中包含了一个map，如果你能够拿到同一个session对象，那么就可以拿到同一个map，就可以进行map的共享
+
+
+
+哪些情况下拿到的是同一个session对象呢？
+
+session是和浏览器关联的，如果是同一个浏览器，那么它进行的访问是不是用的都是一个session
+
+### 登录案例
+
+```java
+@WebServlet("/login")
+public class LoginServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html;charset=utf-8");
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        HttpSession session = request.getSession();
+        session.setAttribute("username", username);
+        response.getWriter().println("登录成功，即将跳转至个人主页");
+        response.setHeader("refresh", "2;url=" + request.getContextPath() + "/info");
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+```java
+@WebServlet("/info")
+public class InfoServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html;charset=utf-8");
+        //如何去获取cookie呢，只需要去调用如下代码就可以解析Cookie请求头
+        HttpSession session = request.getSession();
+        Object username = session.getAttribute("username");
+        response.getWriter().println("欢迎您，" + username);
+    }
+}
+```
+
+### getSession()执行逻辑
+
+判断有没有session，其实完全依赖于当前请**求是否携带了一个有效的Cookie:JSESSIONID=xxxx,**如果携带了，则根据这个id去到session列表中找到对应的session对象；如果没有携带该cookie头，那么就会创建一个session对象
+
+![image-20210511160303949](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210511160303949.png)
+
+
+
+### 关闭浏览器session会被销毁吗，数据会丢失吗
+
+```java
+@WebServlet("/session1")
+public class SessionServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //如何创建session对象呢？
+        //第一次访问当前servlet，当前request对象肯定没有关联的session对象，所以肯定会创建一个
+        // Set-Cookie: JSESSIONID=57E9B12CF320ACCDF39E376F04306196; Path=/session_war_exploded; HttpOnly
+        //如果接下来第二次再次访问当前servlet，还会不会创建sesssion？
+        //第二次访问时，发现的确是不会有set-Cookie:JSESSIONID=XXX这个响应头，说明没有生成session对象
+        HttpSession session = request.getSession();
+        System.out.println("session1:" + session);
+        System.out.println("session1:" + session.getId());
+        session.setAttribute("username", "ssss");
+    }
+}
+```
+
+```java
+@WebServlet("/session2")
+public class SessionServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //如何创建session对象呢？
+        //第一次访问当前servlet，当前request对象肯定没有关联的session对象，所以肯定会创建一个
+        // Set-Cookie: JSESSIONID=57E9B12CF320ACCDF39E376F04306196; Path=/session_war_exploded; HttpOnly
+        //如果接下来第二次再次访问当前servlet，还会不会创建sesssion？
+        //第二次访问时，发现的确是不会有set-Cookie:JSESSIONID=XXX这个响应头，说明没有生成session对象
+        HttpSession session = request.getSession();
+        System.out.println("session2:" + session);
+        System.out.println("session2:" + session.getId());
+        Object username = session.getAttribute("username");
+        System.out.println(username);
+    }
+}
+```
+
+访问session1打印
+
+session1:org.apache.catalina.session.StandardSessionFacade@70450898
+session1:3883EC1D9D5C90447B0E6EBE3068D847
+
+访问session2打印
+
+session2:org.apache.catalina.session.StandardSessionFacade@70450898
+session2:3883EC1D9D5C90447B0E6EBE3068D847
+ssss
+
+关闭浏览器，再次访问session2打印
+
+session2:org.apache.catalina.session.StandardSessionFacade@e631fbf
+session2:CABE8275D8AD4AC67A1306CE7512183F
+null
+
+关闭浏览器session对象不会被销毁。为什么会出现session的地址、id以及数据全部都没了的现象呢？
+
+**主要的原因在于请求携带的cookie请求头没了，会创建一个新的session对象**。
+
+### 关闭服务器session会销毁吗，数据会丢失吗
+
+关闭服务器，session对象会被销毁；数据不会丢失。
+
+数据会不会丢失我们需要去验证一下。
+
+验证的方式，注意：**不要使用关闭IDEA的tomcat来验证，否则你得不出正确的结论**。
+
+配置：
+
+1.
+
+到本地安装的tomcat  conf/tomcat-users.xml文件中增加如下设置
+
+```xml
+<role rolename="manager-gui"/>
+<user username="tomcat" password="tomcat" roles="manager-gui"/>
+```
+
+2.本地的tomcat webapps目录需要有manager应用
+
+
+
+去访问该管理系统：
+
+http://localhost:8080/manager
+
+
+
+访问 session1
+
+访问session2
+
+session2:org.apache.catalina.session.StandardSessionFacade@e631fbf
+session2:CABE8275D8AD4AC67A1306CE7512183F
+ssss
+
+重启应用
+
+11-May-2021 16:34:30.764 璀﹀憡 [http-nio-8080-exec-31] org.apache.tomcat.util.descriptor.web.WebXml.setVersion Unknown version string [4.0]. Default version will be used.
+11-May-2021 16:34:30.816 淇℃伅 [http-nio-8080-exec-31] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+
+访问sesion2
+
+session2:org.apache.catalina.session.StandardSessionFacade@31ee950
+session2:CABE8275D8AD4AC67A1306CE7512183F
+ssss
+
+总结：
+
+观察到应用重启之后，session对象被销毁了（地址），但是session的id没有变，session里面的数据依然可以访问到
+
+实际上是在被销毁之前，把数据转移到了本地硬盘上面（序列化）
+
+应用重新被启动的时候，重新将该序列化形式的文件读取到内存中，生成新的session对象，会将原先的session的id以及session的数据塞入到这个新的session对象中。
+
+
+
+可以直接将IDEA里面的应用直接用本地tomcat来部署
+
+
+
+注意：session域中保存的对象必须实现了Serializable接口才能在重启之后恢复，否则会丢失。
+
+
+
+CATALINA_BASE里存放session序列化后的本地文件，在tomcat启动读取文件后会删除它。
+
+注意IDEA下的tomcat是每次启动都会拷贝本地tomcat的配置文件，所以在IDEA界面的tomcat下停止服务器虽然也会在拷贝的CATALINA_BASE里生成session序列化的本地文件，但是再次启动IDEA的tomcat时IDEA会先删除所有旧的配置文件后再到本地tomcat去重新拷贝配置文件，IDEA的这种行为导致不能再IDEA的tomcat控制界面下完成这个session序列化的测试
+
+### session生命周期
+
+session对象的创建：
+
+request.getSession()  session对象被创建
+
+
+
+应用被卸载、服务器关闭  session对象被销毁
+
+
+
+session对象被销毁并不意味着数据的丢失
+
+数据的丢失只有两个因素有关
+
+1.session的数据有一个有效期，有效期到达，session里面的数据自动消失（30min，如果30min内没有访问该session，那么数据丢失）
+
+2.主动调用session.invalidate()方法将数据被销毁
+
+
+
+### 三个域总结
+
+![image-20210511172639361](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210511172639361.png)
+
+选择：
+
+request域：很小，如果我们希望在一次请求内两个组件之间进行共享，request域
+
+
+
+session域：一个浏览器和一个session对象对应。一个浏览器访问很多个servlet时，对应的都是同一个session对象。和用户具有特异性的数据。用户特有的数据，购物车、浏览记录、用户名
+
+
+
+context域：最大的，一个应用只有一个。一般情况下我们可以存放一些全局性的配置，和用户无关的。比如商城商品的分类，应用的配置信息。
+
+
+
+
+
+## 购物车案例
+
+首页，首页可以展示出商品的超链接
+
+
+
+点击超链接，进入商品详情页，商品toString
+
+
+
+商品详情页还有三个a标签，一个是加入购物车、一个是查看购物车、一个返回首页
+
+
+
+点击加入购物车，会将商品加入到购物车中
+
+点击查看购物车，会显示当前用户的购物车商品
+
+
 
 
 
