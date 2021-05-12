@@ -4580,7 +4580,7 @@ cookie.setMaxAge(180);//单位 秒
 可在同一应用服务器内多个应用共享cookie方法：设置cookie.setPath("/");//和没设置一样的
 ```
 
-
+只setPath，不设置domain，仅当前domain的这个path如aaa.com/path有效，关联的如sub.aaa.com/path无效
 
 ```java
 @WebServlet("/path1")
@@ -4607,6 +4607,52 @@ public class PathServlet2 extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+    }
+}
+```
+
+### 设置域名
+
+关于cookie的域名，有一个大的前提
+
+cookie其实是不允许设置无关域名的cookie的，比如当前域名叫做localhost，你设置了一个域名为baidu.com的cookie，这是不允许的，浏览器也不会允许你设置成功，会拦截
+
+
+
+域名：baidu.com
+
+account.baidu.com属于baidu的吗，别人可以申请到这个域名吗？别人不可以申请到，这个域名还是属于baidu.com
+
+register.account.baidu.com 同理  也是属于baidu的，别人也是申请不到的
+
+如果你设置了一个父域名的cookie，那么当你访问子域名的资源时，该cookie会自动携带过去
+
+比如你设置了一个baidu.com域名的cookie，接下来当你访问account.baidu.com时，浏览器依然会携带cookie过去
+
+继承。
+
+
+
+注意：如果不setDomain 只有当前域名如aaa.com可以，sub.aaa.com不可以；但如果setDomain为aaa.com后aaa.com和sub.aaa.com都可以。
+
+默认cookie是同当前domain的不同应用都可以（如果不setPath的话），aaa.com的/app1和/app2都可以，但是sub.aaa.com是不可以的。
+
+
+
+```java
+@WebServlet("/domain2")
+public class DomainServlet2 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Cookie cookie = new Cookie("attribute", "aaa");
+        //注意：如果你设置该域名。那么一定不能在localhost、127.0.0.1主机下访问
+        //执行这个servlet时，不可以通过localhost:8080/app/domain2来执行
+        //应该通过http://aaa.com:8080/app/info
+        cookie.setDomain("aaa.com");
+        response.addCookie(cookie);
     }
 }
 ```
@@ -4651,47 +4697,7 @@ public class PathServlet2 extends HttpServlet {
 }
 ```
 
-### 设置域名
-
-关于cookie的域名，有一个大的前提
-
-cookie其实是不允许设置无关域名的cookie的，比如当前域名叫做localhost，你设置了一个域名为baidu.com的cookie，这是不允许的，浏览器也不会允许你设置成功，会拦截
-
-
-
-域名：baidu.com
-
-account.baidu.com属于baidu的吗，别人可以申请到这个域名吗？别人不可以申请到，这个域名还是属于baidu.com
-
-register.account.baidu.com 同理  也是属于baidu的，别人也是申请不到的
-
-如果你设置了一个父域名的cookie，那么当你访问子域名的资源时，该cookie会自动携带过去
-
-比如你设置了一个baidu.com域名的cookie，接下来当你访问account.baidu.com时，浏览器依然会携带cookie过去
-
-继承。
-
-
-
-注意：如果不setDomain 只有当前域名如aaa.com可以，sub.aaa.com不可以；但如果setDomain为aaa.com后aaa.com和sub.aaa.com都可以。
-
-```java
-@WebServlet("/domain2")
-public class DomainServlet2 extends HttpServlet {
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-    }
-
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Cookie cookie = new Cookie("attribute", "aaa");
-        //注意：如果你设置该域名。那么一定不能在localhost、127.0.0.1主机下访问
-        //执行这个servlet时，不可以通过localhost:8080/app/domain2来执行
-        //应该通过http://aaa.com:8080/app/info
-        cookie.setDomain("aaa.com");
-        response.addCookie(cookie);
-    }
-}
-```
+### 
 
 ### cookie的优缺点
 
@@ -4717,6 +4723,12 @@ public class DomainServlet2 extends HttpServlet {
 
 
 
+### cookie细节
+
+cookie重名不会覆盖，服务器会一并发给浏览器，浏览器请求时只会选择带其中一个（重名的几个cookie实际上都存在浏览器内存中）。这个特点可用在服务器生成session时给对应的cookie设置存活时间，手动创建一个cookie = new Cookie("JSESSION", session.getId)并setMaxAge发给浏览器，浏览器虽然会收到两个cookie都叫JESESSIONID但是关闭后再打开只有设置了存活时间的会存在。
+
+
+
 ## Session
 
 服务器技术。当用户访问服务器时，服务器会给用户开辟一块内存空间，这个内存空间其实就专门用来给当前客户端来使用，接下来如果当前客户端需要进行数据的存取，那么你存取这个内存空间即可。
@@ -4728,6 +4740,57 @@ public class DomainServlet2 extends HttpServlet {
 这块内存空间，应该是独一无二的，可以给这块内存空间设定一个ID编号，然后接下来将该ID编号通过cookie的形式返回给客户端
 
 客户端会将该ID保存，当下次再次访问服务器时，会把该ID携带回来，服务器通过去查找该ID，那么就可以知道这块内存空间在哪
+
+
+
+问题：什么是会话？
+	会话可简单理解为：用户开一个浏览器，点击多个超链接，访问服务器多个web资源，然后关闭浏览器，整个过程称之为一个会话。
+会话过程中要解决的一些问题？
+每个用户在使用浏览器与服务器进行会话的过程中，不可避免各自会产生一些数据，程序要想办法为每个用户保存这些数据。
+例如：用户点击超链接通过一个servlet购买了一个商品，程序应该想办法保存用户购买的商品，以便于用户点结帐servlet时，结帐servlet可以得到用户购买的商品为用户结帐。
+
+
+
+保存会话数据的两种技术cookie vs Session
+
+Cookie
+Cookie是客户端技术，程序把每个用户的数据以cookie的形式写给用户各自的浏览器。当用户使用浏览器再去访问服务器中的web资源时，就会带着各自的数据去。这样，web资源处理的就是用户各自的数据了。
+HttpSession
+Session是服务器端技术，利用这个技术，服务器在运行时可以为每一个用户的浏览器创建一个其独享的HttpSession对象，由于session为用户浏览器独享，所以用户在访问服务器的web资源时，可以把各自的数据放在各自的session中，当用户再去访问服务器中的其它web资源时，其它web资源再从用户各自的session中取出数据为用户服务。
+
+
+
+有状态会话：一个同学来过教室，下次再来教室，我们会知道这个同学曾经来过，这称之为有状态会话。
+
+
+
+session
+
+在WEB开发中，服务器可以为每个浏览器创建一个会话对象（session对象），注意：把用户数据写到用户浏览器独占的session中，当前用户使一个浏览器独占一个session对象(默认情况下)。因此，在需要保存用户数据时，服务器程序可以用session保存。同一浏览器可以从用户的session中取出该用户的数据，为用户服务。
+（数据保存在服务器的Session对象中 ，内存。浏览器怎么拿到？JsessionID）
+Session对象由服务器创建，开发人员可以调用request对象的getSession方法得到session对象。
+跟cookie一样 从request报文中拿到Session数据？
+  并不是，而是通过报文里的JsessionID 去 服务器内存里查找）
+
+
+
+Session小实验：使用IE访问某一个servlet，其它IE可以取到这个servlet存的数据吗？
+
+
+
+Session和Cookie的主要区别在于：
+Cookie是把用户的数据写给用户的浏览器（在浏览器保存）。
+Session技术把用户的数据写到用户独占的session中。（在服务器端保存）
+
+
+
+Session 生命周期
+
+![image-20210512141340197](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210512141340197.png)
+
+
+
+
 
 ### session使用（session域）
 
@@ -5004,9 +5067,11 @@ context域：最大的，一个应用只有一个。一般情况下我们可以�
 
 
 
+请求执行流程
 
+![请求执行流程](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\请求执行流程.png)
 
-## 购物车案例
+## 应用案例
 
 首页，首页可以展示出商品的超链接
 
@@ -5023,6 +5088,473 @@ context域：最大的，一个应用只有一个。一般情况下我们可以�
 点击加入购物车，会将商品加入到购物车中
 
 点击查看购物车，会显示当前用户的购物车商品
+
+
+
+实现历史足迹
+
+不同要求：
+
+最低要求：不要求按照时间降序来；也不要求将久远的剔除出去
+
+实现真正的历史足迹：按照时间降序来，仅显示最近的20条浏览记录
+
+
+
+## 浏览器禁用Cookie后的session处理
+
+session的存储依赖于cookie，浏览器可以禁用cookie的
+
+如果禁用了cookie，此时session会怎么样呢？
+
+进行URL重写
+
+实验演示禁用Cookie后servlet共享数据导致的问题。
+解决方案：URL重写
+response. encodeRedirectURL(java.lang.String url) 
+用于对sendRedirect方法后的url地址进行重写。
+response. encodeURL(java.lang.String url)
+用于对表单action和超链接的url地址进行重写 
+附加：
+Session的失效  invalidate()立刻实效
+Web.xml文件配置session失效时间
+
+
+
+
+
+# Web组件
+
+在EE规范中，sun公司一共给我们提供了三种类型的组件
+
+Servlet：开发动态web资源
+
+Listener：监听器，监听对象、监听某个事件
+
+Filter：过滤器，过滤、拦截
+
+
+
+## Listener
+
+监听器。
+
+现实生活中的监听器
+
+
+
+被监听对象：明星艺人
+
+监听者：朝阳人民群众
+
+监听事件：吸毒嫖娼
+
+触发事件：报警
+
+
+
+web中的监听器
+
+被监听对象：比如ServletContext对象
+
+监听者：自己去编写了一个监听器
+
+监听事件：ServletContext对象的创建和销毁
+
+触发事件：触发自己写的监听器里面对应的方法
+
+
+
+### 使用（掌握）
+
+1.编写一个类实现ServletContextListener接口
+
+2.声明注册该listener（注解、web.xml）
+
+```java
+@WebListener
+public class MyServletContextListener implements ServletContextListener {
+
+    //该方法会在servletContext对象被创建的时候调用
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        System.out.println("context init");
+    }
+
+    //该方法会在servletContext对象被销毁的时候调用
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+
+    }
+}
+```
+
+
+
+使用场景：
+
+最开始出现的时候，只有servlet组件，没有listener，listener是后来加入的
+
+购物车案例，初始化商品的逻辑----写在index servlet里面的，分析的略微有一些不太合适的
+
+全局性的设置，为什么要设置在某一个servlet中呢？
+
+为何不放在一个更加全局性的设置里面呢？完全可以将全局性的初始化设置放在listener里面来做
+
+
+
+可以将之前放置在某个serlvet中的初始化设置，挪动到listener里面来做
+
+比如查询数据库，拿到一些配置文件
+
+读取配置文件里面的参数
+
+这些都可以在listener里面来做
+
+
+
+**学习Spring阶段，Spring初始化就会用到该listener**
+
+
+
+
+
+原理（**不要求掌握**）
+
+tomcat的代码是90年代的代码
+
+你写的代码是21年的代码
+
+90年的代码是如何调用21年的代码的呢？
+
+
+
+
+
+爸爸妈妈带宝宝，宝宝哭，爸爸打宝宝，妈妈打爸爸
+
+假设工作日 爸爸妈妈需要上班，爷爷奶奶来带
+
+宝宝再哭，爷爷抱宝宝，奶奶做吃的
+
+
+
+如果需求发生变更的时候，需要频繁的去变更现有的代码逻辑，这个代码其实是有很大问题的
+
+代码如何设计？能够让需求变更的时候，最好不要修改代码
+
+![image-20210512111041675](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210512111041675.png)
+
+```java
+class ServletContext{
+    List<ServletContextListener> listeners = new Arrayist;
+    
+    void addListener(ServletContextListener listner){
+        listeners.add(listener);
+    }
+    
+    void init(){
+       //servletContext init 
+        listeners.for----{listener.contextInitialized()}
+    }
+    
+    void destroy(){
+        // servletCOntext destroy
+        listeners.for------{listener.contextDstroyed()}
+    }
+    
+}
+```
+
+
+
+## Filter
+
+sun公司制定的三大web组件之一。
+
+过滤、拦截
+
+
+
+过滤器位于客户端和Servlert之间
+
+可以检查修改request对象
+
+也可以检查修改response对象
+
+打游戏   我*****你
+
+### 简介
+
+过滤器是Servlet规范的高级特性。
+过滤器（Filter）技术是从Servlet2.3规范开始引入的。过滤器是一种Web应用程序组件，可以部署在Web应用程序中。
+过滤器由Servlet容器调用，用来拦截以及处理请求和响应。过滤器本身并不能生成请求和响应对象，但是可以对请求和响应对象进行检查和修改。
+
+
+
+ 过滤器的工作原理
+
+过滤器介于客户端与Servlet/JSP等相关的资源之间，对于与过滤器关联的Servlet来说，过滤器可以在Servlet被调用之前检查并且修改request对象。在Servlet调用之后检查并修改response对象。 
+
+![image-20210512195126946](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210512195126946.png)
+
+以上过程可分为以下步骤：
+1．客户端将请求发送给Web容器；
+2．Web容器根据客户端发送的请求生成请求对象request和响应对象response。
+3．Web容器在调用与过滤器相关联的Web组件（例如Servlet/JSP）之前，先将request对象以及response对象发送给过滤器。
+4．过滤器对request对象进行必要的处理；
+5．过滤器把处理过的request对象以及response对象传递给Web组件；
+6．Web组件调用完成后，再次通过过滤器，此时过滤器对response对象进行必要的处理；
+7．过滤器把处理过的response对象传递给Web容器；
+8．Web容器将响应的结果返回到客户端，并在浏览器上显示。
+
+
+
+过滤器 
+
+Servlet规范中使用javax.servlet.Filter接口支持过滤器的使用
+创建过滤器必须实现Filter接口，该接口中定义了三个方法
+
+- void init(FilterConfig config)：
+
+  用于初始化过滤器，当容器装载并初始化过滤器时调用。Web容器为此方法传递一个FilterConfig对象，FilterConfig对象可以获取web.xml文件中过滤器初始化参数的配置；利用FilterConfig对象也可以获取当前Filter的名称以及相关联的ServletContext对象。
+
+- void doFilter(ServletRequst request, ServletResponse response, FilterChain chain)：
+  此方法是Filter接口的核心方法，用于对请求对象和响应对象进行检查和处理。此方法包括三个输入参数。其中，ServletRequest对象为请求对象，包括表单数据、Cookie以及HTTP请求头等信息；ServletResponse对象为响应对象，用于响应使用ServletRequest对象访问的信息；FilterChain用来调用过滤器链中的下一个资源，即将ServletRequest对象以及ServletResponse对象传递给下一个过滤器或者是其它的Servlet/JSP等资源。
+
+- void destroy( )：
+  此方法用于销毁过滤器，当容器要销毁过滤器实例时调用此方法，Servlet过滤器占用的资源会被释放。
+
+
+
+过滤器的使用步骤
+
+创建过滤器的步骤如下：
+1．创建一个实现Filter接口的Java类；
+2．实现init( )方法，如有必要，读取过滤器的初始化参数；
+3．实现doFilter( )方法，完成对ServletRequest对象以及ServletResponse对象的检查和处理；
+4．在doFilter( )方法中调用FilterChain接口对象chain的doFilter( )方法，以便将过滤器传递给后续的过滤器或资源。
+5．在web.xml中注册过滤器，设置参数以及过滤器要过滤的资源。 
+
+
+
+Filter Chain
+
+FilterChain 是 servlet 容器为开发人员提供的对象，它提供了对某一资源的已过滤请求调用链的视图。过滤器使用 FilterChain 调用链中的下一个过滤器，直到最后一个过滤器。
+
+
+
+Filter链介绍
+
+多个Filter对同一个资源进行了拦截，那么当我们在开始的Filter中执行chain.doFilter(request,response)时，是访问下一下Filter,直到最后一个Filter执行时，它后面没有了Filter,才会访问web资源。
+关于多个FIlter的访问顺序问题
+如果有多个Filter形成了Filter链，那么它们的执行顺序是怎样确定的？
+它们的执行顺序取决于`<filter-mapping>在web.xml`文件中配置的先后顺序
+注解配置，按照类名的ASCII码表顺序
+
+
+
+Filter生命周期
+
+当服务器启动，会创建Filter对象，并调用init方法，只调用一次.
+当访问资源时，路径与Filter的拦截路径匹配，会执行Filter中的doFilter方法，这个方法是真正拦截操作的方法.
+当服务器关闭时，会调用Filter的destroy方法来进行销毁操作.
+
+
+
+Filter配置详解
+
+```xml
+Filter基本配置介绍
+<filter>
+    <filter-name>filter名称</filter-name>
+    <filter-class>filter类全名</filter-class>
+</filter>
+<filter-mapping>
+    <filter-name>filter名称</filter-name>
+    <url-pattern>映射路径</url-pattern>
+</filter-mapping>
+```
+
+关于url-pattern配置
+1.完全匹配 
+	要求必须以"/"开始.
+2.目录匹配
+	要求必须以"/"开始，以`*`结束.			
+3.扩展名匹配
+	不能以“/”开始，以`*.xxx`结束. （或`*`）
+
+关于servlet-name配置
+	针对于servlet拦截的配置  `<servlet-name>`配置
+	在Filter中它的配置项上有一个标签
+	`<servlet-name>`它用于设置当前Filter拦截哪一个servlet
+是通过servlet的name来确定的。
+
+
+
+### Filter编写
+
+1.编写一个类，实现Filter接口
+
+2.声明该filter
+
+```java
+public class FirstFilter implements Filter {
+
+    //init直接会随着应用的启动而加载
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        System.out.println("init");
+    }
+
+    //类比为servle的service方法，每访问一次filter，那么就会执行一次
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        System.out.println("filter doFilter");
+    }
+
+    //应用被卸载、服务器被关闭 
+    @Override
+    public void destroy() {
+        System.out.println("destroy");
+    }
+}
+```
+
+### filter功能（过滤、拦截）
+
+**对于与过滤器关联的Servlet来说**，过滤器可以在Servlet被调用之前检查并且修改request对象。在Servlet调用之后检查并修改response对象。 
+
+
+
+**如何将filter和servlet关联在一起呢**？
+
+最简单的方式就是将servlet的url-pattern赋值给filter即可（注意事项：我们之前说servlet之间不可以设置相同的url-pattern，但是**filter可以设置和servlet相同的url-pattern**）
+
+
+
+但是修改过后，filter可以被执行，servlet缺又执行不到了？？？？？
+
+原因在于filter默认情况下执行的是拦截操作，如果希望filter执行放行，那么需要如下代码
+
+```java
+//这行代码对于放行至关重要，如果没有这行代码，那么执行的就是拦截操作
+filterChain.doFilter(servletRequest, servletResponse);
+```
+
+
+
+既然filter可以检查修改request对象，那么可不可以将这些代码放在filter里面呢？
+
+
+
+
+
+**filter可不可以设置/*呢？**
+
+一个filter对应多个servlet-----------将编码格式的代码放到filter里面来做
+
+
+
+filter完全可以设置/*     可以将编码格式的代码写在filter里面
+
+
+
+**多个filter可以设置相同的url-pattern吗？**
+
+完全可以设置相同的url-pattern
+
+
+
+**多个filter的掉用先后顺序是什么样的呢？**
+
+如果是web.xml，按照filter-mapping声明的先后顺序来
+
+如果是注解，那么按照类名首字母的ASCII先后顺序来
+
+多个filter调用时，和url-pattern的优先级没有关系，只要能够处理该请求，那么他们都是相同地位的，至于谁先调用，那么就看上面的规则
+
+
+
+### 请求处理流程（最终的整合效果）
+
+![请求执行流程](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\请求执行流程-1620819761105.png)
+
+以访问Http://localhost:8080/app/servlet1为例
+
+1.浏览器生成HTTP请求报文，传输到目标服务器主机，被监听8080端口号的Connector程序接收到
+
+2.将请求报文解析成为Request对象， 同时生成一个response对象，传给engine
+
+3.engine将这两个对象进一步传给host，host挑选一个叫做app的context
+
+4.这个时候有效的请求路径为/servlet1,首先判断有没有合适的Filter可以处理该请求，如果有的话，则将其加入到一个链表内；如果有多个，那么按照调用的先后顺序加入到链表中
+
+5.再次去判断有没有合适的servlet可以处理该请求，如果有的话，则将该servlet也加入到该链表内；如果没有，则调用缺省servlet
+
+6.形成链表之后，依次调用链表的每个组件，调用filter的doFilter方法，servlet的service方法，同时将request、response作为参数传递进去，往response里面写入数据
+
+7.Connector读取response里面的数据，生成HTTP响应报文，传输给客户端。
+
+
+
+### filter的doFilter方法被执行了两次
+
+但是为什么里面的日志只打印了一个呢？
+
+​	程序代码执行的时候，执行到filterChain.doFilter方法的时候，会进入到下一个组件执行，全部执行完毕之后，再次原路返回。
+
+递归的方式进入，然后再回来。
+
+
+
+**去的过程只执行filterChain上面的代码**
+
+**回的过程只执行filterChain下面的代码**
+
+![image-20210512142546890](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210512142546890.png)
+
+
+
+### 案例
+
+1.设置编码格式
+
+
+
+2.如果希望filter帮我们进行页面的拦截，比如未登录的情况下，访问京东的我的页面
+
+拦截。
+
+filter涉及到拦截   filterChain.doFilter  这个方法决定了是否拦截还是放行现有的请求
+
+
+
+我的页面逻辑：
+
+没有登录的情况下拦截
+
+登录的情况下放行
+
+
+
+如何判断是否登录呢？
+
+session联系在一起
+
+
+
+但是这里面有一个点，就是不是所有的页面都拦截；登录页面是不拦截的。
+
+
+
+首先判断页面是否需要验证登录状态，如果不需要（比如登录页面），那么直接放行
+
+如果需要验证登录状态（访问我的页面），验证是否登录，如果登录，直接放行；如果没有登录，拦截
+
+建议大家在学习的时候，自己去画流程图
+
+![image-20210512144057514](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210512144057514.png)
 
 
 
