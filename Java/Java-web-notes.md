@@ -4319,6 +4319,16 @@ upload页面进行数据的上传，上传成功之后要求可以在另外一�
 
 # 会话技术
 
+问题：什么是会话？
+	会话可简单理解为：用户开一个浏览器，点击多个超链接，访问同一个服务器多个web资源，然后关闭浏览器，整个过程称之为一个会话。
+会话过程中要解决的一些问题？
+每个用户在使用浏览器与服务器进行会话的过程中，不可避免各自会产生一些数据，程序要想办法为每个用户保存这些数据。
+例如：用户点击超链接通过一个servlet购买了一个商品，程序应该想办法保存用户购买的商品，以便于用户点结帐servlet时，结帐servlet可以得到用户购买的商品为用户结帐。
+
+保存会话数据的两种技术Cookie, Session
+
+
+
 会话，现实生活中就是交谈、对话。
 
 web访问过程中，会话的含义是指从打开浏览器页面开始，然后浏览网站的多个页面，然后最后结束，整个过程我们称之为一个会话。
@@ -4385,9 +4395,69 @@ public class NonStatusServlet extends HttpServlet {
 
 **其实就是在HTTP协议中加入了cookie相关的请求头（cookie:key=value）和响应头(set-Cookie:key=value)**
 
-
-
 注意：cookie中不能有空格
+
+```
+Web应用程序是使用HTTP协议传输数据的。HTTP协议是无状态的协议。一旦数据交换完毕，客户端与服务器端的连接就会关闭，再次交换数据需要建立新的连接。这就意味着服务器无法从连接上跟踪会话。即用户A购买了一件商品放入购物车内，当再次购买商品时服务器已经无法判断该购买行为是属于用户A的会话还是用户B的会话了。要跟踪该会话，必须引入一种机制。
+cookie
+由于服务器无法从http协议上分辨不同的用户，所以服务器要想办法给客户端们颁发一个证件，每人一个，无论谁访问都必须携带自己证件。这样服务器就能从每个人的证件上确认客户身份了。这就是Cookie的工作原理。
+Cookie实际上是一小段的文本信息。客户端请求服务器，如果服务器需要记录该用户状态，就使用response向客户端浏览器颁发一个Cookie。客户端浏览器会把Cookie保存起来。当浏览器再请求该网站时，浏览器把请求的网址连同该Cookie一同提交给服务器。服务器检查该Cookie，以此来辨认用户状态。服务器还可以根据需要修改Cookie的内容。
+```
+
+
+
+Cookie 基本API
+
+javax.servlet.http.Cookie类用于创建一个Cookie，response接口中定义了一个addCookie方法，它用于在其响应头中增加一个相应的Set-Cookie头字段。 同样，request接口中也定义了一个getCookies方法，它用于获取客户端提交的Cookie。Cookie类的方法： 
+public Cookie(String name,String value)
+setValue与getValue方法 
+setMaxAge与getMaxAge方法 (秒)
+getName方法 
+
+
+
+```
+1.Cookie 能被访问要符合:MYURL.startWith(domain+path)完全匹配   然后再找name也匹配，此时才能访问到value
+
+http://localhost:8080/day20_00_cookie/servlet/CookieDemo3   可以访问
+http://localhost:8080/day20_00_cookie/CookieDemo2   不能
+http://localhost:8080/day20_00_cookie/servlet/myservlet/CookieDemo3  可以
+
+
+给不给传cookie是由浏览器决定的，取决于MYURL.startWith(domain+path)完全匹配
+```
+
+
+
+Cookie 其他API
+
+setPath与getPath方法
+setDomain与getDomain方法
+
+
+
+Cookie细节
+
+一个Cookie只能标识一种信息，它至少含有一个标识该信息的名称（NAME）和设置值（VALUE）value也必须是字符串类型。 
+一个WEB站点可以给一个WEB浏览器发送多个Cookie，一个WEB浏览器也可以存储多个WEB站点提供的Cookie。
+浏览器一般只允许存放300个Cookie，每个站点最多存放20-50个Cookie，每个Cookie的大小限制为4KB。
+如果创建了一个cookie，并将他发送到浏览器，默认情况下它是一个会话级别的cookie（即存储在浏览器的内存中），用户退出浏览器之后即被删除。若希望浏览器将该cookie存储在磁盘上，则需要使用maxAge，并给出一个以秒为单位的时间。将最大时效设为0则是命令浏览器删除该cookie。
+注意，删除cookie时，path必须一致，否则不会删除
+
+```java
+Map<String,Book> books =BookDB.getAllBooks();    
+for(Map.Entry<String, Book>itemEntry :books.entrySet()   ){    
+    Bookbook= itemEntry.getValue();
+    pw.write(book.getName()+"&nbsp;&nbsp;&nbsp;&nbsp;<a href='http://localhost/MyCookieDemo/servlet/Showdetails?id="+book.getId()+"'>查看详情</a> <br>");
+}
+
+```
+
+浏览器的容量限制
+
+![image-20210512140334597](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-web-notes.assets\image-20210512140334597.png)
+
+
 
 ### 案例一
 
@@ -4503,6 +4573,14 @@ cookie.setMaxAge(180);//单位 秒
 如果没有设置，那么表示的是当访问当前域名下所有资源都会携带cookie，如果希望访问指定路径才会携带cookie，则可以设置一个path
 
 比如设置访问html页面时携带cookie，访问js、css这些不去携带cookie
+
+
+
+```
+可在同一应用服务器内多个应用共享cookie方法：设置cookie.setPath("/");//和没设置一样的
+```
+
+
 
 ```java
 @WebServlet("/path1")
