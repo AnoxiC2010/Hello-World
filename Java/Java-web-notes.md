@@ -5560,3 +5560,564 @@ session联系在一起
 
 
 
+# MVC
+
+## JSON
+
+json就是指的是js里面的对象。
+
+**json里面如果是一个对象，那么对应的是一个{}**
+
+**如果是一个数组或者集合，那么对应的是一个[]**
+
+[{},{}]
+
+json目前主流的应用场景就是作为数据交换的格式
+
+比如前后端分离的项目
+
+前端传输数据给服务器，可以以json的格式来进行传输，当然key=value也可以，有局限性，中国下面的省份，省份里面又包含了城市信息，key=value无法描述出其中的关系
+
+
+
+```js
+var country = {name:"中国", province:[{name:"黑龙江",cities:["哈尔滨","大庆"]},
+                                        {name:"广东",cities:["广州","深圳"]},
+                                        {name:"台湾",cities:["台北","高雄"]}]}
+```
+
+
+
+ var country ={
+            "name":"中国",
+             "province":[{"name":"黑龙江",”cities”:["哈尔滨","大庆"]},
+		          {"name":"广东","cities":["广州","深圳","珠海"]},
+		          {"name":"台湾","cities":["台北","高雄"]},
+		          {"name":"新疆","cities":["乌鲁木齐"]}
+                                   ]
+                   }
+
+
+
+上面和下面的区别在于下面的属性值上面加了引号。
+
+上下两者的关系你可以理解为java对象和java对象的toString的关系
+
+一个json，一个是json字符串。
+
+实际上我们在进行数据的传输过程中，都是以json字符串的形式来进行传输的
+
+
+
+### 将java对象转成json字符串
+
+比如需要将商品的信息传输给前端，可以以json字符串的形式返回。
+
+
+
+
+
+### 将json字符串转成java对象
+
+前端页面登录，然后将提交的数据以json字符串的形式提交给服务端，解析出里面的数据，封装成为java对象，保存到数据库等。
+
+
+
+```java
+package com.cskaoyan.json;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * junit单元测试用例
+ * 1.导包junit的包 junit 4.12
+ * 2.编写一个类，类名称一般叫做XXXTest
+ * 3.里面编写对应的方法，方法的名称一般叫做testXxxxx
+ * 4.方法的权限public，返回值void，方法的参数为无参
+ */
+public class JsonTest {
+
+    //在java语言里面操纵json字符串，一般会用如下三个jar包
+    //1.jackson  2.gson 3. fastjson
+    @Test
+    public void testJavaObjectToJson(){
+        User user = new User();
+        user.setUsername("admin");
+        user.setPassword("admin123");
+        // user-----json字符串  {"username":"admin","password":"admin123"}
+        // bejson.com
+        String jsonStr = "{\"username\":\"" + user.getUsername() + "\",\"password\":\"" + user.getPassword() + "\"}";
+        System.out.println(jsonStr);
+    }
+
+    @Test
+    public void testJavaObjectToJson2() throws JsonProcessingException {
+        User user = new User();
+        user.setUsername("admin");
+        user.setPassword("admin123");
+
+        User user2 = new User();
+        user2.setUsername("admin");
+        user2.setPassword("admin123");
+
+        //使用的入口类ObjectMapper
+        List<User> users = new ArrayList<>();
+        users.add(user);
+        users.add(user2);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String content = objectMapper.writeValueAsString(user);
+        String usersString = objectMapper.writeValueAsString(users);
+        System.out.println(content);
+        System.out.println(usersString);
+    }
+
+    @Test
+    public void testJsonToObject() throws JsonProcessingException {
+        String content = "{\"username\":\"admin\",\"password\":\"admin123\"}";
+        ObjectMapper objectMapper = new ObjectMapper();
+        //如何做到的呢？利用反射
+        User user = objectMapper.readValue(content, User.class);
+        System.out.println(user);
+    }
+
+    @Test
+    public void testJsonToObject2() throws JsonProcessingException {
+        String content = "[{\"username\":\"admin\",\"password\":\"admin123\"},{\"username\":\"admin\",\"password\":\"admin123\"}]";
+        ObjectMapper objectMapper = new ObjectMapper();
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        CollectionType type = typeFactory.constructCollectionType(List.class, User.class);
+        List<User> users = objectMapper.readValue(content, type);
+        for (User user : users) {
+            System.out.println(user);
+        }
+    }
+
+}
+```
+
+
+
+## MVC
+
+### 从注册登录案例引出MVC
+
+要求：先使用json文件来存储用户的数据，后面需求变更，使用数据库来存储用户的数据。整体业务逻辑不做改变。
+
+```java
+package com.cskaoyan.user;
+
+import com.cskaoyan.user.utils.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.apache.commons.beanutils.BeanUtils;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@WebServlet("/user/*")
+public class UserServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //如何区分是register还是login呢？
+        String requestURI = request.getRequestURI();
+        String replace = requestURI.replace(request.getContextPath() + "/user/", "");
+        if("register".equals(replace)){
+            register(request, response);
+        }else if("login".equals(replace)){
+            login(request, response);
+        }
+    }
+
+    //登录的业务逻辑
+    private void login(HttpServletRequest request, HttpServletResponse response) {
+
+    }
+
+    //注册的业务逻辑
+    private void register(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        //1.首先应该获取请求参数 做一些常规的校验
+        Map<String, String[]> map = request.getParameterMap();
+        User register = new User();
+        try {
+            BeanUtils.populate(register, map);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        //常规的校验，判空  密码的确认密码是否相同
+        if(StringUtils.isEmpty(register.getUsername()) || StringUtils.isEmpty(register.getPassword()) || StringUtils.isEmpty(register.getConfirmPass())){
+            response.getWriter().println("参数不能为空");
+            return;
+        }
+        if(!register.getPassword().equals(register.getConfirmPass())){
+            response.getWriter().println("两次密码不一致");
+            return;
+        }
+        //逻辑：取出users.json文件里面的数据，然后解析成为java对象，通过比较username是否相同， 是否已经被注册
+        String realPath = getServletContext().getRealPath("WEB-INF/users.json");
+        File file = new File(realPath);
+        FileInputStream inputStream = new FileInputStream(file);
+        //如何以字符的形式显示文件里面的内容？
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        int length = 0;
+        byte[] bytes = new byte[1024];
+        while ((length = inputStream.read(bytes)) != -1){
+            outputStream.write(bytes, 0, length);
+        }
+        String content = outputStream.toString("utf-8");
+        List<User> users = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+        if(!StringUtils.isEmpty(content)){
+            //不为空，表示里面有数据，才去解析
+            TypeFactory typeFactory = objectMapper.getTypeFactory();
+            CollectionType type = typeFactory.constructCollectionType(List.class, User.class);
+            users = objectMapper.readValue(content, type);
+            for (User u : users) {
+                if(register.getUsername().equals(u.getUsername())){
+                    //用户名已经被占用
+                    response.getWriter().println("当前用户名已经被注册");
+                    return;
+                }
+            }
+        }
+        //为空 直接注册
+        users.add(register);
+        //最后需要把users数据写回users.json文件中
+        FileWriter writer = new FileWriter(file);
+        writer.write(objectMapper.writeValueAsString(users));
+        writer.flush();
+        writer.close();
+        response.getWriter().println("注册成功，跳转至登录页面");
+        //2.存放到json文件里：判断当前应用中是否存在你输入的用户名；如果不存在，则直接注册，如果存在，则需要更换
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+接下来，需要将使用json文件 来存储用户相关数据改为使用数据库，分析哪些代码需要变化？
+
+
+
+需求变更的时候，如果需要频繁的去变更现有的代码逻辑，这个逻辑写的是有问题的
+
+
+
+### MVC概念
+
+MVC设计模式。模式其实经过实践总结出的一套比较好的编码的习惯
+
+MVC根据概念，其实是需要将我们的程序代码进行一个分离解耦。分为几个模块
+
+Model：数据模型（用户），基于对这些数据模型的操作，比如对于**用户的操作**，注册、登录等，这些其实都是属于模型的部分
+
+view：显示、视图。比如html、jsp。response输出的内容
+
+controller：控制器。一般请求分发到controller中，然后controller会调用模型的一个或者多个方法，比如调用用户的注册相关代码，返回返回一个结果，根据这个结果，进行进一步调用不同的视图。作用就是用来将model模型和视图view进行解耦合。
+
+
+
+```java
+package com.cskaoyan.user;
+
+import com.cskaoyan.user.model.User;
+import com.cskaoyan.user.model.UserJsonModel;
+import com.cskaoyan.user.model.UserSqlModel;
+import com.cskaoyan.user.utils.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.apache.commons.beanutils.BeanUtils;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@WebServlet("/user/*")
+public class UserServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //如何区分是register还是login呢？
+        String requestURI = request.getRequestURI();
+        String replace = requestURI.replace(request.getContextPath() + "/user/", "");
+        if("register".equals(replace)){
+            register(request, response);
+        }else if("login".equals(replace)){
+            login(request, response);
+        }
+    }
+
+    //登录的业务逻辑
+    private void login(HttpServletRequest request, HttpServletResponse response) {
+
+    }
+
+    //注册的业务逻辑
+    private void register(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        //1.首先应该获取请求参数 做一些常规的校验
+        Map<String, String[]> map = request.getParameterMap();
+        User register = new User();
+        try {
+            BeanUtils.populate(register, map);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        //常规的校验，判空  密码的确认密码是否相同
+        if(StringUtils.isEmpty(register.getUsername()) || StringUtils.isEmpty(register.getPassword()) || StringUtils.isEmpty(register.getConfirmPass())){
+            response.getWriter().println("参数不能为空");
+            return;
+        }
+        if(!register.getPassword().equals(register.getConfirmPass())){
+            response.getWriter().println("两次密码不一致");
+            return;
+        }
+        boolean result = UserSqlModel.register(register, request);
+        if(!result){
+            response.getWriter().println("当前用户名已经被注册");
+            return;
+        }
+        response.getWriter().println("注册成功，跳转至登录页面");
+        //2.存放到json文件里：判断当前应用中是否存在你输入的用户名；如果不存在，则直接注册，如果存在，则需要更换
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+}
+```
+
+
+
+总结一下：
+
+如果希望今后需求变更的时候代码改动尽可能少，你应当如何去设计呢？
+
+1.方法的名称相同
+
+2.参数也相同
+
+3.返回值也相同
+
+遵循这三点，其实只需要变更UserJsonModel------->UserSqlModel即可，其他全部的代码都不用变
+
+
+
+这三点像不像规范？
+
+接口。interface。天然就具有上述三个点。
+
+上面其实只是一个建议，建议如果写成这样，那么你的更改将尽可能少
+
+为何不设计成一个接口，设计成接口以后，就可以强制性约束必须这么写
+
+
+
+将在MVC设计模式的基础上进行进一步的优化。引入三层架构
+
+### 三层架构
+
+MVC设计模式和三层架构不是一回事。
+
+MVC设计模式说的是需要将程序的代码进行分层、分模块。分成controller、view、model，这样就已经符合MVC设计模式了
+
+但是我们发现其实还是有可以进一步优化的空间的
+
+```java
+boolean result = UserSqlModel.register(register, request);
+if(!result){
+    response.getWriter().println("当前用户名已经被注册");
+    return;
+}
+```
+
+这部分完全可以把它写成接口和实现类的方式。
+
+三层架构可以认为是在MVC设计模式的基础上，进行进一步的分离解耦，将我们的程序代码进行进一步的细分。
+
+将model的代码比如UserJsonModel和UserSqlModel进行进一步的细分。
+
+首先先将model改一个名字，其实都是和数据打交道的，一般称之为DAO  Data Access Object
+
+将之前的UserJsonModel和UserSqlModel改名改成UserJsonDao和UserSqlDao，同时引入接口的概念
+
+
+
+访问的时候通过
+
+```java
+UserDao userDao = new UserJsonDao();
+userDao.register();
+```
+
+如果今后再进行登录
+
+```java
+UserDao userDao = new UserJsonDao();
+userDao.register();
+```
+
+变成如上代码
+
+UserDao userDao = new UserJsonDao();
+
+这行代码写了多份，如果今后发生需求的变更，那么从json变化到sql，每个地方都要变
+
+为了改动尽可能少，统一写成成员变量
+
+![image-20210513165002397](C:\Users\AnoxiC2010\Desktop\wdJava30th\EE\Day8 MVC\note\MVC.assets\image-20210513165002397.png)
+
+
+
+#### 展示层
+
+展示层你可以理解为就是之前的controller + view，此时充当了展示层的功能
+
+#### 数据层 DAO
+
+此时是将之前的model中关于模型的操作的部分，抽提成了dao  数据层
+
+#### 业务层 Service
+
+现阶段的逻辑：
+
+servlet也就是controller中，我们调用dao的方法
+
+假设一个场景：
+
+某一个功能点：
+
+
+
+需要使用
+
+dao.method1()
+
+dao.method2()
+
+dao.method3()
+
+搭配一起使用，可以完成该功能
+
+
+
+后面发现有另外一种实现方式，但是不知道新的实现方式性能如何，做一个性能测试
+
+新的方式
+
+dao.method1()
+
+dao.method2()
+
+dao.method4()
+
+实现该功能
+
+
+
+
+
+```java
+private void method(){
+        userDao.mehtod1();
+        userDao.method2();
+        userDao.method3();
+        //测试新的实现方式性能
+//        userDao.method1();
+//        userDao.method2();
+//        userDao.method4();
+    }
+```
+
+
+
+
+
+#### 为什么要有service层
+
+其实主要是负责和当前的功能具体相关的业务场景逻辑，绝大多数的业务相关代码，应当封装在当前方法中。
+
+
+
+最终效果：
+
+通过扩增现有的代码逻辑来修改我们的业务功能而不是通过修改现有的代码逻辑
+
+这个就是一个比较好的实现方式
+
+
+
+
+
+展示层调用业务层，业务层调用数据层
+
+
+
+
+
+controller：获取请求参数、参数的校验，调用service的代码，根据结果，调用视图。4s门店
+
+service：和当前业务逻辑息息相关的代码都应该写在service中，逻辑运算、处理，service发起一个一个的dao方法调用，然后再service进行组装。汽车工厂，向各个汽车零部件工厂发起订单，零部件进行组装形成一个整车
+
+dao：单纯的一个一个的sql语句，查询、修改、新增等。零部件工厂
+
+
+
+
+
+## 关于路径的一个补充
+
+如果我想获取EE项目的一个文件的路径，除了可以使用context来获取之外还可以使用另外一种方式来获取
+
+利用类加载器来获取
+
+
+
+编写的java文件，编译形成class文件，class文件存储在本地硬盘上面的
+
+运行时候可以找到该class，说明了啥？
+
+硬盘上面的class文件被加载到了内存中
+
+这个过程称之为磁盘IO，IO代码
+
+类被加载到内存中是由来加载器来完成的
+
+既然类加载器可以将本地硬盘上面的class文件加载到内存中，那么可不可以将本地硬盘上面的其他的文件加载到内存中呢？
+
+肯定也是可以的
+
+
+
+我们可以使用类加载器来将我们需要加载的文件绝对路径拿到
+
+
+
+```java
+package com.cskaoyan.path;import javax.servlet.ServletException;import javax.servlet.annotation.WebServlet;import javax.servlet.http.HttpServlet;import javax.servlet.http.HttpServletRequest;import javax.servlet.http.HttpServletResponse;import java.io.IOException;import java.io.InputStream;import java.util.Properties;@WebServlet("/test")public class TestServlet extends HttpServlet {    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {    }    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {        //拿到类加载器        ClassLoader classLoader = TestServlet.class.getClassLoader();        //输入一个相对于classpath的相对路径，返回一个绝对路径        // classpath一般情况下就是和你的全类目的类最外层package的父目录        //文件存放：就是和你们的全类目的最外层package保持平级，比如com目录平级        //有时候，我只想拿到path        String path = classLoader.getResource("application.properties").getPath();        System.out.println(path);        InputStream inputStream = classLoader.getResourceAsStream("application.properties");        Properties properties = new Properties();        properties.load(inputStream);        String username = properties.getProperty("username");        System.out.println(username);    }}
+```
