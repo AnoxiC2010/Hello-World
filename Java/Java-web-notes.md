@@ -6119,5 +6119,304 @@ dao：单纯的一个一个的sql语句，查询、修改、新增等。零部�
 
 
 ```java
-package com.cskaoyan.path;import javax.servlet.ServletException;import javax.servlet.annotation.WebServlet;import javax.servlet.http.HttpServlet;import javax.servlet.http.HttpServletRequest;import javax.servlet.http.HttpServletResponse;import java.io.IOException;import java.io.InputStream;import java.util.Properties;@WebServlet("/test")public class TestServlet extends HttpServlet {    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {    }    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {        //拿到类加载器        ClassLoader classLoader = TestServlet.class.getClassLoader();        //输入一个相对于classpath的相对路径，返回一个绝对路径        // classpath一般情况下就是和你的全类目的类最外层package的父目录        //文件存放：就是和你们的全类目的最外层package保持平级，比如com目录平级        //有时候，我只想拿到path        String path = classLoader.getResource("application.properties").getPath();        System.out.println(path);        InputStream inputStream = classLoader.getResourceAsStream("application.properties");        Properties properties = new Properties();        properties.load(inputStream);        String username = properties.getProperty("username");        System.out.println(username);    }}
+@WebServlet("/test")
+public class TestServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //拿到类加载器
+        ClassLoader classLoader = TestServlet.class.getClassLoader();
+        //输入一个相对于classpath的相对路径，返回一个绝对路径
+        // classpath一般情况下就是和你的全类目的类最外层package的父目录
+        //文件存放：就是和你们的全类目的最外层package保持平级，比如com目录平级
+        //有时候，我只想拿到path
+        String path = classLoader.getResource("application.properties").getPath();
+        System.out.println(path);
+        InputStream inputStream = classLoader.getResourceAsStream("application.properties");
+        Properties properties = new Properties();
+        properties.load(inputStream);
+        String username = properties.getProperty("username");
+        System.out.println(username);
+    }
+}
 ```
+
+
+
+# 项目一
+
+## Day1 项目启动
+
+### 项目概述
+
+http://115.29.141.32:8085/admin.html
+
+http://115.29.141.32:8085
+
+
+
+项目一是一个商城。可以分为两部分，一部分后台管理系统，一部分是前台用户系统。
+
+前台用户系统指的就是用户购物的一个系统，比如接触的京东、淘宝等这些前台用户系统
+
+后台管理系统指的是商城工作人员使用的一个系统，主要去维护前台用户系统里面的相关数据，比如用户数据，用户忘了密码；商品数据，发布一个新品；订单系统，物流信息；留言、订单的评价
+
+### 项目架构-前后端分离
+
+究竟什么是前后端分离呢？
+
+页面里面的内容，其实可以分为两个部分，一个是单纯的页面，一个是数据
+
+页面是来自于8085系统
+
+数据来自于8084系统
+
+页面和数据不在同一个系统内，一个负责前端页面，一个负责对应的数据
+
+前后端分离
+
+![image-20210514095636570](C:/Users/AnoxiC2010/Desktop/wdJava30th/EE/Day9 项目启动/项目一.assets/image-20210514095636570.png)
+
+你今后的工作其实主要是给前端开发人员提供对应的数据
+
+
+
+### 接口文档
+
+人员组成。
+
+前端开发人员    服务端开发人员
+
+前端开发人员主要负责将psd图片转成html页面，加上css样式，加上js等
+
+数据来源于java等语言的服务端开发人员来提供
+
+开发人员之间要进行对接、交互。全部都以口头的形式进行对接，效率非常低。并且有时候还会出现一些模棱两可的事情
+
+比如前端开发人员说了一句，这个请求应该给我返回什么样的数据格式，你的确也是以这种格式返回的；但是前端忘了，解析取数据的时候不是按照这个格式来进行读取的
+
+最好再对接的时候以纸质的形式记录下来，对照着文档来操作。
+
+文档一般称之为**接口**文档。
+
+这里面的接口和我们java语言里面学习的interface不是一个概念，但是从功能上去分析的话，其实很类似。
+
+interface： Animal animal = new Pig();
+
+​					animal.run();
+
+相当于一个黑盒一样，只需要去调用animal.run()，接下来就会给我返回对应的数据，我并不需要去关心究竟是如何实现的
+
+
+
+请求的响应过程：
+
+发起请求，需要有一个请求的地址，请求的方法，请求的参数，遵循着这个要求，往这个地址去发起一个请求，那么就会给我返回对应的结果
+
+一般情况下，我们将请求的处理响应过程也称之为一个接口
+
+接口一般会涉及：请求的资源路径、请求的方法、请求的参数，返回对应的数据格式
+
+我们需要将这些格式以文档的形式约束下来，请求应该怎么发，响应的数据应该如何去响应，字段应该叫什么字段。都应该写的清清楚楚。
+
+建议大家一定要去写。
+
+### 项目如何进行
+
+在企业中，项目的进行是由前后端开发人员进行交互、协商一起去进行。
+
+但是在项目一，不可能给大家配置一个专门的前端开发人员来进行对接，我们采用的方式是先在公网服务器上面预先搭建好了一套已经实现好了的代码，大家只需要根据这个公网服务器上面的要求来即可。
+
+本地的前端代码和公网服务器上面的前端代码基本是一模一样的，请求的发送格式、响应的格式，
+
+你可以认为项目是前端开发人员已经写好了一个接口文档，然后大家需要去根据这个要求去加以实现即可。
+
+
+
+更通俗的去说，
+
+通过去抓取公网服务器上面的请求报文和响应报文
+
+公网服务器上面的请求报文和本地的前端发送的请求报文应该是一致的
+
+公网服务器上面要求的返回数据类型其实和本地也是一样的
+
+**就是去抓取公网服务器上面的响应报文，然后本地加以复现。你的最终响应报文要和公网服务器一致就可以了。**
+
+### 功能分析
+
+发给大家的前端代码是一个压缩包，解压缩，
+
+1.需要在package.json所在的目录执行cnpm install 或者npm install
+
+但是npm的服务器在国外，可能网速比较慢，直接npm修改源即可。
+
+npm config set registry https://registry.npm.taobao.org
+
+通过这种方式设置，和设置cnpm基本等效
+
+2.执行npm run dev
+
+分析代码，主要关注src目录
+
+叫做api目录-----其实就是一个一个的接口
+
+admin.js
+
+​	const res = axios.post('**/api/admin/admin/login**',data);
+
+其实axios是一个发送HTTP请求的工具，会以post请求方式往这个地方去发送一个请求，拿到对应的结果
+
+
+
+其中admin.js是后台管理系统的所有接口（先从后台管理系统开始）
+
+client.js是前台用户系统所有的接口
+
+/api/admin/admin/login里面的路径是不包含主机端口号的，那么发送的主机端口号在哪个配置的呢？
+
+在src/config目录下
+
+axios-admin.js
+
+axios-client.js
+
+axios.defaults.baseURL = 'http://localhost:8084';
+
+
+
+3.新建Maven的EE项目，监听8084端口号，启动
+
+通过页面点击登录按钮
+
+![image-20210514111437234](C:/Users/AnoxiC2010/Desktop/wdJava30th/EE/Day9 项目启动/项目一.assets/image-20210514111437234.png)
+
+#### 问题：跨域
+
+什么叫跨域？
+
+访问页面的时候请求的地址Http://localhost:8085,但是紧接着发送了一个到Http://localhost:8084的请求
+
+8085和8084虽然主机名相同，但是端口号不同，这个时候也是跨域
+
+默认情况下浏览器是不允许跨域的，如果希望能够跨域，需要服务器的相关支持，需要服务器返回几个响应头
+
+响应头类似于一个通行凭证，今后每次去访问都需要有这个通行凭证才可以正常访问。
+
+在跨域的时候，浏览器会发送两个请求，一个是OPTIONS请求，一个是真正的请求
+
+OPTIONS你可以认为是一个试探性请求，服务器是否支持跨域，如果支持，给他返回了对应的响应头， 那么就可以正常发送真正的请求；如果没有返回对应的响应头，那么则表示不允许跨域，则请求发送失败
+
+#### 登录逻辑分析
+
+本质还是去抓包。
+
+去公网服务器上面去抓请求报文（本地抓请求报文也可以），以及响应报文
+
+然后想法设法和它返回的一致即可。
+
+
+
+登录的请求报文：
+
+POST http://localhost:8084/api/admin/admin/login HTTP/1.1
+Host: localhost:8084
+Connection: keep-alive
+Content-Length: 31
+sec-ch-ua: "Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"
+Accept: application/json, text/plain, */*
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36
+Content-Type: application/json;charset=UTF-8
+Origin: http://localhost:8085
+Sec-Fetch-Site: same-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8085/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9
+
+**{"email":"admin","pwd":"admin"}**
+
+着重关注请求体，因为我们的请求参数是在请求体中
+
+之前我们在给大家演示的时候，都是通过form表单，参数都是以key=value形式进行提交的，此时不再是了，而是json字符串
+
+request.getParameter无法获取到了。
+
+登录的响应报文：（登录成功）
+
+HTTP/1.1 200
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Access-Control-Allow-Origin: *
+Content-Type: application/json;charset=UTF-8
+Date: Fri, 14 May 2021 03:27:59 GMT
+Content-Length: 50
+
+**{"code":0,"data":{"token":"admin","name":"admin"}}**
+
+登录失败的响应报文
+
+HTTP/1.1 200
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Access-Control-Allow-Origin: *
+Content-Type: application/json;charset=UTF-8
+Date: Fri, 14 May 2021 03:31:25 GMT
+Content-Length: 43
+
+**{"code":10000,"message":"密码不正确!"}**
+
+
+
+**你需要做的事情就是本地的响应报文和公网上面的一致即可**。
+
+
+
+### BO、VO、POJO
+
+数据库里面的表----对应的应该有一个java对象  POJO  plain old java object
+
+请求发送过来的数据，数据和数据库里面的字段有关联吗？请求发送过来的字段可以是任意的
+
+比如请求发送过来的是email和pwd，而我的数据库里面的表字段是username和password，完全合理的
+
+新建一个新的对象用来接收传递过来的请求参数的封装，一般称之为BO business object
+
+
+
+数据库里面的字段的信息，要显示给客户端，发送出去，数据库里面的字段信息可能叫做username、password
+
+但是页面需要的字段可能是email和pwd，这也是非常合理的
+
+需要将POJO里面的字段信息转成VO  view Object  显示的
+
+
+
+关于路径：
+
+**如果要用classLoader去获取文件的路径、流，需要将文件放置再classpath相关路径下**
+
+
+
+使用servletContext来获取，路径的写法相对来说比较容易写，需要引入servletContext对象
+
+
+
+
+
+前两天进度应该是不快的
+
+管理员、用户
+
+遇到问题一定要自己先去思考（自己不思考，一个是自己死钻牛角尖，30min~1h没有头绪）
+
+勤总结，bug--分析原因
+
+
+

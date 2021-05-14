@@ -909,7 +909,7 @@ googlefont
 
 根据电脑类型,在node官方网站下载node, 然后默认安装到计算机上 
 
-安装成功的标志如下, 打开计算机命令行 减产node版本 以及 npm版本
+安装成功的标志如下, 打开计算机命令行 检查node版本 以及 npm版本
 
 ![文本  描述已自动生成](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\JavaScript\Vue-learning.assets\clip_image002.jpg)
 
