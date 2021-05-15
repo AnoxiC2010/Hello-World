@@ -300,7 +300,7 @@ public static void main(String[] args) throws IOException {
 >
 > 	<SELECT> 这个标签必须得有resultType，也就是必须得有返回值类型，
 > 	    	 当我们传入简单参数的时候，可以没有parameterType
-> 	
+> 		
 > 	<insert> <update> <delete> 这些标签因为标签里面都是增删改语句，增删改语句的返回值都是影响的行数，所以这些标签不用写resultType,但是得写parameterType,得告诉Mybatis我们传入的参数的类型
 
 ### 4.1 一个简单参数
