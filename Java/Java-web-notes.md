@@ -5621,6 +5621,14 @@ var country = {name:"中国", province:[{name:"黑龙江",cities:["哈尔滨","�
 
 前端页面登录，然后将提交的数据以json字符串的形式提交给服务端，解析出里面的数据，封装成为java对象，保存到数据库等。
 
+```
+//jackson解析不了null "" 和 非jason格式字符串，均会抛出异常
+ObjectMapper objectMapper = new ObjectMapper();
+        String a = null or "" or "abc";
+        Type type = objectMapper.readValue(a, Type.class);
+        System.out.println(type);
+```
+
 
 
 ```java
