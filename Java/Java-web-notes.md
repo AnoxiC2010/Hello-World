@@ -6308,7 +6308,7 @@ axios.defaults.baseURL = 'http://localhost:8084';
 
 通过页面点击登录按钮
 
-![image-20210514111437234](C:/Users/AnoxiC2010/Desktop/wdJava30th/EE/Day9 项目启动/项目一.assets/image-20210514111437234.png)
+![image-20210514111437234](\\192.168.2.100\share\JAVA\30th\EE\Day10 多条件查询\项目一.assets\image-20210514111437234.png)
 
 #### 问题：跨域
 
@@ -6434,6 +6434,26 @@ Content-Length: 43
 遇到问题一定要自己先去思考（自己不思考，一个是自己死钻牛角尖，30min~1h没有头绪）
 
 勤总结，bug--分析原因
+
+## Day2 多条件查询
+
+
+
+假如没有mybatis，该如何处理该多条件查询？
+
+```java
+	String baseSql = "select * from admin where 1 = 1 "
+    if(username != null){
+        baseSql = baseSql + " and username like ?"
+    }
+	if(nickname != null){
+        baseSql = baseSql + "and nickname like ?"
+    }
+```
+
+
+
+
 
 
 
