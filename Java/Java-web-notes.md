@@ -5171,6 +5171,16 @@ web中的监听器
 
 2.声明注册该listener（注解、web.xml）
 
+使用web.xml
+
+```xml
+<listener> 
+    <listener-class>com.baidu.app.MyServletContextListener </listener-class> 
+</listener>
+```
+
+使用注解
+
 ```java
 @WebListener
 public class MyServletContextListener implements ServletContextListener {
@@ -5187,6 +5197,30 @@ public class MyServletContextListener implements ServletContextListener {
 
     }
 }
+```
+
+配置contex域的启动参数；
+
+设置完成后我们可以在web应用启动的时候，在任意的servlet或者jsp中通过`getServletContext().getAttribute(“**”)`来获取存入的参数或者其他
+
+额外：获取web.xml中servlet参数和web应用参数，web.xml参数配置如下：
+
+配置文件中对参数的配置的不同. servletParam这个参数是属于servletTest这个Servlet, webParam这个参数是属于web应用的，被各个servlet共享.
+
+```xml
+<context-param>  
+    <param-name>webParam</param-name>  
+    <param-value>a</param-value>  
+</context-param>  
+
+<servlet>  
+    <servlet-name>servletTest</servlet-name>  
+    <servlet-class>servletTest</servlet-class>  
+    <init-param>  
+        <param-name>servletParam</param-name>  
+        <param-value>b</param-value>  
+    </init-param>  
+</servlet>
 ```
 
 
@@ -5629,7 +5663,12 @@ ObjectMapper objectMapper = new ObjectMapper();
         System.out.println(type);
 ```
 
+```
+ //会自动忽略为null的值
+       objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+```
 
+jackon可以自动把前端传的字符串"1"封装到后端的int中，只要确认是数值类型就可以不用把BO的该属性写为string类型
 
 ```java
 package com.cskaoyan.json;
@@ -6395,6 +6434,22 @@ Content-Length: 43
 
 
 
+服务器开启跨域许可
+
+```
+ //去添加跨域支持的代码响应头
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) resp;
+        response.setHeader("Access-Control-Allow-Origin","*");
+        response.setHeader("Access-Control-Allow-Methods","POST,GET,OPTIONS,PUT,DELETE");
+        response.setHeader("Access-Control-Allow-Headers","x-requested-with,Authorization,Content-Type");
+        response.setHeader("Access-Control-Allow-Credentials","true");
+```
+
+跨域session不能用了
+
+服务器虽然开启了跨域支持，但是每次请求的session是不一样的，解决方法TODO
+
 ### BO、VO、POJO
 
 数据库里面的表----对应的应该有一个java对象  POJO  plain old java object
@@ -6453,7 +6508,71 @@ Content-Length: 43
 
 
 
+## Day3 商品模块
 
+后台管理系统中的商品模块，用来维护前台用户系统的所有商品。
+
+可以对商品进行维护，增删改查等。
+
+
+
+首先先建表
+
+商品部分需要新建几张表
+
+分类表、商品表、商品的规格表
+
+分别是前者和后者一对多的关系。
+
+关系的维护应该写在多的一方。至于写不写外键，取决于你自己，实际开发过程中，其实为了并发，很少去写外键，但是项目一更多是给大家练习的，所以外键你可以用进来。
+
+
+
+分类表：
+
+id（索引，数据结构，B+树）
+
+name
+
+
+
+
+
+商品表：
+
+id
+
+name
+
+**categoryId**
+
+image
+
+description
+
+price
+
+stockNum
+
+分析：查询的数据中是包含了价格、库存的
+
+如果商品表里面不维护价格、库存，那么查询的时候一定需要进行连接查询
+
+如果商品表里面冗余了一份价格、库存，那么查询的时候其实非常轻松，只是在新增或者修改的时候需要去维护一下
+
+
+
+规格表：
+
+id
+
+specName
+
+stockNum
+
+unitPrice
+
+**goodsId**
 
 
 
