@@ -5751,6 +5751,14 @@ public class JsonTest {
 
 
 
+jackson 解析日期
+
+[jackson对日期类型的处理 - 简书 (jianshu.com)](https://www.jianshu.com/p/dbe04e3b6c91)
+
+[Jackson JSON对日期格式的解析设置_海涛的博客-CSDN博客_jackson解析时间](https://blog.csdn.net/zht666/article/details/8718792)
+
+[@JsonFormat与@DateTimeFormat注解的使用 - zhuzhipeng - 博客园 (cnblogs.com)](https://www.cnblogs.com/mracale/p/9828346.html)
+
 ## MVC
 
 ### 从注册登录案例引出MVC
