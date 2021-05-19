@@ -6708,3 +6708,123 @@ hasComment---当前订单是否已经评价
 
 
 
+## Day5 权限管理
+
+虽然我们访问8085应用时，有对应的登录验证拦截，但是对于8084的所有的接口都是没有任何权限验证的，都是可以自由访问的。
+
+http://localhost:8084/api/admin/admin/allAdmins
+
+只要用户记住对应的地址，那么就可以访问
+
+加上权限
+
+只有登录了后台管理系统，才有资格去调用8084的所有接口
+
+
+
+**登录接口**肯定要放行，不需要验证
+
+
+
+**其他后台管理系统所有的接口**全部验证权限-------如果登录，则自由访问（放行）；如果没有登录，则拦截
+
+
+
+如何去判断有没有登录呢？
+
+session中去取数据
+
+
+
+
+
+
+
+登录成功之后放入session数据
+
+
+
+登录之后访问其他接口从session中取数据，发现取不出来？
+
+原因？
+
+**不是同一个session**
+
+1.servletorg.apache.catalina.session.StandardSessionFacade@54302b0e  E5E62431939AD2B578FFCF484843BFE7
+
+2.filter:org.apache.catalina.session.StandardSessionFacade@1ebb201c  CED13DE776097DBF26842C54BB2E2D5E OPTIONS /api/admin/admin/allAdmins
+
+
+
+3。filter:org.apache.catalina.session.StandardSessionFacade@3f6baed1  7F2C1029892F7B757554AC7EA41D65C9 GET /api/admin/admin/allAdmins
+
+
+
+其中1是登录成功之后打印出来的session及id信息
+
+2和3分别是访问allAdmins时OPTIONS请求和GET请求所打印出来的session及id信息
+
+
+
+从上面可以得出：
+
+不是同一个session？为什么不是同一个session？
+
+**全部凭借着Cookie:JSESSIONID=xxxx这个凭证，如果有该凭证，那么就把该凭证对应的session对象返回**
+
+**如果没有该凭证，那么就创建一个新的session对象**
+
+
+
+本质：
+
+请求没有携带cookie（自己去验证）
+
+**为什么没有携带cookie呢？因为跨域。**
+
+
+
+跨域默认情况下是不会携带cookie的，如果希望浏览器能够携带cookie，则需要客户端和服务端同时做一些设置
+
+客户端：
+
+**需要在axios-admin.js以及axios.client.js中分别添加如下代码**
+
+**axios.defaults.withCredentials = true**
+
+服务端：
+
+```java
+response.setHeader("Access-Control-Allow-Origin","http://localhost:8085");
+```
+
+
+
+修改过后，功能ok了，但是发现访问OPTIONS请求时，仍然会创建一个新的session对象，原因在于OPTIONS请求不会携带cookie
+
+OPTIONS看做一个试探性请求，所以它不会携带cookie。
+
+
+
+servletorg.apache.catalina.session.StandardSessionFacade@1e289466  59C20B9FA17A07F200080B79DCB2439A
+filter:org.apache.catalina.session.StandardSessionFacade@75d36291  BC17A9836370AF314459317E6A3476F2 OPTIONS /api/admin/admin/allAdmins
+filter:org.apache.catalina.session.StandardSessionFacade@1e289466  59C20B9FA17A07F200080B79DCB2439A GET /api/admin/admin/allAdmins
+
+
+
+
+
+转入前台用户系统。
+
+注意以下几点：
+
+controller也就是servlet需要重新新建一个新的，因为请求的url不同的
+
+service、dao如果发现可以复用，那么直接复用即可
+
+GoodsService----都是关于商品的，写前台接口
+
+
+
+
+
