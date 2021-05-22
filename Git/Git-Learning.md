@@ -105,3 +105,15 @@
   给ssh远程地址起别名
 * git push origin_ssh master  
   用ssh方式提交，不用每次都进行身份验证，但是只针对一个账号
+
+
+
+查找资源
+
+常用的前缀后缀
+
+- 查找百科大全 awesome xxx
+- 找例子 xxx sample
+- 找空项目架子 xxx starter / xxx boilerplate
+- 找教程 xxx tutorial
+
