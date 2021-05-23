@@ -389,15 +389,27 @@ static {
 
 通常一种情况是，针对当前的 Project 的配置；另外一种情况是新建一个新的工程的时候的配置 
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image002.jpg) 
+当前Project配置maven：File→Settings
 
- 
+新Project配置maven：File→New Projects Settings
 
 ## 1.1   进入到 settings 中 
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image004.jpg)
+搜索maven
 
- 
+设置:
+
+- Maven home directory
+
+  maven的根路径
+
+- User settings file
+
+  maven的配置文件→maven根路径下conf目录下的settings.xml，勾选Override用所选文件覆盖默认配置文件
+
+- Local repository
+
+  本地仓库，maven下载的依赖存放在本地仓库默认在系统用户目录下的`.m2`文件夹，勾选Override覆盖默认设置
 
 # 2   在 Maven 的 settings.xml 中配置什么 
 
@@ -405,7 +417,20 @@ static {
 
 2.1 localRepository（选做）这一项配置的是本地仓库，如果单独使用 maven 的话，项目构建引用本地依赖的位置 
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image006.jpg) 
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <!-- localRepository
+   | The path to the local repository maven will use to store artifacts.
+   |
+   | Default: ${user.home}/.m2/repository
+  <localRepository>/path/to/local/repo</localRepository>
+  -->
+    <localRepository>D:/xxx/xxx/repo</localRepository>
+```
+
+ 
 
 ## 2.2   mirrors（必须） 
 
@@ -413,23 +438,60 @@ static {
 
 注意是 **mirrors** 标签内部，是复数形式，有 s 
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image008.jpg) 这一项如果不配置的话，会采用 maven 的中央仓库下载依赖，连接中央仓库的网络不稳定，会导致依赖下载不下来，导致本地仓库保留不完整的依赖。 
+```xml
+<mirrors>
+    <!-- mirror
+     | Specifies a repository mirror site to use instead of a given repository. The repository that
+     | this mirror serves has an ID that matches the mirrorOf element of this mirror. IDs are used
+     | for inheritance and direct lookup purposes, and must be unique across the set of mirrors.
+     |
+    <mirror>
+      <id>mirrorId</id>
+      <mirrorOf>repositoryId</mirrorOf>
+      <name>Human Readable Name for this Mirror.</name>
+      <url>http://my.repository.com/repo/path</url>
+    </mirror>
+     -->
+    <mirror>
+      <id>nexus-aliyun</id>
+      <mirrorOf>central</mirrorOf>
+      <name>Nexus aliyun</name>
+      <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+    </mirror>
+  </mirrors>
+```
+
+ 这一项如果不配置的话，会采用 maven 的中央仓库下载依赖，连接中央仓库的网络不稳定，会导致依赖下载不下来，导致本地仓库保留不完整的依赖。 
 
 ## 2.3   profiles（必须） 
 
 在 **profiles** 标签下引入 profile 标签，配置项目构建使用的 jdk 版本也注意是 **profiles** 标签内部，是复数形式，有 s 
 
- 
-
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image010.jpg) 
+```xml
+<!--编译使用的jdk版本-->
+<profiles>
+    <profile>
+        <id>jdk-1.8</id>
+        <activation>
+            <activeByDefault>true</activeByDefault>
+            <jdk>1.8</jdk>
+        </activation>
+        <properties>
+            <maven.compiler.source>1.8</maven.compiler.source>
+            <maven.compiler.target>1.8</maven.compiler.target>
+            <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+        </properties>
+    </profile>
+</profiles> 
+```
 
 否则会影响 IDEA 中 module 的 jdk 版本比如下面的图： 
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image012.jpg) 
+- Project Structure→Modules→Sources Language level 会呈现5或6版本
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image014.jpg) 
+- Settings→Java Compiler→Per-module bytecode version - Target bytecode version 也会变成5或6版本
 
- 
+
 
 | **注意：如果上面出现了** **5 或 6 版本，首先先检查  idea 中是否配置了 settings.xml，如果** |      |
 | ------------------------------------------------------------ | ---- |
@@ -441,11 +503,23 @@ static {
 
 Idea 中的 maven 配置是放在 **Project 根目录下的.idea 文件夹下的 workspace.xml** 中，如下图所示 
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image016.jpg) **通常在你去下载或打开了别人的** **project 的时候，会发现 Maven 的配置是其他人的，引入包含了其他人的.idea 文件夹** 
+```xml
+<component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="localRepository" value="D:\Code Program\apache-maven-3.6.0\repository" />
+        <option name="mavenHome" value="$PROJECT_DIR$/../../../../../Code Program/apache-maven-3.6.0" />
+        <option name="userSettingsFile" value="D:\Code Program\apache-maven-3.6.0\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+```
+
+ 通常在你去下载或打开了别人的 project 的时候，会发现 Maven 的配置是其他人的，引入包含了其他人的.idea 文件夹 
 
 **非常重要** 
 
-**所以建议大家：在打开其他人的工程****(project)的时候，尤其是打开老师上课时代码的工程的时候，首先要去做一件事，检查并修改 Maven 的配置，最好形成条件反射。** 
+所以建议：在打开其他人的工程(project)的时候，首先要去做一件事，检查并修改 Maven 的配置，最好形成条件反射。 
 
 # Maven+IDEA使用问题
 
