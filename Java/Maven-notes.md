@@ -383,7 +383,69 @@ static {
 
 
 
+# Maven+IDEA简要小结
 
+# 1   IDEA 中 Maven 的配置 
+
+通常一种情况是，针对当前的 Project 的配置；另外一种情况是新建一个新的工程的时候的配置 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image002.jpg) 
+
+ 
+
+## 1.1   进入到 settings 中 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image004.jpg)
+
+ 
+
+# 2   在 Maven 的 settings.xml 中配置什么 
+
+在上面我们在 Idea 中配置了 Maven 的相关配置，其中第二项我们在 maven 的根路径下配置了 **settings.xml**，那么我们在 **settings.xml** 中做哪一些配置呢？ 
+
+2.1 localRepository（选做）这一项配置的是本地仓库，如果单独使用 maven 的话，项目构建引用本地依赖的位置 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image006.jpg) 
+
+## 2.2   mirrors（必须） 
+
+在 **mirrors** 标签下引入 mirror 标签，配置阿里云镜像。 
+
+注意是 **mirrors** 标签内部，是复数形式，有 s 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image008.jpg) 这一项如果不配置的话，会采用 maven 的中央仓库下载依赖，连接中央仓库的网络不稳定，会导致依赖下载不下来，导致本地仓库保留不完整的依赖。 
+
+## 2.3   profiles（必须） 
+
+在 **profiles** 标签下引入 profile 标签，配置项目构建使用的 jdk 版本也注意是 **profiles** 标签内部，是复数形式，有 s 
+
+ 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image010.jpg) 
+
+否则会影响 IDEA 中 module 的 jdk 版本比如下面的图： 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image012.jpg) 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image014.jpg) 
+
+ 
+
+| **注意：如果上面出现了** **5 或 6 版本，首先先检查  idea 中是否配置了 settings.xml，如果** |      |
+| ------------------------------------------------------------ | ---- |
+| **已经配置了，进一步检查** **settings.xml 中的 profiles 标签** |      |
+
+ 
+
+3 为什么我配置了，有时候失效了（重要） 
+
+Idea 中的 maven 配置是放在 **Project 根目录下的.idea 文件夹下的 workspace.xml** 中，如下图所示 
+
+![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image016.jpg) **通常在你去下载或打开了别人的** **project 的时候，会发现 Maven 的配置是其他人的，引入包含了其他人的.idea 文件夹** 
+
+**非常重要** 
+
+**所以建议大家：在打开其他人的工程****(project)的时候，尤其是打开老师上课时代码的工程的时候，首先要去做一件事，检查并修改 Maven 的配置，最好形成条件反射。** 
 
 # Maven+IDEA使用问题
 
@@ -596,4 +658,8 @@ cmd 创建maven项目生成的pom.xml
     </resources>
 </build>
 ```
+
+
+
+
 
