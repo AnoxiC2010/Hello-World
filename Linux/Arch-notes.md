@@ -42,3 +42,6 @@ $ sudo grub-mkconfig -o /boot/grub/grub.cfg
 
 展示版本信息，需要安装
 
+`uname -r`
+
+查看内核版本
