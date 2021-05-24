@@ -923,6 +923,68 @@ invoke → 1.委托类代码method.invoke 2.额外增强代码
 
 ![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image028.jpg)
 
+
+
+注意在debug模式下一步步查看代理类调用方法的过程会发现在实际执行想要的结果之前InvocationHandler中的增强代码已经执行了两遍，这是由于IDEA的debug模式机制造成的，debug模式下IDEA用于显示变量会调用tostring方法，代理类会增强所有方法，所以在代码执行到invoke方法时IDEA为了显示liushifuProxy和内部类中的proxy先调用了两次tostring方法，便有了这种现象。
+
+```java
+public class Execution {
+
+    //为什么写main方法，没有写单元测试方法
+    //后续要做一件事情 → 生成代理类的字节码文件
+    public static void main(String[] args) {
+
+        //默认的动态代理的字节码文件不生成 👉 可以让他保存下来
+        //生成的文件保存到了哪里 👉 应用程序的working directory 👉 默认的工作路径是project路径
+//        System.setProperty("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
+
+        Liushifu liushifu = new Liushifu();
+        //获得代理类的实例（对象）
+        //1、classloader
+        //2、interfaces 获得委托类所实现的接口数组
+        //3、InvocationHandler → 接口 → 实现类要做的事情 → 增强 → 委托类方法的实现 + 额外的事情
+        //我们需要自己来提供这个代理类的InvocationHandler → invoke方法
+        //代理类对象 去执行委托类相同的这个方法 → 实际上就是去执行InvocationHandler的invoke方法
+        // → invoke方法中 → 不仅要实现委托类的方法的调用 + 额外的增强
+        //可以额外去写InvocationHandler的实现类，也可以采用匿名内部类的方式来做 → 推荐使用匿名内部类的方式
+        // → 可以更方便的调用委托类的方法
+        //要使用接口来接收Jdk代理对象
+        Breakfast liushifuProxy = (Breakfast) Proxy.newProxyInstance(liushifu.getClass().getClassLoader(),
+                liushifu.getClass().getInterfaces(),
+                //new CustomInvocationHandler()
+                new InvocationHandler() { //类的定义
+                    //关注的就是invoke方法的写法 → 回调方法
+                    //invoke方法是否是获得这个Proxy对象的时候执行的？？？ 代理对象去执行方法的时候 → 而不是定义匿名内部类的时候执行的
+                    /**
+                     * @param proxy → 代理对象 → 就是liushifuProxy
+                     * @param method → 代理对象正在执行的委托类的方法
+                     * @param args → 代理对象去执行委托类方法的时候携带的参数
+                     * @return Object → 委托类方法的执行结果
+                     * 增强范围 👉 委托类中的全部方法 👉 按照统一的方式增强
+                     */
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+                        //委托类代码的执行
+                        //liushifu.buyBreakfast(); //方法不要写死了
+                        //liushifu\method\args 反射
+                        Object invoke = method.invoke(liushifu, args);//执行了委托类的方法
+                        //增强
+                        System.out.println("+烤肠" + method.getName()); //增强全部方法
+                        return invoke;
+                    }
+                }
+        );
+        liushifuProxy.buyBreakfast();//使用代理对象执行方法
+//        liushifuProxy.buyBreakfast2("油条");
+    }
+}
+
+//debug模式一步步查看会发现+烤肠提前执行了两次（伴随着toSting方法的调用执行的）
+```
+
+
+
 ## 建造者builder
 
 生产东西 👉 生产实例
