@@ -35,6 +35,16 @@
 | Ctrl+Shift+上下  | 上下换行                        |
 | Ctrl+Shift+enter | 自动补全，并带;                 |
 
+ctrl + shift + v 历史粘贴记录
+
+ctrl + alt + v 返回值补全
+
+ctrl + F12 类中找方法
+
+ctrl + H 看继承关系
+
+ctrl + alt + shift + J 全选当前光标在的关键词
+
 ## Ctrl
 
 | 快捷键           | 介绍                                                         |
@@ -215,6 +225,7 @@
 | Ctrl + Shift + Alt + N | 前往指定的变量 / 方法 |
 | Ctrl + Shift + Alt + S | 打开当前项目设置      |
 | Ctrl + Shift + Alt + C | 复制参考信息          |
+| Ctrl + Shift + Alt + J | 全选当前关键词        |
 
 ## 其他
 
@@ -241,7 +252,7 @@
 
 ## MyBatisCodeHelperPro
 
-# LOMBOK
+## LOMBOK
 
 配合maven导入jar包使用
 
