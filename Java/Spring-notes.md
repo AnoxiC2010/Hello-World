@@ -921,9 +921,7 @@ public class Liushifu$$EnhancerByCGLIB$$ca2612d1 extends Liushifu implements Fac
 invoke → 1.委托类代码method.invoke 2.额外增强代码
 ```
 
-![img](file:///C:/Users/ANOXIC~1/AppData/Local/Temp/msohtmlclip1/01/clip_image028.jpg)
-
-
+![image-20210525201149872](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\image-20210525201149872.png)
 
 注意在debug模式下一步步查看代理类调用方法的过程会发现在实际执行想要的结果之前InvocationHandler中的增强代码已经执行了两遍，这是由于IDEA的debug模式机制造成的，debug模式下IDEA用于显示变量会调用tostring方法，代理类会增强所有方法，所以在代码执行到invoke方法时IDEA为了显示liushifuProxy和内部类中的proxy先调用了两次tostring方法，便有了这种现象。
 
@@ -1092,3 +1090,799 @@ public void mytest3(){
 }
 ```
 
+
+
+
+
+# SpringFramework
+
+Spring框架 👉 Spring
+
+ 
+
+春天
+
+Rod Johnson 👉 大佬
+
+
+
+spring.io 👉 the Source of Modern Java
+
+Java程序员的标配 👉 Spring工程师 
+
+# IOC和DI（核心中的核心）
+
+## IOC
+
+Inverse of control控制反转
+
+ 
+
+经常有方法的调用 👉 对象（实例）
+
+ 
+
+应用程序来通过构造方法new出来实例 
+
+**控制** **👉 实例的生成权**
+
+**反转** **👉 实例的生成反转为由Spring来做**
+
+原先由应用程序来获得实例 👉 现在由Spring来做
+
+ 
+
+👉由Spring来做实例的统一生成、实例的管理
+
+容器：装的是实例 👉 Spring容器或IOC容器 👉 生成并管理实例的地方（实例在容器中通常以单例的形式存在）
+
+ 
+
+## DI
+
+Dependency Injection依赖注入
+
+应用程序和Spring容器：经过了控制反转 👉 谁贫穷谁富有
+
+依赖：谁依赖谁？为什么？ 👉 应用程序依赖于Spring容器，Spring容器中包含了应用程序所必须的资源。
+
+注入：谁注入谁，注入了什么？ 👉 Spring容器注入给应用程序，注入的就是应用程序所必须的实例和外部资源
+
+ 
+
+👉 平台型框架 👉 淘宝网C2C 平台 👉 商家可以入住到淘宝平台 👉 辅助性支撑性的功能
+
+ 
+
+# 入门案例1
+
+将一个实例交给Spring容器来管理，从Spring容器中取出该实例，并且执行该实例的方法
+
+## 引入依赖
+
+**spring-context**
+
+spring-aop
+
+spring-core
+
+spring-expression
+
+spring-beans
+
+jcl 日志包
+
+```xml
+<!--在pom.xml中只写context,maven会关联其他需要的依赖-->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-context</artifactId>
+    <version>5.2.5.RELEASE</version>
+</dependency>
+```
+
+
+
+## 构建Spring容器
+
+获得容器的对象ApplicationContext（接口）
+
+```java
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext();
+//加载Classpath目录下的Spring的xml配置文件，获得Spring容器的实例
+```
+
+
+
+## 提供Spring的配置文件xml
+
+xml格式的 👉 格式要求、语法限制 👉 schema约束 👉 你可以使用什么标签、标签中由什么属性、子标签、标签之间的顺序
+
+ 
+
+需要使用Spring配置文件的schema约束
+
+1、 已有的配置文件
+
+2、 官网 
+
+**3、** **创建文件模板**
+
+application.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- bean definitions here -->
+    <!--实例的管理
+            组件：Spring容器中所管理的实例
+            注册：提供信息完成组件的管理
+            注册组件：将实例交给Spring容器生成并管理
+    -->
+    <!--
+        id属性：组件在容器中的唯一标识 👉 可以省略的，会给到一个和包名类名相关的一个id
+        name属性：通常省略不写，以id作为默认name
+        class属性：必需的，全类名
+    -->
+    <bean id="userService" class="com.cskaoyan.service.UserServiceImpl"/>
+
+</beans>
+```
+
+
+
+## 单元测试
+
+按照类型从容器中取组件的方式更常用
+
+```java
+@Test
+public void mytest1() {
+    //初始化容器，获得容器对象
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+
+    //建议以接口的形式来进行接收 👉 有可能对组件做增强 👉 动态代理 👉 接口实现 👉 Jdk动态代理 👉 接口接收
+    //从容器中取出组件 👉 applicationContext.getBean
+    //getBean(String) 👉 通过组件id从容器中取出对应的值
+    UserService userService1 = (UserService) applicationContext.getBean("userService");
+
+    //getBean(Class) 👉 通过组件的类型取出组件 👉 容器中该类型的组件只有一个
+    UserService userService2 = applicationContext.getBean(UserService.class);
+
+    //getBean(String,Class)
+    UserService userService3 = applicationContext.getBean("userService", UserService.class);
+
+    userService1.sayHello("嘎子");
+    userService2.sayHello("松哥");
+    userService3.sayHello("景天");
+}
+```
+
+
+
+# 入门案例2
+
+向容器中注册多个组件，并且呢，多个组件之间存在关联关系。
+
+UserService
+
+UserDao
+
+建立多个组件之间的依赖关系
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image012.jpg)
+
+## 配置文件
+
+```xml
+<!-- bean definitions here -->
+<!--注册UserService组件-->
+<bean id="userService" class="com.cskaoyan.service.UserServiceImpl">
+    <!--维护容器中UserDao组件和UserService组件之间的关系-->
+    <!--property标签：维护组件之间的依赖关系
+                name属性：set方法名(通常set方法都是根据成员变量名生成的 👉 你可以认为写的是成员变量名)
+                value属性：值的类型为值类型（基本类型以及包装类，字符串，class）
+                ref属性：reference引用的组件id 👉 当你看到一个ref的时候，就要想到id
+        -->
+    <property name="userDaozzz" ref="userDao"/>
+    <!--property标签：完成父标签组件注册过程中使用set方法完成属性值配置-->
+</bean>
+<!--注册UserDao组件-->
+<bean id="userDao" class="com.cskaoyan.dao.UserDaoImpl"/>
+```
+
+
+
+## 单元测试
+
+```java
+@Test
+public void mytest1() {
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+
+    UserService userService = applicationContext.getBean(UserService.class);
+    userService.sayHello("嘎子");
+
+    UserDao userDao = applicationContext.getBean(UserDao.class);//debug来看userService里的userDao和直接取出的是否是同一个
+}
+```
+
+
+
+# 核心接口
+
+BeanFactory 👉 Bean工厂 👉 生产全部Bean的地方
+
+ApplicationContext 👉 extends BeanFactory
+
+都是我们的容器接口 👉 他们提供的方法就是容器提供给我们的功能
+
+ 
+
+使用的是实现类
+
+ClasspathXmlApplicationContext
+
+FileSystemXmlApplicationContext
+
+AnnotationConfigApplicationContext
+
+MVC阶段
+
+XmlWebApplicationContext
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image018.jpg)
+
+# Scope作用域
+
+Spring容器中的组件的作用域
+
+**singleton 单例** 👉 每一次从容器中取出组件都是同一个
+
+prototype 原型 👉 每一次从容器中取出组件都是新的组件
+
+```xml
+<!--
+scope属性：singleton、prototype
+-->
+<bean class="com.cskaoyan.bean.SingletonBean" scope="singleton"/>
+<bean class="com.cskaoyan.bean.PrototypeBean" scope="prototype"/>
+<bean class="com.cskaoyan.bean.DefaultBean"/><!--默认的scope 👉 Singleton-->
+```
+
+```java
+@Test//debug观察地址
+public void mytest1() {
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+	//地址一样
+    SingletonBean singletonBean1 = applicationContext.getBean(SingletonBean.class);
+    SingletonBean singletonBean2 = applicationContext.getBean(SingletonBean.class);
+    SingletonBean singletonBean3 = applicationContext.getBean(SingletonBean.class);
+	//地址不一样
+    PrototypeBean prototypeBean1 = applicationContext.getBean(PrototypeBean.class);
+    PrototypeBean prototypeBean2 = applicationContext.getBean(PrototypeBean.class);
+    PrototypeBean prototypeBean3 = applicationContext.getBean(PrototypeBean.class);
+	//地址一样
+    DefaultBean defaultBean1 = applicationContext.getBean(DefaultBean.class);
+    DefaultBean defaultBean2 = applicationContext.getBean(DefaultBean.class);
+    DefaultBean defaultBean3 = applicationContext.getBean(DefaultBean.class);
+}
+
+```
+
+
+
+# Bean的实例化
+
+Spring容器的功能是**生成**并管理实例
+
+## 构造方法
+
+### 无参构造（最常用）
+
+class属性 👉 全限定类名
+
+```java
+/**
+ * 提供无参构造方法
+ * 无参：最常用
+ */
+@Data
+public class NoParamConstructorBean {
+    String username;
+    String password;
+}
+```
+
+```xml
+<!-- bean definitions here -->
+<bean class="com.cskaoyan.bean.NoParamConstructorBean">
+    <property name="username" value="songge"/>
+    <property name="password" value="yuanzhi"/>
+</bean>
+```
+
+
+
+### 有参构造
+
+```java
+/**
+ * 提供有参构造方法
+ */
+@Data
+@AllArgsConstructor
+public class HasParamConstructorBean {
+    String username;
+    String password;
+}
+```
+
+```xml
+<bean class="com.cskaoyan.bean.HasParamConstructorBean">
+    <!--constructor-arg标签：意味着你要使用有参构造方法
+            name属性：对应的是有参构造方法的形参名
+        -->
+    <constructor-arg name="username" value="ligenli"/>
+    <constructor-arg name="password" value="tianming"/>
+</bean>
+```
+
+
+
+## 工厂
+
+static
+
+### 静态工厂&实例工厂
+
+静态工厂 👉 方法是静态的
+
+实例工厂 👉 方法不是静态的
+
+```java
+public class StaticFactory {
+    public static Money create() {
+        return new Money();
+    }
+}
+
+public class InstanceFactory {
+    public Money create() {
+        return new Money();
+    }
+}
+```
+
+```xml
+<!--**************工厂*******************-->
+<!--
+        factory-method属性：组件的类型是和factory-method的返回值类型相关的，组件并不是class类型
+        实例工厂的时候，没有使用class属性
+    -->
+<bean id="moneyFromStaticFactory" class="com.cskaoyan.factory.StaticFactory" factory-method="create"/>
+
+<bean id="instanceFactory" class="com.cskaoyan.factory.InstanceFactory"/>
+<bean id="moneyFromInstanceFactory" factory-bean="instanceFactory" factory-method="create"/>
+```
+
+
+
+### FactoryBean（工厂方法）
+
+工厂Bean的意思
+
+BeanFactory和FactoryBean之间有什么样的联系和区别？？
+
+都是组件注册。
+
+BeanFactory生成所有的组件，FactoryBean生成特定的组件
+
+XXXFactoryBean 👉 XXX
+
+ 
+
+生产方法 👉 **getObject** **👉 通过FactoryBean注册的组件类型就和getObject的返回值是相关的**
+
+```java
+@Data
+public class MoneyFactoryBean implements FactoryBean<Money> {
+    String type;
+    //在getObject方法中完成bean的实例化
+    @Override
+    public Money getObject() throws Exception {
+        Money money = new Money();
+        money.setType(type);
+        return money;
+    }
+    @Override
+    public Class<?> getObjectType() {
+        return null;
+    }
+}
+
+@Data
+public class Money {
+    String type;
+}
+```
+
+```xml
+<!--FactoryBean-->
+<bean id="moneyFromFactoryBean" class="com.cskaoyan.factory.MoneyFactoryBean">
+    <property name="type" value="dollar"/>
+</bean>
+<!--通常在整合一些其他框架的时候会使用到FactoryBean，可以对实例做一些额外的修饰-->
+```
+
+
+
+# 生命周期
+
+Spring容器中组件的生命周期
+
+ 
+
+组件要使用的话，要执行哪一些方法 👉 完善我们的组件
+
+```java
+public class UserServiceImpl implements UserService, BeanNameAware,
+        BeanFactoryAware, ApplicationContextAware, InitializingBean, DisposableBean {
+
+    UserDao userDao;
+
+    public void setUserDaozzz(UserDao userDao) {
+        System.out.println("2、使用到了set方法");
+        this.userDao = userDao;
+    }
+
+    public void sayHello(String value) {
+        System.out.println("想赚W吗?" + value);
+        userDao.sayHello(value);
+    }
+
+    public UserServiceImpl() {
+        System.out.println("1、userServiceImpl的无参构造方法");
+    }
+    String beanName;
+    @Override
+    public void setBeanName(String beanName) {
+        System.out.println("3、BeanNameAware的setBeanName方法");
+        this.beanName = beanName;//当前组件能够获得它在容器中的组件名（id）
+    }
+
+    BeanFactory beanFactory;
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        System.out.println("4、BeanFactoryAware的setBeanFactory方法");
+        this.beanFactory = beanFactory;//让当前组件能够获得BeanFactory
+    }
+
+    ApplicationContext applicationContext;
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        System.out.println("5、ApplicationContextAware的setApplicationContext方法");
+        this.applicationContext = applicationContext;
+    }
+
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("7、afterPropertiesSet方法");
+    }
+
+    //自定义的init方法，方法名任意
+    public void customInit() {
+        System.out.println("8、自定义的init方法");
+
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("DisposableBean的destroy");
+    }
+    public void customDestroy(){
+        System.out.println("自定义的destroy");
+    }
+}
+```
+
+```
+↓
+Bean的实例化（最常用无参构造方法）		一定执行到的
+↓
+设置参数set方法（property标签）
+↓									Aware
+↓									实现了Aware接口之后，才会取执行对应的Aware相关方法
+↓									使用Aware是为了组件中间可以使用这样的一些值
+BeanNameAware			→			setBeanName
+↓
+BeanFactoryAware		→			setBeanFactory
+↓
+ApplicationContextAware	→			setApplicationContext
+↓
+BeanPostProcessor的before			BeanPostProcessor并不是指当前组件实现该接口，而是单独提供一个组件
+↓
+InitializingBean的afterPropertiesSet
+↓
+自定义的init方法
+↓
+BeanPostProcessor的after
+↓
+----组件达到可用状态----
+	使用组件
+----容器关闭----
+↓
+DisposableBean的destroy				只有scope为singleton的组件会执行这两步
+↓
+自定义的destroy
+```
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image034.jpg)
+
+## BeanPostProcessor
+
+前面的几个Aware我们都是当前组件实现接口，才会去执行对应的方法
+
+ 
+
+通用型的处理器：在组件到达可用状态之前做一些预处理
+
+ 
+
+**容器中有实现BeanPostProcessor类型的组件**，都会执行到该BeanPostProcessor组件的before和after方法
+
+```java
+package org.springframework.beans.factory.config;
+
+import org.springframework.beans.BeansException;
+import org.springframework.lang.Nullable;
+
+public interface BeanPostProcessor {
+    @Nullable
+    default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        return bean;
+    }
+
+    @Nullable
+    default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        return bean;
+    }
+}
+//都是在组件达到可用状态之前的
+```
+
+```java
+/**
+ * BeanPostProcessor的作用范围：除了他本身，其他的所有组件
+ *
+ * 对容器中的所有的其他组件做统一的事情 👉 增强、特殊字符的处理、狸猫换太子（替换为一个增强Bean返回去, 即代理）
+ */
+public class CustomBeanPostProcessor implements BeanPostProcessor {
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("6、BeanPostProcessor的before:" + beanName);
+        //伪代码
+        //if (bean instanceof DataSource){//对容器中的组件中的参数可以做一些额外的加工
+        //    DataSource dataSource = (DataSource) bean;
+        //    String password = dataSource.getPassword();//321ihznauy
+        //    String realPassword = password.reverse(); //yuanzhi123
+        //    dataSource.setPassword(realPassword);
+        //    return dataSource;
+        //}
+
+        //Object proxy = proxyBean(bean);return proxy;//通过委托类组件，生成一个代理组件
+        //将容器中的所有组件都替换为代理组件 👉 所有的组件的方法上都做了统一的增强
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("9、BeanPostProcessor的after:" + beanName);
+        return bean;
+    }
+}
+
+```
+
+```xml
+<bean class="com.cskaoyan.processor.CustomBeanPostProcessor"/>
+
+<!--伪代码
+  <bean class="datasource">
+        <property name="username" value="root"/>
+        <property name="password" value="321ihznauy"/>&lt;!&ndash;避免了原始的密码直接写在配置文件中&ndash;&gt;
+  </bean>
+-->
+```
+
+
+
+## Scope对生命周期的影响
+
+在获得组件之前已经完成了生命周期到达可用状态之前的方法
+
+**singleton：**在获得组件之前已经完成了上面的生命周期，容器初始化的时候
+
+**prototype：**当你获得组件的时候才开始生命周期，每一次获得组件，都开始一个全新的生命周期
+
+## 容器关闭
+
+singleton才有destroy
+
+```
+↓
+----容器关闭----
+↓
+DisposableBean的destroy
+↓
+自定义的destroy
+
+(注意只有Scope为Singleton的组件会执行到这两步)
+```
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image038.jpg)
+
+```xml
+<bean id="userDao" class="com.cskaoyan.dao.UserDaoImpl"/>
+<!--配置自定义的init和destroy方法，方法名自定义-->
+<bean id="userService" class="com.cskaoyan.service.UserServiceImpl"
+      init-method="customInit" destroy-method="customDestroy" scope="singleton">
+    <property name="userDaozzz" ref="userDao"/>
+</bean>
+
+<bean class="com.cskaoyan.processor.CustomBeanPostProcessor"/>
+```
+
+```java
+@Test
+public void mytest3() {
+    ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+    UserService userService1 = applicationContext.getBean(UserService.class);
+    UserService userService2 = applicationContext.getBean(UserService.class);
+    UserService userService3 = applicationContext.getBean(UserService.class);
+	
+    //ApplicationContext类没有close方法，ClassPathXmlApplicationContext中有close()方法
+    applicationContext.close();
+}
+```
+
+
+
+# 注解（重中之重）
+
+整个Spring阶段最常用的内容
+
+## 组件注册功能
+
+当前是使用bean标签完成组件的注册 👉 主要使用的class属性
+
+ 
+
+扫描某个包目录下的类，如果这个类上包含了组件注册功能的注解 👉 就把他注册到容器中
+
+ 
+
+1、 圈定扫描包的范围2、使用组件注册功能的注解
+
+### 扫描包配置
+
+```xml
+<!-- 需要引入context的schema约束 -->
+<!--扫描包的值：扫描当前包目录以及所有子包
+        com.cskaoyan √
+        com.cskaoyan.service √
+        com.cskaoyan.dao.impl √
+    -->
+<context:component-scan base-package="com.cskaoyan"/>
+```
+
+
+
+### 组件注册功能的注解
+
+@Component
+
+@Service
+
+@Repository
+
+MVC阶段
+
+@Controller
+
+ 
+
+**使用注解后组件id是什么：**
+
+**1、** **默认id（默认id是类名的首字母小写）**
+
+**2、** **指定组件id** **👉 value属性值指定**
+
+```java
+//@Component
+//@Repository //组件id：userDaoImpl
+//@Repository(value = "userDao") //组件id：userDao
+@Repository("userDao") //组件id：userDao 👉 如果注解中只有一个value属性，”value=“是可以省略的
+public class UserDaoImpl implements UserDao{
+    @Override
+    public void sayHello(String value) {
+        System.out.println("你把握不住啊 " + value);
+    }
+}
+```
+
+
+
+## 注入功能
+
+注解注入不需要set方法，配置文件property属性注入需要set方法
+
+### 注入组件
+
+从容器中取出组件 👉 之前是如何从容器中取出组件 👉 applicationContext的getBean方法（3种方式：组件id、类型、id+类型）
+
+ 
+
+使用注解可以不去使用set方法
+
+ 
+
+1、@Autowired 按照组件的类型
+
+2、@Autowired + @Qualifier 指定组件id
+
+3、@Resource 默认按照组件类型，也可以使用name属性指定组件id
+
+```java
+//@Component
+@Service
+public class UserServiceImpl implements UserService{
+
+    @Autowired                  //容器中该类型的组件只有一个，直接使用@Autowired
+    UserDao userDao;
+
+    @Autowired
+    @Qualifier("orderDaoImpl1") //使用@Qualifier的value属性指定组件id
+    OrderDao orderDao1;
+
+    @Resource(name = "orderDaoImpl2")//name属性指定组件id
+    OrderDao orderDao2;
+```
+
+
+
+**注意：注入功能的注解，要在容器中的组件中才可以使用**
+
+### 注入值
+
+```java
+//@Value("songgeniupi") //值和代码直接耦合在一起了
+@Value("${service.location}") //使用了SpEL获得了对应的key的value;需要配置文件
+String location;
+```
+
+```xml
+<!--application.xml-->
+<!--classpath: 指的是类加载路径-->
+<context:property-placeholder location="classpath:parameter.properties"/>
+```
+
+```properties
+# parmeter.properties
+service.location=d://myproject/spring
+```
+
+
+
+## 9.3   Scope和生命周期
+
+## 9.4   单元测试的支持
