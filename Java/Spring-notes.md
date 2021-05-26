@@ -2008,6 +2008,68 @@ public class AnnotationTest {
 
 
 
+# @Value标签读取.properties文件的中文乱码
+
+1.在配置spring.xml文件时,声明所需的∗.properties文件时直接使用"utf−8"编码
+
+```xml
+<!--application.xml-->
+<context:property-placeholder location="classpath:conf/*.properties" file-encoding="UTF-8"/>
+```
+
+2.如果在所需类上注入可使用以下方式来声明编码格式:
+
+```java
+@Component
+@PropertySource(value = "classpath:conf/copyWriteUI.properties",encoding = "utf-8")
+@Getter
+public class CopyWriteUI {
+    @Value("${a}")
+    private String a;
+    @Value("${b}")
+    private String b;
+}
+```
+
+3.不设置编码格式,编写文件时将中文转化为unicode编码
+
+4.如果是IntelliJIDEA那么按如下图操作以上步骤都可以省去!idea会自动帮我们进行如上的第三步!
+
+​	Settings→File Encoding→ Properties Files的Default encoding or proterties files
+
+​	设置为UTF-8并勾选Transparent native-to-ascii conversion
+
+- IDEA中看到的properties文件内容
+
+  ```
+  cat.name=细嗅蔷薇
+  tiger.name=萌虎
+  ```
+
+- notepad中看到的proterties文件内容
+
+  ```
+  cat.name=\u7EC6\u55C5\u8537\u8587
+  tiger.name=\u840C\u864E
+  ```
+
+
+
+spring `<context:property-placeholder/>`的属性说明
+
+```xml
+<context:property-placeholder   
+        location="属性文件，多个之间逗号分隔"  
+        file-encoding="文件编码"  
+        ignore-resource-not-found="是否忽略找不到的属性文件"  
+        ignore-unresolvable="是否忽略解析不到的属性，如果不忽略，找不到将抛出异常"  
+        properties-ref="本地Properties配置"  
+        local-override="是否本地覆盖模式，即如果true，那么properties-ref的属性将覆盖location加载的属性，否则相反"  
+        system-properties-mode="系统属性模式，默认ENVIRONMENT（表示先找ENVIRONMENT，再找properties-ref/location的），NEVER：表示永远不用ENVIRONMENT的，OVERRIDE类似于ENVIRONMENT"  
+        order="顺序"  
+        />
+```
+
 
 
 # AOP
