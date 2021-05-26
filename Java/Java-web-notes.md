@@ -6209,6 +6209,21 @@ main包下新建webapp包
 Projcet Structure -> Facets ->  + web and choose module -> check Deployment Descriptors path and Web Resource Directories path, filanny apply 
 pom.xml -> `<packaging>war</packaging>` -> then Artifacts will be automatically set with war and war exploded (部署用这个展开形式即可)， 查看output layout没有lib文件夹，没关系，加入maven依赖会自动被添加到WEB-INF下的lib，编译时其实不需要引入jar包到项目，只需要把jar包的路径引入到classpath，运行时Artifacts会把依赖的jar包复制到lib中 
 
+
+
+注意servlet-api的scope范围设置为provided，应为服务器环境下应有tomcat的依赖存在了
+
+```xml
+<dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>javax.servlet-api</artifactId>
+    <version>3.1.0</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+
+
 # 项目一
 
 ## Day1 项目启动
