@@ -1552,21 +1552,21 @@ public class UserServiceImpl implements UserService, BeanNameAware,
     public UserServiceImpl() {
         System.out.println("1、userServiceImpl的无参构造方法");
     }
-    String beanName;
+    String beanName;//维护一个beanName属性
     @Override
     public void setBeanName(String beanName) {
         System.out.println("3、BeanNameAware的setBeanName方法");
         this.beanName = beanName;//当前组件能够获得它在容器中的组件名（id）
     }
 
-    BeanFactory beanFactory;
+    BeanFactory beanFactory;//维护一个beanFactory属性
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         System.out.println("4、BeanFactoryAware的setBeanFactory方法");
         this.beanFactory = beanFactory;//让当前组件能够获得BeanFactory
     }
 
-    ApplicationContext applicationContext;
+    ApplicationContext applicationContext;//维护一个applicationContext属性
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         System.out.println("5、ApplicationContextAware的setApplicationContext方法");
@@ -1589,6 +1589,7 @@ public class UserServiceImpl implements UserService, BeanNameAware,
     public void destroy() throws Exception {
         System.out.println("DisposableBean的destroy");
     }
+    //自定义的destroy方法，名字任意
     public void customDestroy(){
         System.out.println("自定义的destroy");
     }
@@ -1881,8 +1882,284 @@ String location;
 service.location=d://myproject/spring
 ```
 
+# 
+
+## 值的引用
+
+```xml
+<!--application.xml-->
+<context:property-placeholder location="classpath:parameter.properties"/>
+<!--Spring配置文件中也可以引用↑的属性配置-->
+<bean class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="username" value="${db.username}"/>
+    <property name="password" value="${db.password}"/>
+</bean>
+```
+
+```properties
+# parameter.properties
+db.username=root
+db.password=123456
+# 如果直接写username没有写一个前缀，容器引用到系统变量
+# username=root
+# password=123456
+```
 
 
-## 9.3   Scope和生命周期
 
-## 9.4   单元测试的支持
+## Scope和生命周期
+
+@Scope
+
+```java
+@Scope("prototype")//不写名字或者不写Scope注解默认就为singleton
+@Component
+public class ScopeBean {
+}
+```
+
+
+
+自定义的init方法：@PostConstruct
+
+自定义的destroy方法：@PreDestroy
+
+```java
+@Component
+public class LifeCycleBean {
+    @PostConstruct
+    public void customInit(){
+        System.out.println("init");
+    }
+    @PreDestroy
+    public void customDestroy(){
+        System.out.println("destroy");
+    }
+}
+```
+
+
+
+## Spring对单元测试的支持
+
+在单元测试类中直接去使用注入功能的注解(单元测试类当作是容器中的组件)
+
+### 引入依赖spring-test
+
+```xml
+<!--版本最好和springframework一致-->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-test</artifactId>
+    <version>5.2.5.RELEASE</version>
+</dependency>
+```
+
+
+
+### 注解写法
+
+@Runwith 👉 junit
+
+@ContextConfiguration 👉 spring-test
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:application.xml")
+public class AnnotationTest {
+
+    @Autowired
+    UserService userService;
+    @Autowired
+    ApplicationContext applicationContext;
+    @Test
+    public void mytest1() {
+        //ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+        //UserService userService = applicationContext.getBean(UserService.class);
+        userService.sayHello("嘎子");
+    }
+}
+```
+
+### 获得特定类型的组件
+
+注解 和 Aware接口都可以获得applicationContext
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:application.xml")
+public class AnnotationTest {
+
+    @Autowired
+    UserService userService;
+    @Autowired
+    ApplicationContext applicationContext;
+    @Test
+    public void mytest1() {
+        //ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+        //UserService userService = applicationContext.getBean(UserService.class);
+    
+        String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();//获得所有的组件名称
+        Map<String, UserService> beansOfType = applicationContext.getBeansOfType(UserService.class);
+        Map<String, OrderDao> beansOfType1 = applicationContext.getBeansOfType(OrderDao.class);
+    }
+}
+```
+
+
+
+
+
+# AOP
+
+Aspect Oriented Programming 面向切面编程 
+
+OOP面向对象
+
+ 
+
+增强
+
+动态代理和AOP之间的关系是什么？ AOP是基于动态代理来实现的，
+
+动态代理范围：委托类的全部方法
+
+AOP：组件中特定的方法（指定方法范围 👉 更灵活的处理增强范围）
+
+ 
+
+👉 通用性的工作
+
+## 核心术语 
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image014-1622012742926.jpg)
+
+# 实战案例
+
+## 动态代理（略）
+
+jdk动态代理和cglib动态代理
+
+ 
+
+SpringAOP基于JDK动态代理还是CGlib动态代理？？全都要
+
+如果你有接口的实现JDK动态代理
+
+如果没有接口实现 cglib动态代理
+
+## SpringAOP
+
+
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image016-1622012742926.jpg)
+
+### 构建userService业务并且注册到容器中
+
+```java
+@Service
+public class UserServiceImpl implements UserService{
+    @Override
+    public void sayHello(String name) {
+        System.out.println("叔，我是" + name);
+    }
+}
+```
+
+
+
+### 提供通知组件并且注册到容器中
+
+implements MethodInterceptor 👉 通知组件 👉 when和what
+
+```java
+@Component
+public class CustomAdvice implements MethodInterceptor {
+    @Override
+    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+        //when（相对时间）和what
+        System.out.println("你把握不住啊");
+        Object proceed = methodInvocation.proceed();//执行委托类的代码
+        System.out.println("赚钱的事儿，让叔来");
+        return proceed;
+    }
+}
+```
+
+
+
+### 代理组件的注册
+
+```xml
+<!--application.xml-->
+<!--FactoryBean来注册代理组件 👉 ProxyFactoryBean-->
+<bean id="userServiceProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+    <!--target：委托类组件是谁-->
+    <property name="target" ref="userServiceImpl"/>
+	<!--根据委托类组件和通知类组件注册代理组件-->
+    <!--interceptorNames：代理组件根据哪个通知去做的增强-->
+    <property name="interceptorNames" value="customAdvice"/>
+</bean>
+```
+
+
+
+### 单元测试
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:application.xml")
+public class MyTest {
+
+    @Autowired
+    @Qualifier("userServiceProxy") //因为委托类组件有接口的实现 👉 代理组件是根据JDK动态代理生成的 👉 也是接口类型的
+    UserService userService;
+    @Test
+    public void mytest1() {
+        userService.sayHello("嘎子");
+    }
+
+    @Autowired
+    @Qualifier("orderServiceProxy")
+    OrderService orderService; // 没有接口的实现 👉 cglib动态代理生成代理组件
+    @Test
+    public void mytest2() {
+        orderService.buy();
+    }
+}
+```
+
+```java
+@Service
+public class OrderService {
+    public void buy(){
+        System.out.println("买假酒");
+    }
+}
+```
+
+```xml
+<bean id="orderServiceProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+    <property name="target" ref="orderService"/>
+    <property name="interceptorNames" value="customAdvice"/>
+</bean>
+```
+
+
+
+### 怎么样
+
+不怎么样？
+
+针对于每一个委托类组件，都要单独使用ProxyFactoryBean生成代理组件
+
+每次取出组件时 👉 都要指定组件id
+
+## 3.3   Aspectj
+
+ 
+
+ 
+
+ 
+
