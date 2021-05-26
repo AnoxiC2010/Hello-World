@@ -302,3 +302,43 @@ public class LoginServlet extends HttpServlet {
 # IO流的矛盾
 
 一个含有输入流的方法在另一个try...catch语句中调用读不到东西，在try...catch块之前调用能读取到文件的数据
+
+总结：和try...catch无关，和FileOutputStream的机制有关，new一个FileOutputStream会清空文件的数据...
+
+所以问题变成了在建立输出流之前读取得到，和在输出流之后读取不到的问题，所以是我不够了解的问题
+
+```java
+@Test
+public void testForIO() {
+    String path = this.getClass().getClassLoader().getResource("users.jason").getPath();
+
+    try (InputStream in = new FileInputStream(path)) {
+        byte[] bytes = new byte[1024];
+        int length = in.read(bytes);
+        System.out.println("读取到数据长读=" + length);
+        String str = new String(bytes, 0, length);
+        System.out.println(str);
+    }
+    try (OutputStream out = new FileOutputStream(path)) {
+        ...
+    }
+}
+```
+
+```java
+@Test
+public void testForIO() {
+    String path = this.getClass().getClassLoader().getResource("users.jason").getPath();
+	//一切的开始只是想偷懒一起catch住异常
+    try (OutputStream out = new FileOutputStream(path)) {
+        try (InputStream in = new FileInputStream(path)) {
+            byte[] bytes = new byte[1024];
+            int length = in.read(bytes);
+            System.out.println("读取到数据长读=" + length);
+            String str = new String(bytes, 0, length);
+            System.out.println(str);
+        }
+    }
+}
+```
+
