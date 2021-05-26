@@ -335,7 +335,7 @@ maven是如何去管理我们的依赖的呢？
 
 
 
-## 4. 使用Maven开发项目
+## 4. 使用Maven后的配置文件获取
 
 使用了maven开发以后，我们需要把配置文件放在resources目录下， 那么这个时候我们获取文件的方式就发生了改变
 
@@ -381,7 +381,14 @@ static {
     }
 ```
 
+## scope标签说明
 
+1.test范围是指测试范围有效,在编译和打包时都不会使用这个依赖
+2.compile范围是指编译范围内有效,在编译和打包时都会将依赖存储进去
+3.provided依赖,在编译和测试过程中有效,最后生成的war包时不会加入 例如:
+   servlet-api,因为servlet-api  tomcat服务器已经存在了,如果再打包会冲突
+4.runtime在运行时候依赖,在编译时候不依赖
+默认依赖范围是compile
 
 # Maven+IDEA简要小结
 
@@ -573,10 +580,10 @@ maven会把项目语言等级设置为JDK5，编译环境也设为1.5。就算�
   (use -source 7 or higher to enable try-with-resources)
 ```
 
-需要再pom.xml添加以下设置
+需要去 maven 安装目录/conf/settings.xml 文件中新增以下设置
 
 ```xml
-<!--pom.xml-->
+<!--settings.xml-->
 <profiles>
     <profile>
         <id>jdk-1.8</id>
@@ -592,6 +599,16 @@ maven会把项目语言等级设置为JDK5，编译环境也设为1.5。就算�
     </profile>
 
 </profiles>
+```
+
+或在pom.xml里新增下面的properties
+
+```xml
+<properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+</properties>
 ```
 
 
@@ -698,6 +715,8 @@ cmd 创建maven项目生成的pom.xml
 ```
 
 
+
+其实在maven的settings.xml里配置上面提到的profiles标签和在pom.xml里配置project.build.sourceEncoding的properties属性就足以。
 
 ## resources路径下新建多级目录
 
