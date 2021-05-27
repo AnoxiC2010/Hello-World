@@ -2217,11 +2217,885 @@ public class OrderService {
 
 每次取出组件时 👉 都要指定组件id
 
-## 3.3   Aspectj
+
+
+
+
+# 1    AspectJ
+
+增强方法的指定需要使用Pointcut
+
+Advice
+
+ 
+
+首先要引入依赖aspectjweaver 👉 groupId带 org的这个版本
+
+```xml
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjweaver</artifactId>
+    <version>1.9.6</version>
+</dependency>
+```
+
+
+
+## 1.1   Pointcut切入点表达式
+
+如何指定增强范围
+
+### 1.1.1 表达式语言execution
+
+匹配 方法
+
+execution(修饰符 返回值 包名、类名、方法名(形参))
+
+ 
+
+提供一个记忆的角度：能否省略、能否通配、特殊用法
+
+#### 1.1.1.1  修饰符
+
+可以省略 👉 全部修饰符
+
+```xml
+<!--修饰符：可以省略不写代表任意修饰符 👉 当前这个表达式也可以增强到sayHello方法-->
+<aop:pointcut id="servicePointcut2" expression="execution(void com.cskaoyan.service.UserServiceImpl.sayHello(String))"/>
+```
+
+
+
+#### 1.1.1.2  返回值
+
+可否省略：不能省略
+
+可否通配：使用通配符* 👉 代表任意返回值
+
+特殊用法：全类名
+
+```xml
+<!--返回值：
+                  不能省略
+                  使用*作为通配符 👉 代表任意类型的返回值
+                  全类名
+        -->
+<!--当前这个切入点表达式：仅仅增强了sayHello2方法-->
+<aop:pointcut id="servicePointcut3" expression="execution(String com.cskaoyan.service.UserServiceImpl.sayHello2(String))"/>
+<!--当前这个表达式，可以增强到sayHello2-->
+<aop:pointcut id="servicePointcut4" expression="execution(* com.cskaoyan.service.UserServiceImpl.sayHello2(String))"/>
+<!--当前这个表达式，仅仅增强到sayHello3-->
+<aop:pointcut id="servicePointcut5" expression="execution(com.cskaoyan.bean.User com.cskaoyan.service.UserServiceImpl.sayHello3(String))"/>
+```
+
+
+
+#### 1.1.1.3  包名、类名、方法名
+
+```xml
+<!--包名、类名、方法名：
+                  能否省略: 能 👉 部分省略，头尾不能省略 👉 中间任意一部分都可以省略 ，使用 .. 来进行省略
+                  能否通配: 使用通配符*
+        -->
+<!--当前的切入点表达式 头是com 尾是sayHello3
+            中间的任意一部分都可以省略
+        -->
+<aop:pointcut id="servicePointcut6" expression="execution(com.cskaoyan.bean.User com.cskaoyan.service.UserServiceImpl.sayHello3(String))"/>
+<aop:pointcut id="servicePointcut7" expression="execution(com.cskaoyan.bean.User com..sayHello3(String))"/>
+<aop:pointcut id="servicePointcut8" expression="execution(com.cskaoyan.bean.User com..service..sayHello3(String))"/>
+<aop:pointcut id="servicePointcut9" expression="execution(com.cskaoyan.bean.User com.cskaoyan..UserServiceImpl.sayHello3(String))"/>
+
+<!--头尾都可以直接使用通配符
+            通配符也可以通配一段内容的一部分 比如sayHello*
+        -->
+<aop:pointcut id="servicePointcut10" expression="execution(* com.cskaoyan.service..*(String))"/>
+<aop:pointcut id="servicePointcut11" expression="execution(* com.cskaoyan.service..sayHello*(String))"/>
+<aop:pointcut id="servicePointcut12" expression="execution(* *.cskaoyan.service..sayHello*(String))"/>
+```
+
+
+
+ 
+
+#### 1.1.1.4  形参
+
+```xml
+<!--形参：
+                  能否省略：可以省略不写 👉 无参方法
+                  能否通配：* 和 ..
+                  特殊用法：全类名
+
+        -->
+<aop:pointcut id="servicePointcut13" expression="execution(* *.cskaoyan.service..sayHello*())"/>
+<!--当前切入点表达式对应的形参：单个任意类型的形参-->
+<aop:pointcut id="servicePointcut14" expression="execution(* *.cskaoyan.service..sayHello*(*))"/>
+<!--当前切入点表达式对应的形参：两个任意类型的形参-->
+<aop:pointcut id="servicePointcut15" expression="execution(* *.cskaoyan.service..sayHello*(*,*))"/>
+<!--当前切入点表达式对应的形参：任意参数 👉 数量和类型上的任意-->
+<aop:pointcut id="servicePointcut16" expression="execution(* *.cskaoyan.service..sayHello*(..))"/>
+<!--如果参数类名是bean 👉 全类名-->
+<aop:pointcut id="servicePointcut17" expression="execution(* *.cskaoyan.service..sayHello*(com.cskaoyan.bean.User))"/>
+```
+
+
+
+### 1.1.2 自定义注解 @annotation
+
+指哪打哪（保证是容器中的组件中的方法）
+
+#### 1.1.2.1  自定义的注解
+
+```java
+@Target(ElementType.METHOD) //自定义注解能够写在哪里 👉 方法上
+@Retention(RetentionPolicy.RUNTIME) //注解在运行时生效
+public @interface CountTime {
+}
+```
+
+
+
+#### 1.1.2.2  通知
+
+计算方法执行时间的通知
+
+```java
+//计算方法执行时间的通知
+@Component
+public class CustomAdvice implements MethodInterceptor {
+    @Override
+    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+        long start = System.currentTimeMillis();
+        Object proceed = methodInvocation.proceed();
+        long end = System.currentTimeMillis();
+        System.out.println("执行时间：" + (end - start));
+        return proceed;
+    }
+}
+```
+
+
+
+#### 1.1.2.3  切入点配置
+
+```xml
+<context:component-scan base-package="com.cskaoyan"/>
+<aop:config>
+    <!--@annotation(自定义注解的全类名)-->
+    <aop:pointcut id="annotationPointcut" expression="@annotation(com.cskaoyan.anno.CountTime)"/>
+    <aop:advisor advice-ref="customAdvice" pointcut-ref="annotationPointcut"/>
+</aop:config>
+<!--注解指定的方法按照advice的方式去做增强-->
+```
+
+
+
+#### 1.1.2.4  单元测试
+
+```java
+@CountTime//包含注解，被增强了→注意：要在容器中的组件中的方法里使用注解
+@Override
+public void sayHello(String name) {
+    System.out.println("hello " + name);
+    try {
+        Thread.sleep(5);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+
+}
+@Override//没有注解，没有增强
+public void sayHello() {
+    System.out.println("hello xxxx");
+}
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:application.xml")
+public class MyTest {
+
+    @Autowired
+    UserService userService;
+    @Test
+    public void mytest1() {
+        userService.sayHello();
+    }
+    @Test
+    public void mytest2() {
+        userService.sayHello("嘎子");
+    }
+}
+```
+
+
+
+## 1.2   Advisor 通知器
+
+表述我们的增强 pointcut 和 advice（自定义）
+
+ 
+
+要使用aop开头的标签 👉 aop的schema约束 引入
+
+### 1.2.1 通知组件
+
+```java
+@Component
+public class CustomAdvice implements MethodInterceptor {
+    @Override
+    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+        System.out.println("正道的光");
+        Object proceed = methodInvocation.proceed();
+        System.out.println("照在大地上");
+        return proceed;
+    }
+}
+```
+
+
+
+### 1.2.2 advisor
+
+非侵入式
+
+```xml
+<!--aop标签-->
+<aop:config>
+    <!--
+            advice-ref属性：通知组件的id
+            pointcut属性：直接写切入点表达式
+            pointcut-ref属性：引入切入点id
+            第一个切入点表达式：userService中的sayHello方法
+            👉 execution(修饰符 返回值 包名、类名、方法名(形参))
+        -->
+    <!--<aop:advisor advice-ref="customAdvice" pointcut="execution(public void com.cskaoyan.service.UserServiceImpl.sayHello(String))"/>-->
+
+    <!--
+            使用aop:pointcut标签相当于定义了一个全局变量 👉 后面标签里可以引用id
+            id属性: 切入点的id
+            expression属性：切入点表达式
+        -->
+    <aop:pointcut id="servicePointcut" expression="execution(public void com.cskaoyan.service.UserServiceImpl.sayHello(String))"/>
+    <aop:advisor advice-ref="customAdvice" pointcut-ref="servicePointcut"/>
+</aop:config>
+```
+
+
+
+## 1.3   Aspect 切面
+
+pointcut 和 advice（提供了一些通知 👉 时间）
+
+ 
+
+相对时间 👉 相对于委托类的方法
+
+before、after、around、after-returning、after-throwing
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image028-1622118850275.jpg)
+
+### 1.3.1 委托类的方法
+
+```java
+@Service
+public class UserServiceImpl implements UserService{
+    @Override
+    public String sayHello(String name) {
+        String result = "hello " + name;
+        System.out.println(result);
+        return result;
+    }
+}
+```
+
+
+
+### 1.3.2 切面组件以及方法
+
+```java
+/**
+ * 定义一个类叫切面类 👉 注册到容器中
+ * 提供通知
+ */
+@Component//没有实现接口和继承类
+public class CustomAspect {
+
+    public void methodBefore() {
+        System.out.println("before通知的方法");
+    }
+
+    public void methodAfter() {
+        System.out.println("after通知的方法");
+    }
+
+    //返回值为Object，参数中包含ProceedingJoinPoint
+    public Object methodAround(ProceedingJoinPoint joinPoint) throws Throwable { //环绕通知 👉 需要有一行代码 👉 委托类方法的执行
+        System.out.println("around通知的方法：前半部分");
+        Object proceed = null;
+
+        proceed = joinPoint.proceed();//执行的是委托类的方法
+
+        System.out.println("around通知的方法：后半部分");
+        return proceed;
+    }
+
+    //AfterReturning通知 👉 委托类方法的执行结果，可以直接放在形参中
+    //                  👉形参名可以任意写，但是需要指定
+    public void methodAfterReturning(Object result){
+        System.out.println("AfterReturning通知：" + result);
+    }
+
+    //AfterThrowing通知
+    //通过Exception或Throwable类型的形参来接收委托类方法抛出的异常
+    public void methodAfterThrowing(Exception exception){
+        System.out.println("AfterThrowing通知的方法：" + exception.getMessage());
+    }
+}
+```
+
+
+
+### 1.3.3 配置文件
+
+```xml
+<aop:config>
+    <aop:pointcut id="servicePointcut" expression="execution(* com..service..*(..))"/>
+    <!--ref属性：指定容器中的组件为切面组件-->
+    <aop:aspect ref="customAspect">
+        <!--如果aop：pointcut标签写在aop:aspect标签内，作用范围就是当前的aspect-->
+        <aop:pointcut id="servicePointcut2" expression="execution(* com..service..*(..))"/>
+        <!--
+                method属性：指定切面组件中的方法为通知方法
+                pointcut属性：切入点表达式
+                pointcut-ref属性：引用切入点id
+                -->
+        <!--<aop:before method="methodBefore" pointcut="execution(* com..service..*(..))"/>-->
+        <aop:before method="methodBefore" pointcut-ref="servicePointcut"/>
+        <aop:after method="methodAfter" pointcut-ref="servicePointcut"/>
+        <aop:around method="methodAround" pointcut-ref="servicePointcut"/>
+        <!--returning属性：method属性对应的方法中Object类型的参数名，将委托类的方法的执行结果给到这个参数-->
+        <aop:after-returning method="methodAfterReturning" pointcut-ref="servicePointcut" returning="result"/>
+
+        <!--throwing属性：method属性对应的方法中Exception(Throwable)类型的参数名，将委托类的方法抛出的异常给到这个参数-->
+        <aop:after-throwing method="methodAfterThrowing" pointcut-ref="servicePointcut" throwing="exception"/>
+    </aop:aspect>
+</aop:config>
+```
+
+
+
+### 1.3.4 执行结果
+
+before通知的方法
+around统治的方法：前半部分
+hello 嘎子
+AfterReturning通知：hello 嘎子
+around通知的方法：后半部分
+after通知的方法
+
+
+
+
+
+### 1.3.5 AfterThrowing通知
+
+让委托类方法抛出异常
+
+执行结果；
+
+before通知的方法
+around统治的方法：前半部分
+hello 嘎子
+~~AfterReturning通知：hello 嘎子~~ AfterThrowing通知
+~~around通知的方法：后半部分~~
+after通知的方法
+
+```java
+//AfterThrowing通知
+//通过Exception或Throwable类型的形参来接收委托类方法抛出的异常
+public void methodAfterThrowing(Exception exception){//这里的参数名要和配置文件的throwing属性对应
+    System.out.println("AfterThrowing通知的方法：" + exception.getMessage());
+}
+```
+
+```xml
+<!--throwing属性：method属性对应的方法中Exception(Throwable)类型的参数名，将委托类的方法抛出的异常给到这个参数-->
+<aop:after-throwing method="methodAfterThrowing" pointcut-ref="servicePointcut" throwing="exception"/>
+```
+
+
+
+注意一个点：并不是因为新增了AfterThrowing通知 👉 执行情况发生改变 👉 而是因为抛出了异常 👉 执行情况要根据 try-catch还是抛出来的
+
+ 
+
+### 1.3.6 JoinPoint 连接点
+
+可以获得执行过程中的一些值 目标类对象、代理对象、方法、参数
+
+ 
+
+直接写入到通知方法的形参中即可
+
+```java
+@Component
+public class CustomAspect {
+
+    public void methodBefore(JoinPoint joinPoint) {
+        System.out.println("before通知的方法");
+        Object target = joinPoint.getTarget(); //目标类对象
+        Object aThis = joinPoint.getThis();    //代理对象
+
+        System.out.println(target);
+        System.out.println(aThis);
+
+        Signature signature = joinPoint.getSignature(); //方法的参数
+        String name = signature.getName();     //方法名
+        Object[] args = joinPoint.getArgs();   //参数
+
+        System.out.println(name);
+        System.out.println(Arrays.asList(args));
+    }
+	//ProceedingJoinPoint是JoinPoint的子类
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object[] args = joinPoint.getArgs();
+        String methodName = joinPoint.getSignature().getName();
+        Object[] argsTransfer = new Object[0];
+        if ("sayHello".equals(methodName)) {
+            argsTransfer =  new Object[]{"嘎子"};
+        }
+
+        Object proceed = joinPoint.proceed(argsTransfer);
+        return proceed;
+    }
+
+}
+```
+
+
+
+### 1.3.7 aspect的注解使用
+
+aop:config标签给他变更为注解的方式
+
+1、 指定了切入点
+
+2、 指定了切面组件
+
+3、 指定方法为通知方法
+
+#### 1.3.7.1  打开注解开关
+
+```xml
+<!--application.xml-->
+<aop:aspectj-autoproxy/>
+```
+
+
+
+#### 1.3.7.2  切入点方法
+
+切入点在切面组件中以方法的形式存在
+
+```java
+/**
+* 修饰符：public / private
+* 返回值：void
+* 方法名：任意写 👉 方法名作为切入点id
+* 形参：没有参数
+* 方法体：没有内容
+* @Pointcut注解的value属性：切入点表达式
+*/
+@Pointcut("execution(* com..service..*(..))")
+public void mypointcut() {
+}
+```
+
+相当于
+
+```xml
+<aop:pointcut id="servicePointcut2" expression="execution(* com..service..*(..))"/>
+```
+
+
+
+#### 1.3.7.3  切面组件的指定
+
+```java
+@Aspect
+@Component
+public class CustomAspect {}
+```
+
+相当于
+
+```xml
+<aop:aspect ref="customAspect"></aop:aspect>
+```
+
+
+
+#### 1.3.7.4  方法的指定
+
+@Before、@After、@Around、@AfterReturning、@AfterThrowing
+
+写在方法上
+
+ 
+
+注解的value属性 👉 指定增强范围
+
+```java
+/**
+* value属性可以直接写切入点表达式 👉 pointcut属性
+* value属性也可以引用切入点方法   👉 pointcut-ref属性
+*/
+//@Before("execution(* com..service..*(..))")
+@Before("mypointcut()")   //如果通过切入点方法进行指定，后面有一对括号
+public void methodBefore() {
+    System.out.println("before通知的方法");
+}
+
+@After("mypointcut()")
+public void methodAfter() {
+    System.out.println("after通知的方法");
+}
+
+//返回值为Object，参数中包含ProceedingJoinPoint
+@Around("mypointcut()")
+public Object methodAround(ProceedingJoinPoint joinPoint) throws Throwable { //环绕通知 👉 需要有一行代码 👉 委托类方法的执行
+    System.out.println("around通知的方法：前半部分");
+    Object proceed = null;
+
+    proceed = joinPoint.proceed();//执行的是委托类的方法
+
+    System.out.println("around通知的方法：后半部分");
+    return proceed;
+}
+
+//AfterReturning通知 👉 委托类方法的执行结果，可以直接放在形参中
+//                  👉形参名可以任意写，但是需要指定
+@AfterReturning(value = "mypointcut()",returning = "result")//对应参数名
+public void methodAfterReturning(Object result){
+    System.out.println("AfterReturning通知：" + result);
+}
+
+//AfterThrowing通知
+//通过Exception或Throwable类型的形参来接收委托类方法抛出的异常
+@AfterThrowing(value = "mypointcut()",throwing = "exception")//对应参数名
+public void methodAfterThrowing(Exception exception){
+    System.out.println("AfterThrowing通知的方法：" + exception.getMessage());
+}
+```
+
+
+
+
+
+# 2    Spring事务
+
+## 2.1   Spring整合MyBatis
+
+### 2.1.1 原先的MyBatis代码
+
+```java
+@Test
+public void mytest1() throws Exception{
+    SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+
+    //SqlSessionFactory能否通过Spring管理 👉 √
+    SqlSessionFactory sqlSessionFactory = builder.build(Resources.getResourceAsStream("mybatis.xml"));
+
+    //SqlSession是否要通过Spring管理 👉 SqlSession线程不安全
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+
+    //要考虑交给spring容器管理
+    UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+    User user = mapper.selectById(1);
+    System.out.println(user);
+}
+```
+
+
+
+### 2.1.2 引入依赖
+
+```xml
+<dependencies>
+    <!--spring-->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>5.2.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>5.2.5.RELEASE</version>
+        <scope>test</scope>
+    </dependency>
+    <!--spring对mybatis的支持-->
+    <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis-spring</artifactId>
+        <version>2.0.6</version>
+    </dependency>
+    <!--jdbc、tx-->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>5.2.5.RELEASE</version>
+    </dependency>
+    <!--druid-->
+    <dependency>
+        <groupId>com.alibaba</groupId>
+        <artifactId>druid</artifactId>
+        <version>1.2.6</version>
+    </dependency>
+
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis</artifactId>
+        <version>3.5.6</version>
+    </dependency>
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.47</version>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.20</version>
+    </dependency>
+</dependencies>
+
+```
+
+
+
+### 2.1.3 组件注册
+
+Mapper组件
+
+```xml
+<!--application.xml-->
+<context:component-scan base-package="com.cskaoyan"/>
+
+    <!--datasource组件-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/j30_db?useUnicode=true&amp;characterEncoding=utf-8"/>
+        <property name="username" value="root"/>
+        <property name="password" value="123456"/>
+    </bean>
+
+    <!--组件类型是SqlSessionFactory-->
+    <!--implements FactoryBean<SqlSessionFactory> -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!--引入mybatis配置文件可以分开做更多的mybatis配置-->
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+        <property name="typeAliasesPackage" value="com.cskaoyan.bean"/>
+    </bean>
+
+    <!--MapperScannerConfiguer mapper的扫描配置
+        通过SqlSessionFactory将包目录下的mapper接口对应的mapper组件注册到容器中
+    -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--SqlSessionFactory-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!--包目录配置-->
+        <property name="basePackage" value="com.cskaoyan.mapper"/>
+    </bean>
+<!--以上都是为了Mapper组件注册-->
+```
+
+
+
+## 2.2   Spring事务
+
+### 2.2.1 事务的回顾
+
+事务的特性：
+
+A原子性 → 数据库操作的最小单位，能够在分割
+
+C一致性 → 一致性状态
+
+I隔离性 → 事务操作彼此之间是隔离
+
+D持久性 → 持久化
+
+ 
+
+事务并发引起的问题：脏读、不可重复读、虚（幻）读
+
+脏读：一个事务读取到另外一个事务**还没有提交的**数据
+
+不可重复读：一个事务读取到另外一个事务**已经提交的**数据（数据变更）
+
+虚读：一个事务读取到另外一个事务**已经提交**的数据（数据量变化）
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image058.png)
+
+ 
+
+数据库的隔离级别
+
+
+
+|          | 脏读 | 不可重复读 | 虚读 |
+| -------- | ---- | ---------- | ---- |
+| 读未提交 | ×    | ×          | ×    |
+| 读已提交 | √    | ×          | ×    |
+| 可重复读 | √    | √          | ×    |
+| 串行化   | √    | √          | √    |
+
+ 
+
+mysql默认的隔离级别是什么？ 可重复读 → MySql不会导致虚读
+
+ 
+
+### 2.2.2 核心接口
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image060.jpg)
+
+#### 2.2.2.1  PlatformTransactionManager 事务管理器
+
+Spring要管理事务 → 一定要使用到平台事务管理器
+
+ 
+
+DataSourceTransactionManager
+
+HibernateTransactionManager
+
+ 
+
+getTransaction
+
+commit
+
+rollback
+
+```java
+package org.springframework.transaction;
+
+import org.springframework.lang.Nullable;
+
+public interface PlatformTransactionManager extends TransactionManager {
+    //参数为TransactionDefinition
+    TransactionStatus getTransaction(@Nullable TransactionDefinition var1) throws TransactionException;
+	//下两个方法都用到了上一个方法的返回值TransactionStatus
+    void commit(TransactionStatus var1) throws TransactionException;
+
+    void rollback(TransactionStatus var1) throws TransactionException;
+}
+```
+
+
+
+#### 2.2.2.2  TransactionStatus 事务的状态
+
+过程值，开发过程中其实不会使用到
+
+TransactionStatus.class INherited members
+
+```
+<I> TransactionStatus
+	m createSavepoint(): Object→SavepointManager
+	m flush():void
+	m hasSavepoint():boolean
+	m isCompleted():boolean→TransactionExecution
+	m isNewTransaction():boolean→TransactionExecution
+	m isRollbackOnly():boolean→TransactionExecution
+	m releaseSavepoint(Object):void→SavepointManager
+	m rollbackToSavepoint(Object):void→SavepointManager
+	m setRollbackOnly():void→TransactionExecution
+```
+
+
+
+#### 2.2.2.3  TransactionDefinition 事务的定义
+
+事务的名称、隔离级别、只读属性、**传播行为**、超时时间、回滚、不回滚
+
+ 
+
+##### 2.2.2.3.1        传播行为
+
+多个方法之间如何来共享事务。
+
+多个方法之间存在调用关系，发生异常的时候，如何回滚。
+
+method2、method1
+
+###### 2.2.2.3.1.1  Required 默认的传播行为
+
+如果不包含事务，就新增一个事务；如果你包含事务，我就加入进来，作为一个事务。
+
+ 
+
+一荣俱荣，一损俱损：要么一起提交，要么一起回滚。
+
+methodB 调用了methodA
+
+methodA发生异常：都回滚
+
+methodB发生异常：都回滚
+
+###### 2.2.2.3.1.2  Requires_new
+
+如果不包含事务，就新增一个事务；如果包含了事务，则新建一个新的事务。
+
+ 
+
+自私型：外围不能影响内部，内部可以影响外围。
+
+methodB 调用了methodA
+
+methodA发生异常：A是内部。A、B都回滚
+
+methodB发生异常：B是外围。B回滚
+
+ 
+
+###### 2.2.2.3.1.3  nested
+
+如果不包含事务，就新增一个事务；如果包含了事务，则以嵌套事务的方式运行。
+
+ 
+
+无私型：外围可以影响内部，内部不会影响外围。 方法之间存在调用关系的时候，内部的方法不重要。
+
+methodB 调用了methodA
+
+methodA发生异常：A是内部。A回滚
+
+methodB发生异常：B是外围。AB回滚
+
+ 
+
+PDD → 获得新用户
+
+ 
+
+register（外围） → sendCoupon（内部）
+
+发放优惠券失败了，注册要保留下来
+
+注册失败了，优惠券也失败
+
+
 
  
 
  
-
- 
-
