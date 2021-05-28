@@ -2478,7 +2478,7 @@ public class CustomAdvice implements MethodInterceptor {
 </aop:config>
 ```
 
-
+多个advisor作用于同一个pointcut方法上时，写在前面的在外层，写在后面的在内层
 
 ## 1.3   Aspect 切面
 
@@ -2790,11 +2790,11 @@ public void methodAfterThrowing(Exception exception){
 
 
 
-# 2    Spring事务
+# 
 
-## 2.1   Spring整合MyBatis
+# 1   Spring整合MyBatis
 
-### 2.1.1 原先的MyBatis代码
+## 2.1.1 原先的MyBatis代码
 
 ```java
 @Test
@@ -2817,7 +2817,7 @@ public void mytest1() throws Exception{
 
 
 
-### 2.1.2 引入依赖
+## 2.1.2 引入依赖
 
 ```xml
 <dependencies>
@@ -2880,7 +2880,7 @@ public void mytest1() throws Exception{
 
 
 
-### 2.1.3 组件注册
+## 2.1.3 组件注册
 
 Mapper组件
 
@@ -2919,9 +2919,9 @@ Mapper组件
 
 
 
-## 2.2   Spring事务
+# 2   Spring事务
 
-### 2.2.1 事务的回顾
+## 2.2.1 事务的回顾
 
 事务的特性：
 
@@ -2964,11 +2964,11 @@ mysql默认的隔离级别是什么？ 可重复读 → MySql不会导致虚读
 
  
 
-### 2.2.2 核心接口
+## 2.2.2 核心接口
 
 ![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image060.jpg)
 
-#### 2.2.2.1  PlatformTransactionManager 事务管理器
+### 2.2.2.1  PlatformTransactionManager 事务管理器
 
 Spring要管理事务 → 一定要使用到平台事务管理器
 
@@ -2992,18 +2992,20 @@ package org.springframework.transaction;
 import org.springframework.lang.Nullable;
 
 public interface PlatformTransactionManager extends TransactionManager {
-    //参数为TransactionDefinition
+    //传入TransactionDefinition获得TransactionStatus
     TransactionStatus getTransaction(@Nullable TransactionDefinition var1) throws TransactionException;
-	//下两个方法都用到了上一个方法的返回值TransactionStatus
+	//传入TransactionStatus做提交和回滚
     void commit(TransactionStatus var1) throws TransactionException;
 
     void rollback(TransactionStatus var1) throws TransactionException;
 }
 ```
 
+开发人员不需关注status，而是关注definition配置方法
 
+### 2.2.2.2  TransactionStatus 事务的状态
 
-#### 2.2.2.2  TransactionStatus 事务的状态
+是否已完成，是否是新事物，是否有保存点...
 
 过程值，开发过程中其实不会使用到
 
@@ -3024,13 +3026,13 @@ TransactionStatus.class INherited members
 
 
 
-#### 2.2.2.3  TransactionDefinition 事务的定义
+### 2.2.2.3  TransactionDefinition 事务的定义
 
-事务的名称、隔离级别、只读属性、**传播行为**、超时时间、回滚、不回滚
+事务的名称、隔离级别、只读属性、**传播行为**、超时时间、回滚的异常、不回滚的异常
 
  
 
-##### 2.2.2.3.1        传播行为
+#### 2.2.2.3.1        传播行为
 
 多个方法之间如何来共享事务。
 
@@ -3038,7 +3040,7 @@ TransactionStatus.class INherited members
 
 method2、method1
 
-###### 2.2.2.3.1.1  Required 默认的传播行为
+##### 2.2.2.3.1.1  Required 默认的传播行为
 
 如果不包含事务，就新增一个事务；如果你包含事务，我就加入进来，作为一个事务。
 
@@ -3052,7 +3054,7 @@ methodA发生异常：都回滚
 
 methodB发生异常：都回滚
 
-###### 2.2.2.3.1.2  Requires_new
+##### 2.2.2.3.1.2  Requires_new
 
 如果不包含事务，就新增一个事务；如果包含了事务，则新建一个新的事务。
 
@@ -3068,7 +3070,7 @@ methodB发生异常：B是外围。B回滚
 
  
 
-###### 2.2.2.3.1.3  nested
+##### 2.2.2.3.1.3  nested
 
 如果不包含事务，就新增一个事务；如果包含了事务，则以嵌套事务的方式运行。
 
@@ -3096,6 +3098,874 @@ register（外围） → sendCoupon（内部）
 
 
 
+## 2.3   事务的案例
+
+TransactionManager → 依赖于 DataSource
+
+```xml
+<!--application.xml-->
+<!--TransactionManager-->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+```
+
+
+
+MyBatis的事务交给Spring来进行管理 → 每一次执行方法都会提交
+
+### 2.3.1 transactionTemplate 事务模板
+
+```xml
+<!--application.xml-->
+<!--TransactionManager-->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+```
+
+```java
+@Service
+public class AccountServiceImpl implements AccountService{
+
+    @Autowired
+    AccountMapper accountMapper;
+
+    @Autowired
+    TransactionTemplate transactionTemplate;
+
+    @Override
+    public void transfer(Integer fromId, Integer destId, Double money) {
+        Double fromMoney = accountMapper.selectMoneyById(fromId);
+        Double destMoney = accountMapper.selectMoneyById(destId);
+
+        fromMoney -= money; //计算转账后应该有多少钱
+        destMoney += money; //计算转账后应该有多少钱
+
+        Double finalFromMoney = fromMoney;
+        Double finalDestMoney = destMoney;
+        Object execute = transactionTemplate.execute(new TransactionCallback<Object>() {
+            //将需要增加事务的代码 → 放入到doInTransaction方法中即可
+            @Override
+            public Object doInTransaction(TransactionStatus transactionStatus) {
+                int x = accountMapper.updateMoney(fromId, finalFromMoney);
+                int i = 1 / 0;
+                int y = accountMapper.updateMoney(destId, finalDestMoney);
+                return (x + y); //如果需要增加事务的代码 它需要返回值 → 直接返回去
+            }
+        });//transactionTemplate的execute方法的返回值 → doInTransaction方法的返回值
+
+        //如果不需要返回值
+        /*transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                 //把需要增加事务的代码放入进来即可
+            }
+        });*/
+    }
+}
+```
+
+
+
+### 2.3.2 TransactionProxyFactoryBean
+
+将一个委托类对象 → 生成一个事务的代理对象  → 类似于SpringAOP案例
+
+ 
+
+```xml
+<!--application.xml-->
+<bean id="accountServiceProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+    <!--target-->
+    <property name="target" ref="accountServiceImpl"/>
+    <!--transactionManager-->
+    <property name="transactionManager" ref="transactionManager"/>
+    <!--transactionAttributes → Definition-->
+    <property name="transactionAttributes">
+        <!--properties: props-->
+        <props>
+            <!--
+                    key：方法名
+                    value：definition
+                        ISOLATION_XXX:隔离级别
+                        PROPAGATION_XXX:传播行为
+                        readOnly: 只读
+                        timeout_xxx: 数字，单位是秒
+                        +XXXException: noRollbackFor
+                        -XXXException: rollbackFor
+                -->
+            <!--<prop key="transfer">ISOLATION_DEFAULT,PROPAGATION_REQUIRED</prop>-->
+            <!--<prop key="transfer">ISOLATION_DEFAULT,PROPAGATION_REQUIRED,readOnly</prop>-->
+            <!--<prop key="transfer">ISOLATION_DEFAULT,PROPAGATION_REQUIRED,timeout_5</prop>-->
+            <prop key="transfer">ISOLATION_DEFAULT,PROPAGATION_REQUIRED,+java.lang.ArithmeticException</prop>
+        </props>
+    </property>
+</bean>
+```
+
+```java
+@Service
+public class AccountServiceImpl implements AccountService{
+
+    @Autowired
+    AccountMapper accountMapper;
+
+    @Override
+    public void transfer(Integer fromId, Integer destId, Double money) {
+        Double fromMoney = accountMapper.selectMoneyById(fromId);
+        Double destMoney = accountMapper.selectMoneyById(destId);
+
+        fromMoney -= money; //计算转账后应该有多少钱
+        destMoney += money; //计算转账后应该有多少钱
+
+        int x = accountMapper.updateMoney(fromId,fromMoney);
+        int i = 1 / 0;
+        int y = accountMapper.updateMoney(destId,destMoney);
+    }
+}
+```
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:application.xml")
+public class MyTest {
+
+    @Autowired
+    @Qualifier("accountServiceProxy")
+    AccountService accountService; //代理对象
+
+    @Test
+    public void mytest1(){
+        accountService.transfer(1,2,5000D);
+    }
+}
+```
+
+ 
+
+### 2.3.3 advisor （advice组件）
+
+```xml
+<!--pom.xml-->
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjweaver</artifactId>
+    <version>1.9.6</version>
+</dependency>
+```
+
+```xml
+<!--application.xml-->
+<!--之前整合mybatis相关配置-->
+<!--TransactionManager-->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+
+<aop:config>
+    <aop:pointcut id="transactionPointcut" expression="execution(* com.cskaoyan.service..*(..))"/>
+    <aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut"/>
+</aop:config>
+
+<!--tx:advice标签提供了advice通知-->
+<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+    <!--definition-->
+    <tx:attributes>
+        <!--
+                name属性:方法名，也可以使用通配符
+                其他属性：definition相关的属性
+            -->
+        <tx:method name="*" isolation="REPEATABLE_READ" propagation="REQUIRED" />
+    </tx:attributes>
+</tx:advice>
+```
+
+
+
+### 2.3.4 Transactional（最简单也是最重要）
+
+打开注解开关 → tx:annotation-driven
+
+```xml
+<!--application.xml-->
+<tx:annotation-driven transaction-manager="transactionManager"/>
+```
+
+```java
+package org.springframework.transaction.annotation;
+@Target({ElementType.TYPE, ElementType.METHOD})//可以写在类或方法上
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface Transactional {
+    @AliasFor("transactionManager")
+    String value() default "";
+
+    @AliasFor("value")
+    String transactionManager() default "";
+
+    Propagation propagation() default Propagation.REQUIRED;
+
+    Isolation isolation() default Isolation.DEFAULT;
+
+    int timeout() default -1;
+
+    boolean readOnly() default false;
+
+    Class<? extends Throwable>[] rollbackFor() default {};
+
+    String[] rollbackForClassName() default {};
+
+    Class<? extends Throwable>[] noRollbackFor() default {};
+
+    String[] noRollbackForClassName() default {};
+}
+```
+
+```java
+//@Transactional//写在这里作用于类中所有方法
+@Service
+public class AccountServiceImpl implements AccountService{
+
+    @Autowired
+    AccountMapper accountMapper;
+	//使用TransactionDefinition相关属性
+    @Transactional(isolation = Isolation.REPEATABLE_READ,propagation = Propagation.NESTED)
+    @Override
+    public void transfer(Integer fromId, Integer destId, Double money) {
+        Double fromMoney = accountMapper.selectMoneyById(fromId);
+        Double destMoney = accountMapper.selectMoneyById(destId);
+
+        fromMoney -= money; //计算转账后应该有多少钱
+        destMoney += money; //计算转账后应该有多少钱
+
+        int x = accountMapper.updateMoney(fromId,fromMoney);
+        int i = 1 / 0;
+        int y = accountMapper.updateMoney(destId,destMoney);
+    }
+}
+```
+
+
+
+# 3    JavaConfig
+
+使用Java代码来进行Spring的配置
+
+ 
+
+xml、注解
+
+ 
+
+干掉xml配置文件 → SpringBoot → 干掉xml
+
+## 3.1   配置类
+
+@Configuration **把当前类作为容器中的组件，同时呢作为配置类**
+
+```java
+@Configuration
+public class SpringConfiguration {}
+```
+
+
+
+## 3.2   组件注册
+
+xml注册组件 → java方法来注册
+
+以方法的形式存在
+
+```java
+@Configuration
+public class SpringConfiguration {
+    /**
+    * 组件注册
+    * 返回值：对应的组件的class或者其接口
+    * 方法名：作为默认的组件id
+    * 也可以使用@Bean注解的value属性指定组件id
+    */
+    //@Bean //组件id是druidDataSource
+    @Bean("dataSource") //组件id是dataSource
+    public DruidDataSource druidDataSource(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/j30_db?useUnicode=true&characterEncoding=utf-8");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        return dataSource;
+    }
+}
+```
+
+相当于
+
+```xml
+<!--application.xml-->
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost:3306/j30_db?useUnicode=true&amp;characterEncoding=utf-8"/>
+    <property name="username" value="${db.username}"/>
+    <property name="password" value="${db.password}"/>
+</bean>
+```
+
+同理其他配置
+
+```java
+@Configuration//注册为组件和配置类
+@ComponentScan("com.cskaoyan")//扫描包
+@PropertySource("classpath:db.properties")//配置文件路径
+@EnableAspectJAutoProxy//aspectj注解配置
+@EnableTransactionManagement//开启事务
+public class SpringConfiguration {
+
+    @Value("${db.username}")//从配置文件获取参数，如配置datasource用
+    String username;
+    /**
+     * 组件注册
+     * 返回值：对应的组件的class或者其接口
+     * 方法名：作为默认的组件id
+     * 也可以使用@Bean注解的value属性指定组件id
+     */
+    //@Bean //组件id是druidDataSource
+    @Bean("dataSource") //组件id是dataSource
+    public DruidDataSource druidDataSource(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/j30_db?useUnicode=true&characterEncoding=utf-8");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        return dataSource;
+    }
+    @Bean("dataSource2") //组件id是dataSource
+    public DruidDataSource druidDataSource2(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/cskaoyan_db?useUnicode=true&characterEncoding=utf-8");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        return dataSource;
+    }
+
+    /**
+     * 形参：从容器中取出对应的类型的组件。默认是按照类型去取，容器中该类型的组件只有一个。
+     *                                通过@Qualifier指定组件id
+     */
+    @Bean
+    public SqlSessionFactoryBean sqlSessionFactory(@Qualifier("dataSource") DataSource dataSource){
+        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+        sqlSessionFactoryBean.setDataSource(dataSource); //也应该是来源于容器中的DataSource组件
+        return sqlSessionFactoryBean;
+    }
+
+    @Bean
+    public MapperScannerConfigurer mapperScannerConfigurer(){
+        MapperScannerConfigurer mapperScannerConfigurer = new MapperScannerConfigurer();
+        mapperScannerConfigurer.setSqlSessionFactoryBeanName("sqlSessionFactory");
+        mapperScannerConfigurer.setBasePackage("com.cskaoyan.mapper");
+        return mapperScannerConfigurer;
+    }
+    @Bean
+    public DataSourceTransactionManager transactionManager(@Qualifier("dataSource") DataSource dataSource){
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+        dataSourceTransactionManager.setDataSource(dataSource);
+        return dataSourceTransactionManager;
+    }
+}
+```
+
+
+
+## 3.3   功能性配置
+
+### 3.3.1 扫描包 @ComponentScan
+
+context:component-scan base-package
+
+```java
+@Configuration
+@ComponentScan("com.cskaoyan")
+public class SpringConfiguration {}
+```
+
+相当于
+
+```xml
+<!--application.xml-->
+<context:component-scan base-package="com.cskaoyan"/>
+```
+
+
+
+### 3.3.2 aspectj → @EnableAspectJAutoProxy
+
+```java
+@Configuration
+@ComponentScan("com.cskaoyan")
+@EnableAspectJAutoProxy//打开aspectj注解开关
+public class SpringConfiguration {}
+```
+
+相当于
+
+```xml
+<!--application.xml-->
+<aop:aspectj-autoproxy/>
+```
+
+
+
+### 3.3.3 事务 → @EnableTransactionManagement
+
+```java
+
+@Configuration
+@ComponentScan("com.cskaoyan")
+@EnableTransactionManagement//开启事务注解开关
+public class SpringConfiguration {...}
+```
+
+相当于
+
+```xml
+<!--application.xml-->
+<tx:annotation-driven transaction-manager.../>
+```
+
+
+
+### 3.3.4 引入properties配置文件
+
+```java
+@Configuration
+@ComponentScan("com.cskaoyan")
+@PropertySource("classpath:db.properties")//引入properties配置文件
+public class SpringConfiguration {}
+```
+
+相当于
+
+```xml
+<!--application.xml-->
+<context:property-placeholder location="classpath:db.properties"/>
+```
+
+
+
+## 3.4   加载配置类
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = SpringConfiguration.class)//使用classes属性加载配置类
+public class MyTest {
+
+    @Autowired
+    AccountService accountService;
+
+    @Test
+    public void mytest1(){
+        accountService.transfer(1,2,5000D);
+    }
+}
+```
+
+
+
+
+
+# 1    JavaEE
+
+控制层Servlet
+
+# 2    SpringMVC
+
+干掉Servlet → 基于Servlet
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image002-1622211001072.jpg)
+
+ 
+
+SpringMVC的核心流程
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image004-1622211001072.jpg)
+
+在初始化DispatcherServlet的过程中构建了Spring容器
+
+# 3    入门案例1
+
+## 3.1   引入依赖
+
+5+2（web\webmvc）+1
+
+servlet-api(provided)
+
+```xml
+<!--pom.xml-->   
+<packaging>war</packaging>
+    <dependencies>
+        <!--5+2+1-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>5.2.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>3.0-alpha-1</version>
+            <scope>provided</scope><!--打包web应用时不要打包进去-->
+        </dependency>
+    </dependencies>
+```
+
+
+
+## 3.2   DispatcherServlet
+
+通过Servlet的生命周期的init方法会维护一个WebApplicationContext
+
+ 
+
+doGet、doPost → doDispatch → 通过handlermapping和HandlerAdapter → handler（反射）
+
+```xml
+<!--web.xml-->
+<!--DispatcherServlet
+        Servlet : Class、ServletMapping
+        WebApplicationContext → 在DispatcherServlet初始化的时候 → init方法 → initWebApplicationContext
+        给DispatcherServlet提供一个参数 → set方法 → contextConfigLocation
+    -->
+<servlet>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:application.xml</param-value>
+    </init-param>
+</servlet>
+<servlet-mapping>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <!--全局 除了jsp的请求. /*可能会出问题因为jsp要交给处理jsp的servlet-->
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
+```
+
+
+
+## 3.3   配置文件
+
+```xml
+<!--application.xml-->
+<!-- 扫描包配置 -->
+<context:component-scan base-package="com.cskaoyan"/>
+
+<!--HandlerMapping和HandlerAdapter-->
+<mvc:annotation-driven/>
+```
+
+
+
+## 3.4   使用handler
+
+以方法的形式存在 → 容器中的@Controller组件中的方法 → HandlerMethod（Handler方法）
+
+/hello → 响应hello springmvc
+
+```java
+@Controller
+public class HelloController {
+
+    //Handler方法 → url映射到Handler方法上
+    @RequestMapping("/hello")
+    public String hello(){
+        return "/hello.jsp";
+    }
+}
+```
+
+
+
+## 3.5   使用Handler响应json数据
+
+Jackson-databind
+
+```xml
+<!--pom.xml-->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.11.4</version>
+</dependency>
+```
+
+```java
+@Controller
+public class HelloController {
+
+    @RequestMapping("/hello/user")
+    @ResponseBody //响应json数据，要增加一个@ResponseBody注解
+    public User helloUser(){
+        User user = new User();
+        user.setUsername("松哥");
+        user.setPassword("远志");
+        return user;
+    }
+}
+```
+
+
+
+## 3.6   响应Json数据
+
+```java
+//@Controller
+//@ResponseBody //当前类下的所有方法，响应的都是Json数据 →
+@RestController// 引申注解@RestController = @ResponseBody+ @Controller
+public class HelloController {
+
+    @RequestMapping(value = {"home","index","home/index"})
+    //@ResponseBody
+    public BaseRespVo index(){
+        return BaseRespVo.ok("访问主页");
+    }
+
+    @RequestMapping({"hello*","hello/*"})
+    //@ResponseBody
+    public BaseRespVo hello(){
+        return BaseRespVo.ok("你好");
+    }
+}
+```
+
+
+
+# 4    Handler的映射关系@RequestMapping
+
+
+
+## 4.1   url路径映射（核心）
+
+将请求url和Handler方法之间建立映射关系 → 使用value属性建立映射关系
+
+### 4.1.1 将多个url映射到同一个handler方法上
+
+/index
+
+/home
+
+/home/index
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Mapping
+public @interface RequestMapping {
+    String name() default "";
+
+    @AliasFor("path")
+    String[] value() default {};//数组 多个
+    ...
+```
+
+```java
+@RequestMapping(value = {"home","index","home/index"})//利用value属性是数组，将多个url映射到一个handler方法上
+@ResponseBody
+public BaseRespVo index(){
+    return BaseRespVo.ok("访问主页");
+}
+```
+
+
+
+### 4.1.2 使用通配符映射
+
+/hello*
+
+/hello/*
+
+```java
+@RequestMapping({"hello*","hello/*"})
+@ResponseBody
+public BaseRespVo hello(){
+    return BaseRespVo.ok("你好");
+}
+```
+
+
+
+### 4.1.3 一个url映射到不同的方法上？？？
+
+其实是可以 → 请求方法不同 → 后面再讲
+
+## 4.2   窄化请求
+
+user/login
+
+user/register
+
+user/modify
+
+```java
+@RestController
+@RequestMapping("user")//开头的/可以加也可以不加
+public class UserController {
+	//同理这里也是开头的/可以加也可以不加
+    //@RequestMapping("user/login")
+    @RequestMapping("login") //映射的url → 类上的requestMapping的value属性值 + 方法上的value属性
+    public BaseRespVo login(){
+        return BaseRespVo.ok("登录");
+    }
+    //@RequestMapping("user/register")
+    @RequestMapping("register")
+    public BaseRespVo register(){
+        return BaseRespVo.ok("注册");
+    }
+    //@RequestMapping("user/modify")
+    @RequestMapping("modify")
+    public BaseRespVo modify(){
+        return BaseRespVo.ok("更新");
+    }
+//    @RequestMapping("user/delete")
+}
+```
+
+
+
+## 4.3   请求方法限定 method属性
+
+```java
+/**
+ * 请求方法限定
+ */
+@RestController
+@RequestMapping("method")
+public class MethodController {
+
+    //@RequestMapping(value = "/get",method = RequestMethod.GET)
+    @GetMapping("get")
+    public BaseRespVo getLimit(){
+        return BaseRespVo.ok("GET方法");
+    }
+
+    //@RequestMapping(value = "/post",method = RequestMethod.POST)
+    @PostMapping("post")
+    public BaseRespVo postLimit(){
+        return BaseRespVo.ok("POST方法");
+    }
+
+    //多个请求方法之间的关系是OR
+    @RequestMapping(value = "double",method = {RequestMethod.GET,RequestMethod.POST})
+    public BaseRespVo doubleLimit(){
+        return BaseRespVo.ok();
+    }
+}
+```
+
+
+
+### 4.3.1 引申注解
+
+@GetMapping、@PostMapping
+
+```java
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@RequestMapping(//这里
+    method = {RequestMethod.GET}
+)
+public @interface GetMapping {...}
+
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@RequestMapping(//这里
+    method = {RequestMethod.POST}
+)
+public @interface PostMapping {...}
+```
+
+```java
+//@RequestMapping(value = "/get",method = RequestMethod.GET)
+@GetMapping("get")
+public BaseRespVo getLimit(){
+    return BaseRespVo.ok("GET方法");
+}
+
+//@RequestMapping(value = "/post",method = RequestMethod.POST)
+@PostMapping("post")
+public BaseRespVo postLimit(){
+    return BaseRespVo.ok("POST方法");
+}
+```
+
+
+
+
+
+## 4.4   请求参数限定 params → 400
+
+请求过程中要携带什么样的参数
+
+```java
+/**
+ * 请求参数限定
+ */
+@RestController
+@RequestMapping("param")
+public class ParamController {
+
+    //先不管请求参数的接口，只管请求过程中要携带什么参数
+    //localhost:8080/param/login?username=songge&password=yuanzhi
+    @RequestMapping(value = "login",params = {"username!=songge","password"})//多个参数之间的关系 and
+                                             //一定要携带username和password两个参数，且username不能等于songge
+    public BaseRespVo login(){
+        return BaseRespVo.ok();
+    }
+
+}
+```
+
+
+
+## 4.5   请求头限定
+
+# 5    附录
+
+## 5.1   packaging=war
+
+Facets 为web配置到src\main\webapp
+
+在pom.xml里添加`<packaging>`标签IDEA会自动把webapp目录变色同时生成Facets和Artifacts设置，并且在maven依赖发生变化时会自动重新打包,项目会编译到target目录下artifact-version，自动在WEB-INF/lib下打包更新依赖。
+
+```
+<!--pom.xml-->
+<packaging>war</packaging>
+```
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image036-1622211001074.jpg)
+
+## 5.2   postman
+
+[Download Postman | Try Postman for Free](https://www.postman.com/downloads/)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image038-1622211001074.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image040-1622211001074.jpg)
+
+Cookie、Json请求
+
  
 
  
+
+
+
+ 
+
+ 
+
