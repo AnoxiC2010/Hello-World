@@ -45,6 +45,12 @@ ctrl + H 看继承关系
 
 ctrl + alt + shift + J 全选当前光标在的关键词
 
+alt + ctrl + v 提取变量
+
+ctrl + alt + shift + c 复制全类名
+
+ctrl + F12 在类中查看方法
+
 ## Ctrl
 
 | 快捷键           | 介绍                                                         |
