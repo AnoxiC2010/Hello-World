@@ -2221,7 +2221,7 @@ public class OrderService {
 
 
 
-# 1    AspectJ
+# AspectJ
 
 增强方法的指定需要使用Pointcut
 
@@ -2241,11 +2241,11 @@ Advice
 
 
 
-## 1.1   Pointcut切入点表达式
+## Pointcut切入点表达式
 
 如何指定增强范围
 
-### 1.1.1 表达式语言execution
+### 表达式语言execution
 
 匹配 方法
 
@@ -2255,7 +2255,7 @@ execution(修饰符 返回值 包名、类名、方法名(形参))
 
 提供一个记忆的角度：能否省略、能否通配、特殊用法
 
-#### 1.1.1.1  修饰符
+#### 修饰符
 
 可以省略 👉 全部修饰符
 
@@ -2266,7 +2266,7 @@ execution(修饰符 返回值 包名、类名、方法名(形参))
 
 
 
-#### 1.1.1.2  返回值
+#### 返回值
 
 可否省略：不能省略
 
@@ -2290,7 +2290,7 @@ execution(修饰符 返回值 包名、类名、方法名(形参))
 
 
 
-#### 1.1.1.3  包名、类名、方法名
+#### 包名、类名、方法名
 
 ```xml
 <!--包名、类名、方法名：
@@ -2317,7 +2317,7 @@ execution(修饰符 返回值 包名、类名、方法名(形参))
 
  
 
-#### 1.1.1.4  形参
+#### 形参
 
 ```xml
 <!--形参：
@@ -2339,11 +2339,11 @@ execution(修饰符 返回值 包名、类名、方法名(形参))
 
 
 
-### 1.1.2 自定义注解 @annotation
+### 自定义注解 @annotation
 
 指哪打哪（保证是容器中的组件中的方法）
 
-#### 1.1.2.1  自定义的注解
+#### 自定义的注解
 
 ```java
 @Target(ElementType.METHOD) //自定义注解能够写在哪里 👉 方法上
@@ -2354,7 +2354,7 @@ public @interface CountTime {
 
 
 
-#### 1.1.2.2  通知
+#### 通知
 
 计算方法执行时间的通知
 
@@ -2375,7 +2375,7 @@ public class CustomAdvice implements MethodInterceptor {
 
 
 
-#### 1.1.2.3  切入点配置
+#### 切入点配置
 
 ```xml
 <context:component-scan base-package="com.cskaoyan"/>
@@ -2389,7 +2389,7 @@ public class CustomAdvice implements MethodInterceptor {
 
 
 
-#### 1.1.2.4  单元测试
+#### 单元测试
 
 ```java
 @CountTime//包含注解，被增强了→注意：要在容器中的组件中的方法里使用注解
@@ -2427,7 +2427,7 @@ public class MyTest {
 
 
 
-## 1.2   Advisor 通知器
+## Advisor 通知器
 
 表述我们的增强 pointcut 和 advice（自定义）
 
@@ -2435,7 +2435,7 @@ public class MyTest {
 
 要使用aop开头的标签 👉 aop的schema约束 引入
 
-### 1.2.1 通知组件
+### 通知组件
 
 ```java
 @Component
@@ -2452,7 +2452,7 @@ public class CustomAdvice implements MethodInterceptor {
 
 
 
-### 1.2.2 advisor
+### advisor
 
 非侵入式
 
@@ -2480,7 +2480,7 @@ public class CustomAdvice implements MethodInterceptor {
 
 多个advisor作用于同一个pointcut方法上时，写在前面的在外层，写在后面的在内层
 
-## 1.3   Aspect 切面
+## Aspect 切面
 
 pointcut 和 advice（提供了一些通知 👉 时间）
 
@@ -2492,7 +2492,7 @@ before、after、around、after-returning、after-throwing
 
 ![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image028-1622118850275.jpg)
 
-### 1.3.1 委托类的方法
+### 委托类的方法
 
 ```java
 @Service
@@ -2508,7 +2508,7 @@ public class UserServiceImpl implements UserService{
 
 
 
-### 1.3.2 切面组件以及方法
+### 切面组件以及方法
 
 ```java
 /**
@@ -2553,7 +2553,7 @@ public class CustomAspect {
 
 
 
-### 1.3.3 配置文件
+### 配置文件
 
 ```xml
 <aop:config>
@@ -2582,7 +2582,7 @@ public class CustomAspect {
 
 
 
-### 1.3.4 执行结果
+### 执行结果
 
 before通知的方法
 around统治的方法：前半部分
@@ -2595,7 +2595,7 @@ after通知的方法
 
 
 
-### 1.3.5 AfterThrowing通知
+### AfterThrowing通知
 
 让委托类方法抛出异常
 
@@ -2627,7 +2627,7 @@ public void methodAfterThrowing(Exception exception){//这里的参数名要和�
 
  
 
-### 1.3.6 JoinPoint 连接点
+### JoinPoint 连接点
 
 可以获得执行过程中的一些值 目标类对象、代理对象、方法、参数
 
@@ -2672,7 +2672,7 @@ public class CustomAspect {
 
 
 
-### 1.3.7 aspect的注解使用
+### aspect的注解使用
 
 aop:config标签给他变更为注解的方式
 
@@ -2682,7 +2682,7 @@ aop:config标签给他变更为注解的方式
 
 3、 指定方法为通知方法
 
-#### 1.3.7.1  打开注解开关
+#### 打开注解开关
 
 ```xml
 <!--application.xml-->
@@ -2691,7 +2691,7 @@ aop:config标签给他变更为注解的方式
 
 
 
-#### 1.3.7.2  切入点方法
+#### 切入点方法
 
 切入点在切面组件中以方法的形式存在
 
@@ -2717,7 +2717,7 @@ public void mypointcut() {
 
 
 
-#### 1.3.7.3  切面组件的指定
+#### 切面组件的指定
 
 ```java
 @Aspect
@@ -2733,7 +2733,7 @@ public class CustomAspect {}
 
 
 
-#### 1.3.7.4  方法的指定
+#### 方法的指定
 
 @Before、@After、@Around、@AfterReturning、@AfterThrowing
 
@@ -2790,11 +2790,9 @@ public void methodAfterThrowing(Exception exception){
 
 
 
-# 
+# Spring整合MyBatis
 
-# 1   Spring整合MyBatis
-
-## 2.1.1 原先的MyBatis代码
+## 原先的MyBatis代码
 
 ```java
 @Test
@@ -2817,7 +2815,7 @@ public void mytest1() throws Exception{
 
 
 
-## 2.1.2 引入依赖
+## 引入依赖
 
 ```xml
 <dependencies>
@@ -2880,7 +2878,7 @@ public void mytest1() throws Exception{
 
 
 
-## 2.1.3 组件注册
+## 组件注册
 
 Mapper组件
 
@@ -2919,9 +2917,9 @@ Mapper组件
 
 
 
-# 2   Spring事务
+# Spring事务
 
-## 2.2.1 事务的回顾
+## 事务的回顾
 
 事务的特性：
 
@@ -2964,11 +2962,11 @@ mysql默认的隔离级别是什么？ 可重复读 → MySql不会导致虚读
 
  
 
-## 2.2.2 核心接口
+## 核心接口
 
 ![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image060.jpg)
 
-### 2.2.2.1  PlatformTransactionManager 事务管理器
+### PlatformTransactionManager 事务管理器
 
 Spring要管理事务 → 一定要使用到平台事务管理器
 
@@ -3003,7 +3001,7 @@ public interface PlatformTransactionManager extends TransactionManager {
 
 开发人员不需关注status，而是关注definition配置方法
 
-### 2.2.2.2  TransactionStatus 事务的状态
+### TransactionStatus 事务的状态
 
 是否已完成，是否是新事物，是否有保存点...
 
@@ -3026,13 +3024,13 @@ TransactionStatus.class INherited members
 
 
 
-### 2.2.2.3  TransactionDefinition 事务的定义
+###  TransactionDefinition 事务的定义
 
 事务的名称、隔离级别、只读属性、**传播行为**、超时时间、回滚的异常、不回滚的异常
 
  
 
-#### 2.2.2.3.1        传播行为
+#### 传播行为
 
 多个方法之间如何来共享事务。
 
@@ -3040,7 +3038,7 @@ TransactionStatus.class INherited members
 
 method2、method1
 
-##### 2.2.2.3.1.1  Required 默认的传播行为
+##### Required 默认的传播行为
 
 如果不包含事务，就新增一个事务；如果你包含事务，我就加入进来，作为一个事务。
 
@@ -3054,7 +3052,7 @@ methodA发生异常：都回滚
 
 methodB发生异常：都回滚
 
-##### 2.2.2.3.1.2  Requires_new
+##### Requires_new
 
 如果不包含事务，就新增一个事务；如果包含了事务，则新建一个新的事务。
 
@@ -3070,7 +3068,7 @@ methodB发生异常：B是外围。B回滚
 
  
 
-##### 2.2.2.3.1.3  nested
+##### nested
 
 如果不包含事务，就新增一个事务；如果包含了事务，则以嵌套事务的方式运行。
 
@@ -3098,7 +3096,7 @@ register（外围） → sendCoupon（内部）
 
 
 
-## 2.3   事务的案例
+## 事务的案例
 
 TransactionManager → 依赖于 DataSource
 
@@ -3114,7 +3112,7 @@ TransactionManager → 依赖于 DataSource
 
 MyBatis的事务交给Spring来进行管理 → 每一次执行方法都会提交
 
-### 2.3.1 transactionTemplate 事务模板
+### transactionTemplate 事务模板
 
 ```xml
 <!--application.xml-->
@@ -3168,7 +3166,7 @@ public class AccountServiceImpl implements AccountService{
 
 
 
-### 2.3.2 TransactionProxyFactoryBean
+### TransactionProxyFactoryBean
 
 将一个委托类对象 → 生成一个事务的代理对象  → 类似于SpringAOP案例
 
@@ -3244,7 +3242,7 @@ public class MyTest {
 
  
 
-### 2.3.3 advisor （advice组件）
+### advisor （advice组件）
 
 ```xml
 <!--pom.xml-->
@@ -3283,7 +3281,7 @@ public class MyTest {
 
 
 
-### 2.3.4 Transactional（最简单也是最重要）
+### Transactional（最简单也是最重要）
 
 打开注解开关 → tx:annotation-driven
 
@@ -3349,7 +3347,7 @@ public class AccountServiceImpl implements AccountService{
 
 
 
-# 3    JavaConfig
+# JavaConfig
 
 使用Java代码来进行Spring的配置
 
@@ -3361,7 +3359,7 @@ xml、注解
 
 干掉xml配置文件 → SpringBoot → 干掉xml
 
-## 3.1   配置类
+## 配置类
 
 @Configuration **把当前类作为容器中的组件，同时呢作为配置类**
 
@@ -3372,7 +3370,7 @@ public class SpringConfiguration {}
 
 
 
-## 3.2   组件注册
+## 组件注册
 
 xml注册组件 → java方法来注册
 
@@ -3477,11 +3475,40 @@ public class SpringConfiguration {
 }
 ```
 
+相当于
+
+```xml
+<!--application.xml-->
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost:3306/j30_db?useUnicode=true&amp;characterEncoding=utf-8"/>
+    <property name="username" value="${db.username}"/>
+    <property name="password" value="${db.password}"/>
+</bean>
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+
+<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    <property name="basePackage" value="com.cskaoyan.mapper"/>
+</bean>
+
+<!--TransactionManager-->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+
+<!--aspectj注解开关-->
+<aop:aspectj-autoproxy/>
+```
 
 
-## 3.3   功能性配置
 
-### 3.3.1 扫描包 @ComponentScan
+## 功能性配置
+
+### 扫描包 @ComponentScan
 
 context:component-scan base-package
 
@@ -3500,7 +3527,7 @@ public class SpringConfiguration {}
 
 
 
-### 3.3.2 aspectj → @EnableAspectJAutoProxy
+### aspectj → @EnableAspectJAutoProxy
 
 ```java
 @Configuration
@@ -3518,7 +3545,7 @@ public class SpringConfiguration {}
 
 
 
-### 3.3.3 事务 → @EnableTransactionManagement
+### 事务 → @EnableTransactionManagement
 
 ```java
 
@@ -3537,7 +3564,7 @@ public class SpringConfiguration {...}
 
 
 
-### 3.3.4 引入properties配置文件
+### 引入properties配置文件
 
 ```java
 @Configuration
@@ -3555,7 +3582,7 @@ public class SpringConfiguration {}
 
 
 
-## 3.4   加载配置类
+## 加载配置类
 
 ```java
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -3576,11 +3603,11 @@ public class MyTest {
 
 
 
-# 1    JavaEE
+# JavaEE
 
 控制层Servlet
 
-# 2    SpringMVC
+# SpringMVC
 
 干掉Servlet → 基于Servlet
 
@@ -3594,11 +3621,13 @@ SpringMVC的核心流程
 
 在初始化DispatcherServlet的过程中构建了Spring容器
 
-# 3    入门案例1
+# 入门案例1
 
-## 3.1   引入依赖
+## 引入依赖
 
 5+2（web\webmvc）+1
+
+aop&beans&context&core&expression + webmvc&web + jcl
 
 servlet-api(provided)
 
@@ -3606,7 +3635,7 @@ servlet-api(provided)
 <!--pom.xml-->   
 <packaging>war</packaging>
     <dependencies>
-        <!--5+2+1-->
+        <!--5+2+1 都包括了 之前用的spring-context只包含5+1-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
@@ -3623,7 +3652,7 @@ servlet-api(provided)
 
 
 
-## 3.2   DispatcherServlet
+## DispatcherServlet
 
 通过Servlet的生命周期的init方法会维护一个WebApplicationContext
 
@@ -3648,14 +3677,56 @@ doGet、doPost → doDispatch → 通过handlermapping和HandlerAdapter → hand
 </servlet>
 <servlet-mapping>
     <servlet-name>dispatcherServlet</servlet-name>
-    <!--全局 除了jsp的请求. /*可能会出问题因为jsp要交给处理jsp的servlet-->
+    <!--
+	全局 除了jsp的请求. 
+	/*会出问题因为.jsp默认要交给tomcat的jspservlet处理,
+	-->
     <url-pattern>/</url-pattern>
 </servlet-mapping>
 ```
 
+但是dispatcherServlet的url-pattern为/取代了tomcat处理静态资源的defaultservlet会导致静态资源不能显示，spring提供了静态资源放行的配置：
+
+[参考]([不能访问webapp下的图片文件_JavaWeb技术（5）：Servlet的理解（下）_weixin_39522486的博客-CSDN博客](https://blog.csdn.net/weixin_39522486/article/details/111126479))
+
+```xml
+<!--application.xml-->
+<mvc:default-servlet-handler/><!-- 静态资源放行 -->
+<mvc:annotation-driven/><!-- 开启注解支持 -->
+```
+
+这个配置让DispatchServlet发现请求是一个静态资源那么会交给default servlet即交给Tomcat处理
+
+## 中文乱码
+
+注意
+表单的提交方式必须是post
+在web.xml中配置CharacterEncodingFilter编码格式要和JSP页面的编码格式一致
+解决中文乱码必须使用过滤器(在DispatcherServlet之前执行)，而不能使用springmvc的拦截器，因为过滤器在DispatcherServlet之前，所以设置好编码后，DispatcherServlet和Controller都可以获取到正确的数据，而拦截器运行在DispatcherServlet之后，也即是意味着DispatcherServlet获取的数据已经是乱码，那么在拦截器中调整乱码是没有意义的
+
+```xml
+<!--web.xml 不用自己写，spring提供了-->
+<!-- 配置 CharacterEncodingFilter解决中文乱码问题-->
+<filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+
+    <!-- 配置编码格式为UTF-8 -->
+    <init-param>
+        <param-name>encoding</param-name>
+        <param-value>UTF-8</param-value>
+    </init-param>
+</filter>
+
+<filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+```
 
 
-## 3.3   配置文件
+
+## 配置文件
 
 ```xml
 <!--application.xml-->
@@ -3664,11 +3735,12 @@ doGet、doPost → doDispatch → 通过handlermapping和HandlerAdapter → hand
 
 <!--HandlerMapping和HandlerAdapter-->
 <mvc:annotation-driven/>
+<!--这个标签做了很多工作，比如响应jason也是它做的-->
 ```
 
 
 
-## 3.4   使用handler
+## 使用handler
 
 以方法的形式存在 → 容器中的@Controller组件中的方法 → HandlerMethod（Handler方法）
 
@@ -3688,7 +3760,7 @@ public class HelloController {
 
 
 
-## 3.5   使用Handler响应json数据
+## 使用Handler响应json数据
 
 Jackson-databind
 
@@ -3718,7 +3790,7 @@ public class HelloController {
 
 
 
-## 3.6   响应Json数据
+## 响应Json数据
 
 ```java
 //@Controller
@@ -3742,15 +3814,15 @@ public class HelloController {
 
 
 
-# 4    Handler的映射关系@RequestMapping
+# Handler的映射关系@RequestMapping
 
+默认get post请求都接收 最开始的/可写可不写
 
-
-## 4.1   url路径映射（核心）
+## url路径映射（核心）
 
 将请求url和Handler方法之间建立映射关系 → 使用value属性建立映射关系
 
-### 4.1.1 将多个url映射到同一个handler方法上
+### 将多个url映射到同一个handler方法上
 
 /index
 
@@ -3781,7 +3853,7 @@ public BaseRespVo index(){
 
 
 
-### 4.1.2 使用通配符映射
+### 使用通配符映射
 
 /hello*
 
@@ -3797,11 +3869,11 @@ public BaseRespVo hello(){
 
 
 
-### 4.1.3 一个url映射到不同的方法上？？？
+### 一个url映射到不同的方法上？？？
 
 其实是可以 → 请求方法不同 → 后面再讲
 
-## 4.2   窄化请求
+## 窄化请求
 
 user/login
 
@@ -3835,7 +3907,7 @@ public class UserController {
 
 
 
-## 4.3   请求方法限定 method属性
+## 请求方法限定 method属性
 
 ```java
 /**
@@ -3867,7 +3939,7 @@ public class MethodController {
 
 
 
-### 4.3.1 引申注解
+### 引申注解
 
 @GetMapping、@PostMapping
 
@@ -3907,7 +3979,9 @@ public BaseRespVo postLimit(){
 
 
 
-## 4.4   请求参数限定 params → 400
+## 请求参数限定 params → 400
+
+这个问题时请求参数封装有问题，需要和前端沟通协调
 
 请求过程中要携带什么样的参数
 
@@ -3932,11 +4006,261 @@ public class ParamController {
 
 
 
-## 4.5   请求头限定
+# 1    Handler方法对应的@RequestMapping
 
-# 5    附录
+## 1.1   请求头限定 headers
 
-## 5.1   packaging=war
+```java
+@RestController
+public class HeaderController {
+    //headers 请求头的key有哪些 👉 多个请求头之间的关系 and
+    @RequestMapping(value = "header/limit",headers = {"Cskaoyan-Token","My-Tag"})
+    public BaseRespVo headerLimit(){
+        return BaseRespVo.ok();
+    }
+}
+```
+
+
+
+## 1.2   特定请求头的值的限定
+
+值的语法 xxx/xxx
+
+### 1.2.1 Content-Type → consumes
+
+```java
+//Content-Type
+@RequestMapping(value = "header/consumes",consumes = "xxx/yyy")
+public BaseRespVo contentType(){
+    return BaseRespVo.ok();
+}
+```
+
+
+
+### 1.2.2 Accept → produces
+
+```java
+//限定的是value
+//Accept
+@RequestMapping(value = "header/produces",produces = "abc/def")
+public BaseRespVo accept(){
+    return BaseRespVo.ok();
+}
+```
+
+
+
+# 2    Handler方法的返回值
+
+## 2.1   视图相关（了解）
+
+不要增加@ResponseBody和@RestController
+
+单体应用的时候，响应视图信息 ModelAndView
+
+### 2.1.1 ModelAndView
+
+```java
+@Controller
+public class HelloController {
+    @RequestMapping("hello1")
+    public ModelAndView hello1(){
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.setViewName("/WEB-INF/view/hello1.jsp");
+        modelAndView.addObject("content", "嘎子");
+        return modelAndView;
+    }
+}
+```
+
+
+
+### 2.1.2 String 👉 视图名
+
+```java
+@RequestMapping("hello2")
+public String hello2(Model model) {
+    model.addAttribute("content", "潘老师");
+    return "/WEB-INF/view/hello2.jsp";
+}
+```
+
+
+
+## 2.2   Json（主要是Json）
+
+Jackson依赖 `<mvc:annotation-driven/>`
+
+ 
+
+1、 Handler方法上增加@ResponseBody
+
+2、 类上增加@ResponseBody或@RestController
+
+# 3    Handler方法的形参
+
+主要要做的事情 👉 获得请求所携带的参数 👉 主要做的是请求参数的接收
+
+ 
+
+之前request.getParameter
+
+构造一个业务场景 👉 register
+
+## 3.1   直接接收
+
+```java
+@RestController
+@RequestMapping("user")
+public class UserController {
+    //可以使用request来接收，但是呢不建议
+    @RequestMapping("register")
+    public BaseRespVo register(HttpServletRequest request){
+        String username = request.getParameter("username");
+        return BaseRespVo.ok();
+    }
+}
+```
+
+
+
+**请求参数名和Handler方法的形参名一致**
+
+### 3.1.1 字符串、基本类型、包装类
+
+直接接收：1、请求参数名和Handler方法的形参名一致 2、包装类
+
+```java
+//请求参数名 和 handler方法的形参名一致
+//如果要接收 👉 建议使用包装类
+//localhost:8080/user/register?username=songge&password=yuanzhi&age=25&married=true
+@RequestMapping("register")//本身接收的是字符串→SpringMVC提供了转换器,int最好用Integer,否则null和""会抛异常
+public BaseRespVo register(String username,String password,int age,boolean married){
+    //public BaseRespVo register(String username,String password,String age,String married){
+    //Integer integer = Integer.valueOf(age);
+    return BaseRespVo.ok();
+}
+```
+
+
+
+### 3.1.2 数组接收
+
+```java
+//数组 👉 构造请求的时候，构造了多个相同的请求参数
+//请求参数名和Handler方法形参名一致
+//localhost:8080/user/register2?username=songge&password=yuanzhi&age=25&married=true
+//                  &hobbys=sing&hobbys=dance&hobbys=rap&hobbys=basketball
+@RequestMapping("register2")
+public BaseRespVo register2(String username,String password,int age,boolean married,String[] hobbys){
+    return BaseRespVo.ok(hobbys);
+}
+```
+
+
+
+### 3.1.3 Date
+
+```java
+//Date 👉 它其实是有类型转换器 👉 指定日期转换器的格式
+//localhost:8080/user/register3?username=songge&password=yuanzhi&age=25&married=true
+//                  &hobbys=sing&hobbys=dance&hobbys=rap&hobbys=basketball
+//                  &birthday=1991-05-04
+@RequestMapping("register3")
+public BaseRespVo register3(String username, String password,
+                            int age, boolean married, String[] hobbys, 
+                            @DateTimeFormat(pattern = "yyyy-MM-dd") Date birthday){
+    return BaseRespVo.ok();
+}
+```
+
+如果不用注解指定日期转换格式：
+
+```
+浏览器端：
+HTTP Status 400 – Bad Request
+Type Status Report
+
+Description The server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing).
+
+Apache Tomcat/8.5.37
+
+IDEA debug日志：
+29-May-2021 20:49:03.521 WARNING [http-nio-8080-exec-9] org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver.logException Resolved [org.springframework.web.method.annotation.MethodArgumentTypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'java.util.Date'; nested exception is org.springframework.core.convert.ConversionFailedException: Failed to convert from type [java.lang.String] to type [java.util.Date] for value '2021-05-03'; nested exception is java.lang.IllegalArgumentException]
+```
+
+
+
+### 3.1.4 自定义转换器
+
+```java
+package org.springframework.core.convert.converter;
+import org.springframework.lang.Nullable;
+@FunctionalInterface
+public interface Converter<S, T> {
+    @Nullable
+    T convert(S var1);
+}//第一个泛型：参数类型；第二个泛型：返回值类型
+```
+
+
+
+```java
+@Component
+public class String2DateConverter implements Converter<String, Date> {
+    @Override
+    public Date convert(String s) {
+        //转换业务 👉 自定义转换业务
+
+        SimpleDateFormat simpleDateFormat = null;
+        if (s.length() == 10) {
+            simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        } else if (s.length() == 19) {
+            simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+
+        Date parse = null;
+        try {
+            parse = simpleDateFormat.parse(s);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return parse;
+    }
+}
+```
+
+```xml
+<!--application.xml-->   
+<mvc:annotation-driven conversion-service="conversionService"/>
+
+<!--将自定义的转换器添加到SpringMVC的转换器列表里-->
+<bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+    <property name="converters"><!--set类型-->
+        <set><!--局部组件-->
+            <!--<bean class="com.cskaoyan.converter.String2DateConverter"/>-->
+            <!--通过ref标签的bean属性指定组件id-->
+            <ref bean="string2DateConverter"/><!--set中的数据-->
+        </set>
+    </property>
+</bean>
+```
+
+
+
+## 3.2   JavaBean接收
+
+## 3.3   接收Json
+
+ 
+
+
+
+# 附录
+
+## packaging=war
 
 Facets 为web配置到src\main\webapp
 
@@ -3949,7 +4273,7 @@ Facets 为web配置到src\main\webapp
 
 ![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image036-1622211001074.jpg)
 
-## 5.2   postman
+## postman
 
 [Download Postman | Try Postman for Free](https://www.postman.com/downloads/)
 
