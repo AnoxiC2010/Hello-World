@@ -4,6 +4,8 @@
 
 ## [Official Instruction](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10#simplified-installation-for-windows-insiders)
 
+以下为手动安装，使用预览版简化安装，管理员启动cmd执行wsl.exe --install即可
+
 * Windows version 2004 or higher
 
 * 2 windows features to be turned on via Control Panel or PowerShell
