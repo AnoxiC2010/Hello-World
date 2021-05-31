@@ -3812,7 +3812,11 @@ public class HelloController {
 }
 ```
 
+不加注解浏览器404
 
+```
+The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.
+```
 
 # Handler的映射关系@RequestMapping
 
@@ -4006,9 +4010,9 @@ public class ParamController {
 
 
 
-# 1    Handler方法对应的@RequestMapping
+# Handler方法对应的@RequestMapping
 
-## 1.1   请求头限定 headers
+## 请求头限定 headers
 
 ```java
 @RestController
@@ -4023,11 +4027,11 @@ public class HeaderController {
 
 
 
-## 1.2   特定请求头的值的限定
+## 特定请求头的值的限定
 
 值的语法 xxx/xxx
 
-### 1.2.1 Content-Type → consumes
+### Content-Type → consumes
 
 ```java
 //Content-Type
@@ -4039,7 +4043,7 @@ public BaseRespVo contentType(){
 
 
 
-### 1.2.2 Accept → produces
+### Accept → produces
 
 ```java
 //限定的是value
@@ -4052,15 +4056,15 @@ public BaseRespVo accept(){
 
 
 
-# 2    Handler方法的返回值
+# Handler方法的返回值
 
-## 2.1   视图相关（了解）
+## 视图相关（了解）
 
 不要增加@ResponseBody和@RestController
 
 单体应用的时候，响应视图信息 ModelAndView
 
-### 2.1.1 ModelAndView
+### ModelAndView
 
 ```java
 @Controller
@@ -4069,27 +4073,36 @@ public class HelloController {
     public ModelAndView hello1(){
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("/WEB-INF/view/hello1.jsp");
-        modelAndView.addObject("content", "嘎子");
+        modelAndView.addObject("content", "泰勒");
         return modelAndView;
     }
 }
+//测试在@RestController下也能返回视图，但是不要这样做
+```
+
+```jsp
+<!--在hello1.jsp中取数据-->
+<body>
+    <h1>hello  ${content}</h1>
+</body>
 ```
 
 
 
-### 2.1.2 String 👉 视图名
+### String 👉 视图名
 
 ```java
 @RequestMapping("hello2")
 public String hello2(Model model) {
-    model.addAttribute("content", "潘老师");
+    model.addAttribute("content", "斯威夫特");
     return "/WEB-INF/view/hello2.jsp";
 }
+//测试在@RestController下会404
 ```
 
+同ModleAndView用jsp取数据
 
-
-## 2.2   Json（主要是Json）
+##  Json（主要是Json）
 
 Jackson依赖 `<mvc:annotation-driven/>`
 
@@ -4099,7 +4112,7 @@ Jackson依赖 `<mvc:annotation-driven/>`
 
 2、 类上增加@ResponseBody或@RestController
 
-# 3    Handler方法的形参
+# Handler方法的形参
 
 主要要做的事情 👉 获得请求所携带的参数 👉 主要做的是请求参数的接收
 
@@ -4109,7 +4122,7 @@ Jackson依赖 `<mvc:annotation-driven/>`
 
 构造一个业务场景 👉 register
 
-## 3.1   直接接收
+## 直接接收
 
 ```java
 @RestController
@@ -4128,7 +4141,7 @@ public class UserController {
 
 **请求参数名和Handler方法的形参名一致**
 
-### 3.1.1 字符串、基本类型、包装类
+### 字符串、基本类型、包装类
 
 直接接收：1、请求参数名和Handler方法的形参名一致 2、包装类
 
@@ -4146,7 +4159,7 @@ public BaseRespVo register(String username,String password,int age,boolean marri
 
 
 
-### 3.1.2 数组接收
+### 数组接收
 
 ```java
 //数组 👉 构造请求的时候，构造了多个相同的请求参数
@@ -4161,7 +4174,7 @@ public BaseRespVo register2(String username,String password,int age,boolean marr
 
 
 
-### 3.1.3 Date
+### Date
 
 ```java
 //Date 👉 它其实是有类型转换器 👉 指定日期转换器的格式
@@ -4193,7 +4206,7 @@ IDEA debug日志：
 
 
 
-### 3.1.4 自定义转换器
+### 自定义转换器
 
 ```java
 package org.springframework.core.convert.converter;
@@ -4250,9 +4263,686 @@ public class String2DateConverter implements Converter<String, Date> {
 
 
 
-## 3.2   JavaBean接收
 
-## 3.3   接收Json
+
+### 文件类型
+
+文件的接收 👉 非常简单
+
+1、 接收到
+
+2、 存起来
+
+MultipartResolver
+
+#### 引入依赖
+
+commons-io\commons-fileupload
+
+```xml
+<!--pom.xml-->
+<dependency>
+    <groupId>commons-fileupload</groupId>
+    <artifactId>commons-fileupload</artifactId>
+    <version>1.4</version>
+</dependency>
+```
+
+
+
+#### 构造文件上传的请求
+
+```html
+<h1>单个文件的上传</h1>
+<!--注意请求url 编码类型 请求类型-->
+<form action="file/upload" enctype="multipart/form-data" method="post">
+    <input type="file" name="myfile"><br><!--请求参数名是myfile-->
+    <input type="submit">
+</form>
+```
+
+
+
+#### 组件注册
+
+```xml
+<!--application.xml-->
+<!--组件id是一个固定值--><!--SpringMVC适合用这个组件的时候实际上是按照组件的id去使用的-->
+<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    <property name="maxUploadSize" value="5120000"/>
+</bean>
+```
+
+
+
+#### handler方法来接收文件
+
+```properties
+# param.proterties
+# 配置上传文件的目录
+file.uploadPath=d://stone/spring
+```
+
+```xml
+<!--application.xml-->
+<context:property-placeholder location="classpath:param.properties"/>
+```
+
+```java
+@RestController
+@RequestMapping("file")
+public class FileController {
+
+    //@Value("d://stone/spring")
+    @Value("${file.uploadPath}")//对应配置文件
+    String filePath;
+
+
+    @RequestMapping("upload") //file/upload 👉 form表单中的action
+    public BaseRespVo upload(MultipartFile myfile/*对应请求参数名*/) throws IOException {//使用MultipartFile来接收请求参数中的文件
+        //获得上传的文件名
+        String originalFilename = myfile.getOriginalFilename();
+        String name = myfile.getName(); //请求参数名=myfile
+        //获得上传的文件类型Content-Type
+        String contentType = myfile.getContentType();
+        //获得文件大小
+        long size = myfile.getSize();
+        //获得输入流
+        InputStream in = myfile.getInputStream();
+
+        //文件名也可以使用UUID或随机数生成器生成一个随机值 👉 避免出现上传同名文件时会覆盖
+        //构造一个File接收MultipartFile 👉 文件上传
+        File file = new File(filePath,originalFilename); //配置接收的路径和文件名
+        myfile.transferTo(file); //文件上传
+
+        return BaseRespVo.ok();
+    }
+}
+```
+
+
+
+#### 接收多个文件
+
+```html
+<h1>多个文件的上传</h1>
+<form action="file/list/upload" enctype="multipart/form-data" method="post">
+    <%--multiple:允许选择多个文件--%>
+    <input type="file" multiple name="myfiles"><br><!--需要multiple布尔属性-->
+    <input type="submit">
+</form>
+```
+
+```java
+@RequestMapping("list/upload")
+public BaseRespVo listUpload(MultipartFile[] myfiles) throws IOException {
+    for (MultipartFile myfile : myfiles) {
+        //获得上传的文件名
+        String originalFilename = myfile.getOriginalFilename();
+        File file = new File(filePath,originalFilename); //配置接收的路径和文件名
+        myfile.transferTo(file); //文件上传
+    }
+    return BaseRespVo.ok();
+}
+```
+
+
+
+## JavaBean请求参数接收
+
+直接接收 👉 JavaBean
+
+localhost:8080/register?username=songge&password=yuanzhi&age=25&married=true&birthday=1991-05-04
+
+ 
+
+register(String username,String password,Integer age,Boolean married,Date birthday,String[] hobbys)
+
+ 
+
+👉 Javabean
+
+ 
+
+```java
+@Data
+public class User {
+    String username;
+    String password;
+    Integer age;
+    Boolean married;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")//可以使用@DateTimeFormmat注解也可以使用自定义转换器
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8") //响应的json数据格式
+    Date birthday;
+    String[] hobbys;
+}
+```
+
+```java
+@RestController
+@RequestMapping("user")
+public class UserController {
+
+    //将请求参数对应的形参 👉 变更为javabean的成员变量
+    //请求参数名 对应javabean的成员变量名 （set方法）
+    @RequestMapping("register")
+    public BaseRespVo register(User user) {
+        return BaseRespVo.ok(user);
+    }
+}
+```
+
+
+
+### 嵌套JavaBean
+
+```java
+@Data
+public class User {
+    String username;
+    String password;
+    Integer age;
+    Boolean married;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")//可以使用@DateTimeFormmat注解也可以使用自定义转换器
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8") //响应的json数据格式
+    Date birthday;
+    String[] hobbys;
+
+    //http://localhost:8080/user/register?
+    //      username=songge&password=yuanzhi&age=25&married=true&birthday=1991-05-04&hobbys=sing
+    //      &userDetail.email=songge@cskaoyan.com&userDetail.mobile=110
+    //嵌套JavaBean 👉 请求参数名和JavaBean的成员变量名一致
+    UserDetail userDetail;//注意 变量.变量 的请求参数写法
+}
+@Data
+public class UserDetail {
+    String email;
+    String mobile;
+}
+```
+
+
+
+
+
+###  javaBean的list
+
+```java
+@Data
+public class User {
+    //http://localhost:8080/user/register?
+    //      username=songge&password=yuanzhi&age=25&married=true&birthday=1991-05-04&hobbys=sing
+    //      &userDetail.email=songge@cskaoyan.com&userDetail.mobile=110
+    //      &orderList[0].location=huashan&orderList[0].price=500
+    //      &orderList[1].location=guanggu&orderList[1].price=400
+    //      &orderList[2].location=hanjie&orderList[2].price=300
+
+    //构造了一个请求👉 发现400 👉 请求参数[] 👉 URL编码
+    //[ %5b
+    //] %5d
+    //&orderList%5b0%5d.location=huashan&orderList%5b0%5d.price=500
+    //&orderList%5b1%5d.location=guanggu&orderList%5b1%5d.price=400
+    //&orderList%5b2%5d.l  ocation=hanjie&orderList%5b2%5d.price=300
+    //JavaBean的List 👉 请求参数名和JavaBean的成员变量名一致
+    List<Order> orderList;//注意中括号在URL中不能直接写，需要编码才行
+}
+```
+
+```java
+@Data
+public class Order {
+    String location;
+    Double price;
+}
+```
+
+
+
+## Json数据的接收
+
+### 构造Json的请求
+
+请求方法：post
+
+Content-Type：application/json
+
+data：Json字符串
+
+ 
+
+postman构造Json请求
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image018-1622463776338.jpg)
+
+### 构造一个请求的Json数据和对应的JavaBean
+
+```java
+@RestController
+@RequestMapping("user")
+public class UserController { 
+    /**
+     * @RequestBody 意味着接收的是Json数据
+     * {"username":"songge","password":"yuanzhi"}
+     */
+    //@RequestMapping(value = "login", method = RequestMethod.POST)
+    @PostMapping("login")
+    public BaseRespVo login(@RequestBody LoginUser user) {
+        return BaseRespVo.ok(user);
+    }
+
+    //@RequestMapping(value = "login", method = RequestMethod.GET)
+    @GetMapping("login")
+    public BaseRespVo login2(LoginUser user) { //localhost:8080/user/login?username=songge&password=yuanzhi
+        return BaseRespVo.ok(user);
+    }
+}
+//同一个URL映射到两个Handler方法，一个处理json参数请求，一个处理普通键值对参数请求
+```
+
+
+
+### 以Map来接收json数据
+
+```java
+//当你封装的值比较少
+//JavaBean可以固定数据类型
+@PostMapping("map/login")
+public BaseRespVo mapLogin(@RequestBody Map user) {
+    Object username = user.get("username");
+    Object password = user.get("password");
+    return BaseRespVo.ok(user);
+}
+```
+
+
+
+## 响应的json的日期格式
+
+@JsonFormmat
+
+响应和接收的Json日期格式
+
+```java
+@Data
+public class User {
+    @DateTimeFormat(pattern = "yyyy-MM-dd")//可以使用@DateTimeFormmat注解也可以使用自定义转换器
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8") //响应的json数据格式
+    Date birthday;
+}
+```
+
+{"data":{birthday":"1991-05-03 23:00:00"}}
+
+
+
+## 其他参数
+
+在handler方法的形参中还能够写什么
+
+### request和response
+
+```java
+@RequestMapping("reqAndResp")//了解但不建议
+public BaseRespVo reqAndResp(HttpServletRequest request, HttpServletResponse response) {
+    return BaseRespVo.ok();
+}
+```
+
+
+
+### Cookie
+
+能否直接放在形参中？ 否
+
+通过request来获得cookie
+
+```java
+@RequestMapping("cookie")
+public BaseRespVo cookie(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    for (Cookie cookie : cookies) {
+        String name = cookie.getName();
+        String value = cookie.getValue();
+        System.out.println(name + " → " + value);
+    }
+    return BaseRespVo.ok();
+}
+```
+
+
+
+#### 构造cookie
+
+chrome浏览器
+
+developer tools -> application -> storate -> session storage
+
+配置cookie的name和value
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image030-1622463776341.jpg)
+
+通过postman的Headers设置Cookie请求头
+
+通过分号来分割多个cookie
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image032-1622463776341.jpg)
+
+### Session
+
+能否直接写到形参中？？ 行 HttpSession
+
+也可以通过request去获得
+
+```java
+@RequestMapping("session/put")
+public BaseRespVo session1(HttpSession session, String value) {
+    session.setAttribute("content", value);
+    return BaseRespVo.ok();
+}
+//直接放在形参中或通过request来获得session
+@RequestMapping("session/get")
+//public BaseRespVo session2(HttpSession session) {
+public BaseRespVo session2(HttpServletRequest request) {
+    HttpSession session = request.getSession();
+    Object content = session.getAttribute("content");
+    return BaseRespVo.ok(content);
+}
+```
+
+
+
+# RESTful
+
+表述性状态传递
+
+通过请求的表述去携带信息
+
+ 
+
+localhost:8080/user
+
+GET：查询
+
+POST：新增
+
+DELETE：删除
+
+PUT：更新
+
+ 
+
+前后端分离的应用，请求方法GET或POST
+
+ 
+
+不同的请求url 👉 **资源 +** **操作**
+
+ 
+
+localhost:8080/user/query
+
+localhost:8080/user/update
+
+localhost:8080/user/insert
+
+localhost:8080/user/delete
+
+ 
+
+可读性、窄化请求、配置拦截器、配置权限
+
+ 
+
+响应JSON数据 👉 @ResponseBody、@RestController
+
+ 
+
+注解：获得请求中携带的表述的状态 👉 请求中哪一些内容会给我们提供参数 👉 提供到Handler方法的形参中 👉 形参中要去获得一些值
+
+ 
+
+1、 请求URL 👉 @PathVariable
+
+2、 请求参数 👉 @RequestParam （没啥用）
+
+3、 请求头 👉 @RequestHeader
+
+4、 Cookie 👉 @CookieValue
+
+5、 Session 👉 @SessionAttribute
+
+ 
+
+## 请求URL 👉 @PathVariable
+
+weixin_44991304/article/details/117355320
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image036-1622463776344.jpg)
+
+用户名/article/details/文章id 👉 使用占位符
+
+```java
+@RestController
+public class ArticleController {
+
+    //使用大括号来指定占位符
+    @RequestMapping("{username}/article/details/{id}")
+    public BaseRespVo articleDetails(@PathVariable("username") String name,
+                                     @PathVariable("id") Integer id) {
+        System.out.println("id: " + id);
+        System.out.println("name: " + name);
+        return BaseRespVo.ok(name);
+    }
+}
+```
+
+
+
+## 请求参数 👉 @RequestParam （没啥用）
+
+获得是请求参数中的值
+
+```java
+//localhost:8080/login?username=songge&password=yuanzhi
+@RequestMapping("login")
+public BaseRespVo login(@RequestParam("username") String name,
+                        @RequestParam("password") String pwd) {
+    return BaseRespVo.ok();
+}
+//比较繁琐,直接将形参名和请求参数对应起来即可->String username,String password
+```
+
+
+
+## 请求头 👉 @RequestHeader
+
+请求头的值，通过指定请求头的key来获得对应的value
+
+```java
+//可以直接以String来接收对应的请求头的值，也可以使用数组来接收（请求头中的值里面包含 逗号）
+@RequestMapping("header/get")
+public BaseRespVo headerGet(@RequestHeader("Accept") String[] accept,
+                            @RequestHeader("Host") String host){
+    return BaseRespVo.ok();
+}
+```
+
+
+
+## Cookie 👉 @CookieValue
+
+通过cookie的name来获得cookie的value
+
+```java
+//通过cookie的name来获得对应的value
+@RequestMapping("cookie/value")
+public BaseRespVo cookieValue(@CookieValue("ligenli") String ligenli,
+                              @CookieValue("songge") String songge){
+    System.out.println(ligenli);//@CookieValue后面括号里是cookie的name
+    System.out.println(songge);
+    return BaseRespVo.ok();
+}
+```
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image042-1622463776346.jpg)
+
+## Session 👉 @SessionAttribute
+
+```java
+@RequestMapping("session/put/{value}")
+public BaseRespVo sessionPut(HttpSession httpSession, @PathVariable("value") String value) {
+    httpSession.setAttribute("30th",value);
+    return BaseRespVo.ok();
+}
+
+@RequestMapping("session/get")//通过key去除对应的value
+public BaseRespVo getSession(@SessionAttribute("30th") String value) { //Session这里接收的value是Object，
+    // 放入的是什么类型，就取出什么类型
+    return BaseRespVo.ok(value);
+}
+```
+
+
+
+# 静态资源处理
+
+为什么我们要做静态资源的处理？
+
+当我们整合SpringMVC之后，静态资源访问不到了。原先是由默认的servlet来进行出来，SpringMVC把静态资源处理的请求抢过去，并且没有提供对应的handler来进行处理
+
+```xml
+<!--web.xml,default-servlet从dispatcherServlet截获静态资源-->
+<servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>*.jpg</url-pattern>
+</servlet-mapping>
+```
+
+## 默认的servlet
+
+李冰 父子 治水 👉 都江堰
+
+分流
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image048-1622463776347.jpg)
+
+```xml
+<servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>*.jpg</url-pattern>
+</servlet-mapping>
+<servlet-mapping>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
+```
+
+仅能访问到webapp路径（web资源根路径）下的资源
+
+## default-servlet-handler
+
+由DispatcherServlet分给Default-servlet-handler
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image052-1622463776350.jpg)
+
+```xml
+<!--application.xml-->
+<mvc:default-servlet-handler/>
+```
+
+
+
+## 静态资源映射 ResourceHandler
+
+映射的url是什么
+
+静态资源在哪里
+
+```xml
+<!--application.xml-->
+<!--静态资源映射 ResourceHandler
+            mapping属性：映射url 👉 **意味着多级url
+            location属性：静态资源所处的位置 👉 最后要加一个/
+                1、web资源根路径 👉 /
+                2、类加载路径classpath 👉 classpath:/
+                3、文件路径 👉 file:路径
+        想要访问到静态资源：mapping中的值 + 静态资源相对于location的值
+    -->
+<mvc:resources mapping="/pic/**" location="/"/>
+<mvc:resources mapping="/pic2/**" location="classpath:/"/>
+<mvc:resources mapping="/pic3/**" location="file:D:/stone/spring/"/><!--实际开发常用-->
+```
+
+
+
+# 异常处理
+
+Handler方法向上抛出的异常
+
+## HandlerExceptionResolver（了解）
+
+统一的异常处理 👉 抛出异常 👉 之前响应视图相关的数据时
+
+ModelAndView resolveException
+
+```java
+//注册到容器中即生效
+//@Component
+public class CustomHandlerExceptionResolver implements HandlerExceptionResolver {
+    @Override//Object handler是handler方法,e是抛出的异常
+    public ModelAndView resolveException(HttpServletRequest httpServletRequest,
+                                         HttpServletResponse httpServletResponse, Object handler, Exception e) {
+        String message = e.getMessage();
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.setViewName("/exception.jsp");
+        modelAndView.addObject("message", message);
+        return modelAndView;
+    }
+}
+```
+
+
+
+## ExceptionHandler（推荐）
+
+通过异常的类型进行映射 👉 不同类型的异常可以通过不同的handler方法来处理
+
+```java
+@ControllerAdvice
+//@ResponseBody
+//@RestControllerAdvice = @ControllerAdvice + @ResponseBody
+public class ExceptionControllerAdvice {
+	//如果没有@ResponseBody或@RestControllerAdvice响应的是ModelAndView
+    @ExceptionHandler(ArithmeticException.class)
+    public String arithmeticException(){ //返回值String 👉 ModelAndView中的viewName
+        return "/exception.jsp";
+    }
+
+    @ExceptionHandler(SensitiveWordException.class)
+    @ResponseBody//对应的异常对象可以直接写在形参中,获得抛出的异常对象,也可以获得携带的信息
+    public BaseRespVo sensitiveException(SensitiveWordException sensitiveWordException){
+        //抛出异常时 可以携带信息
+        //处理方法中 可以获得携带的信息
+        String word = sensitiveWordException.getWord();//抛出异常时封装的信息
+        return BaseRespVo.fail(word + "敏感词，查水表");
+    }
+
+    //可以通过一个方法处理多种类型的异常 //value=Class<? extends Throwable>[] 说明可以接收异常数组
+    @ExceptionHandler({ParameterException.class,NullPointerException.class})//映射多个异常
+    @ResponseBody
+    public BaseRespVo parameterException(){
+        return BaseRespVo.fail("参数有误");
+    }
+}
+```
+
+
+
+# 5    拦截器
+
+# 6    validator
+
+# 7    JavaConfig
 
  
 
