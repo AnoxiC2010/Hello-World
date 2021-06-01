@@ -5300,24 +5300,12 @@ public class User {
     @RequestMapping("login")
     //public BaseRespVo login(@Valid User user){//@Valid或@Validated注解告知SpringMVC请求参数需要校验
     public BaseRespVo login(@Validated User user, BindingResult bindingResult){
-        //可以根据校验结果做个性化的处理
-        if (bindingResult.hasFieldErrors()) { //校验结果中有否有错误
-            return ValidUtil.valid(bindingResult);
-        }
-
-        /*String username = user.getUsername();
-        if (username == null || username.length() < 6) {
-            return BaseRespVo.fail("username长度至少是6位");
-        }
-        String password = user.getPassword();
-        if (password == null || password.length() < 6 || password.length() > 10) {
-            return BaseRespVo.fail("password的长度在6到8位");
-        }*/
+       
         return BaseRespVo.ok();
     }
 ```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image038-1622554259768.jpg)
+
 
 ## 2.5   常见的注解
 
@@ -5333,19 +5321,85 @@ public class User {
 
 要获得校验结果并且要进入到Handler方法中 👉 形参中增加一个BindingResult（参数校验的结果）
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image042-1622554259769.jpg)
+```java
+public class ValidUtil {
+    public static BaseRespVo valid(BindingResult bindingResult){
+        //拿到没有校验成功的成员变量 👉 哪一个请求参数没有通过校验
+        FieldError fieldError = bindingResult.getFieldError();
+
+        //成员变量名 👉 请求参数名
+        String field = fieldError.getField();
+        //哪一个请求参数对应的值没有通过校验
+        Object rejectedValue = fieldError.getRejectedValue();
+
+        //没有校验通过提供的默认的消息
+        String defaultMessage = fieldError.getDefaultMessage();
+
+        String message = "请求参数" + field + "因为" + rejectedValue + "没有通过校验;" + defaultMessage;
+        return BaseRespVo.fail(message);
+    }
+}
+```
+
+```java
+@RequestMapping("login")
+//public BaseRespVo login(@Valid User user){
+public BaseRespVo login(@Validated User user, BindingResult bindingResult){
+    //可以根据校验结果做个性化的处理
+    if (bindingResult.hasFieldErrors()) { //校验结果中有否有错误
+        return ValidUtil.valid(bindingResult);
+    }
+    return BaseRespVo.ok();
+}
+```
+
+
 
 ## 2.7   default-message
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image044-1622554259769.jpg)
+```java
+@Data
+public class User {
+    @NotNull
+    @Length(min = 6)
+    String username;
+    @Length(min = 6, max = 10,message = "length must between 6 and 10")
+    String password;//检验注解中都可以使用message属性修改默认的消息
+
+    @Min(18)
+    @Max(70)
+    Integer age;
+}
+```
+
+
 
 ## 2.8   提供外部的配置文件
 
 提供消息 👉 MessageSource
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image046-1622554259769.jpg)
+```java
+//@Length(min = 6, max = 10,message = "length must between 6 and 10")
+@Length(min = 6, max = 10, message = "{user.password}")//使用大括号来引用key
+String password;
+```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image048-1622554259769.jpg)
+```xml
+<!--application.xml-->    
+<mvc:annotation-driven validator="validator"/>
+
+<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+    <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+    <property name="validationMessageSource" ref="messageSource"/>
+</bean>
+<!--上面validator引用这里的的messageSource的id-->
+<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+    <property name="basename" value="classpath:valid"/>
+    <property name="defaultEncoding" value="utf-8"/>
+</bean>
+```
+
+
 
 # 3    国际化i18n
 
@@ -5361,9 +5415,25 @@ hello
 
 Locale 👉 地区信息
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image050-1622554259769.jpg)
+```xml
+<!--application.xml-->
+<!--Locale管理 👉 组件id也是一个固定值-->
+<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+    <!--cookieName:cookie中的哪一个name维护locale信息-->
+    <property name="cookieName" value="language"/>
+    <!--默认的locale-->
+    <property name="defaultLocale" value="en_US"/>
+</bean>
+```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image052-1622554259770.jpg)
+```java
+    @RequestMapping("locale/get")
+    public BaseRespVo getLocale(Locale locale){ //写在形参中，获得的是默认的locale信息
+        return BaseRespVo.ok(message);//配置了cookieName:local信息和cookieName所对应的value相关
+    }
+```
+
+
 
 ## 3.1   Locale信息能做什么
 
@@ -5373,15 +5443,65 @@ MessageSource 👉 国际化的配置文件properties
 
 新增多个配置文件，每个配置文件 对应一个locale信息，将多个配置文件当成是一组配置文件
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image054-1622554259770.jpg)
+```
+IDEA中resources文件加会以这种形式么显示
+文件名后面跟着locale信息
+▽Resource Bundle 'param' 
+	param_en_US.properties
+	param_th_TH.properties
+	param_zh_CN.properties
+```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image056-1622554259769.jpg)
+```java
+@Autowired
+MessageSource messageSource;
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image058-1622554259771.jpg)
+@RequestMapping("locale/get")
+public BaseRespVo getLocale(Locale locale){ //写在形参中，获得的是默认的locale信息
+    //这里根据传入的locale会找到对应locale的properties的user.password的值
+    String message = messageSource.getMessage("user.password", /*Object[]类型*/null, locale);
+    return BaseRespVo.ok(message);//找到不同的locale对应的配置文件按照key来获取对应的value
+}
+```
+
+占位符的用法
+
+```properties
+# param_en_US.properties
+user.password={0} length must between 6 and 10 {1}
+```
+
+```java
+    @Autowired
+    MessageSource messageSource;
+
+    @RequestMapping("locale/get")
+    public BaseRespVo getLocale(Locale locale){ //写在形参中，获得的是默认的locale信息
+
+        //第一个参数：String 👉 配置文件key
+        //第二个参数：为占位符提供值 👉 配置文件中的value里的占位符
+        //第三个参数：locale信息
+        String[] value = {"枫哥","牛批"};//对应properties文件中的{0}和{1}占位符，注意从0开始
+        String message = messageSource.getMessage("user.password", value, locale);
+
+        return BaseRespVo.ok(message);
+    }
+```
+
+
 
 ## 3.2   我们做的message和locale也可以直接给到validator使用
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image060-1622554259773.jpg)
+```java
+@Data
+public class User {
+    //@Length(min = 6, max = 10,message = "length must between 6 and 10")
+    @Length(min = 6, max = 10, message = "{user.password}")
+    String password;//可以根据locale获得不同的locale对应的配置文件中的value
+}
+```
+
+
 
 # 4    JavaConfig
 
@@ -5407,21 +5527,78 @@ MessageSource 👉 国际化的配置文件properties
 
  
 
-**ContextLoaderLoaderListener**
+**ContextLoaderListener**
 
 ### 4.1.1  web.xml
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image062-1622554259773.jpg)
+```xml
+<!--web.xml-->
+<listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+<context-param>
+    <param-name>contextConfigLocation</param-name><!--父容器-->
+    <param-value>classpath:application.xml</param-value>
+</context-param>
+
+<servlet>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+        <param-name>contextConfigLocation</param-name><!--子容器，可以使用父容器组件-->
+        <param-value>classpath:application-mvc.xml</param-value>
+    </init-param>
+</servlet>
+<servlet-mapping>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
+```
+
+
 
 ### 4.1.2 spring配置文件
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image064-1622554259773.jpg)
+```xml
+<!--application.xml-->
+<!--排除掉@Controller注解对应的组件-->
+<context:component-scan base-package="com.cskaoyan">
+    <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+</context:component-scan>
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image066.jpg)
+<bean id="datasource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost:3306/j30_db?useUnicode=true&amp;characterEncoding=utf-8"/>
+    <property name="username" value="root"/>
+    <property name="password" value="123456"/>
+</bean>
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="datasource"/>
+</bean>
+
+<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    <property name="basePackage" value="com.cskaoyan.mapper"/>
+</bean>
+
+<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="datasource"/>
+</bean>
+<tx:annotation-driven transaction-manager="txManager"/>
+```
+
+
 
 ### 4.1.3 springmvc的配置文件
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image068.jpg)
+```xml
+<!--application-mvc.xml-->
+<context:component-scan base-package="com.cskaoyan.controller"/>
+<mvc:annotation-driven/>
+```
+
+
 
 ## 4.2   JavaConfig
 
@@ -5435,37 +5612,173 @@ application-mvc.xml 👉 扫描包、mvc:annotation-driven、mvc的相关配置
 
 ### 4.2.1 web.xml 👉 AACDSI
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image070.jpg)
+```java
+/**
+ * 相当于web.xml 👉 AACDSI 嗷嗷吃到死
+ */
+public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    //加载Spring配置类
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{SpringConfiguration.class};
+    }
+    //加载SpringMVC配置类
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{MvcConfiguration.class};
+    }
+    //配置DispatcherServlet的servlet-mapping
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+}
+```
+
+
 
 #### 4.2.1.1  characterEncodingFilter
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image072.jpg)
+```java
+public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    @Override//Spring默认的编码过滤器
+    protected Filter[] getServletFilters() {
+        CharacterEncodingFilter filter = new CharacterEncodingFilter();
+        filter.setEncoding("utf-8");
+        filter.setForceEncoding(true);
+        return new Filter[]{filter};
+        //return new Filter[]{new CharacterEncodingFilter("UTF-8", true)};//可以直接这么写
+        //不用设置urlmapping，也没法设置，默认是/*
+    }
+}
+```
+
+
 
 ### 4.2.2 Spring配置类
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image074.jpg)
+```java
+@Configuration
+@ComponentScan(value = "com.cskaoyan",
+        excludeFilters = @ComponentScan.Filter(value = {Controller.class, EnableWebMvc.class}))
+        //excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION,value = Controller.class))
+		//这两中写法都可以，因为不屑type的默认类型就是FilterType.ANNOTATION
+@EnableTransactionManagement
+public class SpringConfiguration {//其余注册组件和spring的javaConfig一致
+
+    @Bean
+    public DruidDataSource druidDataSource() {
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/j30_db?useUnicode=true&characterEncoding=utf-8");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        return dataSource;
+    }
+
+    @Bean
+    public SqlSessionFactoryBean sqlSessionFactory(DataSource dataSource) {
+        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+        sqlSessionFactoryBean.setDataSource(dataSource);
+        return sqlSessionFactoryBean;
+    }
+
+    @Bean
+    public MapperScannerConfigurer mapperScannerConfigurer() {
+        MapperScannerConfigurer mapperScannerConfigurer = new MapperScannerConfigurer();
+        mapperScannerConfigurer.setSqlSessionFactoryBeanName("sqlSessionFactory");
+        mapperScannerConfigurer.setBasePackage("com.cskaoyan.mapper");
+        return mapperScannerConfigurer;
+    }
+    @Bean
+    public DataSourceTransactionManager dataSourceTransactionManager(DataSource dataSource) {
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+        dataSourceTransactionManager.setDataSource(dataSource);
+        return dataSourceTransactionManager;
+        //return new DataSourceTransactionManager(dataSource);//或这么写
+    }
+}
+```
+
+
 
 ### 4.2.3 SpringMVC配置类
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image076.jpg)
+```java
+@ComponentScan("com.cskaoyan.controller")
+@EnableWebMvc//相当于<mvc:annotation-driven/>
+public class MvcConfiguration implements WebMvcConfigurer {//该接口提供了mvc标签的功能
+}
+```
+
+相当于
+
+```xml
+<!--application-mvc.xml-->
+<context:component-scan base-package="com.cskaoyan.controller"/>
+<mvc:annotation-driven/>
+```
+
+
 
 #### 4.2.3.1  MultipartResolver
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image078.jpg)
+```java
+@Bean
+public CommonsMultipartResolver multipartResolver() {//组件id是固定值，我们采用方法名作为默认的组件id了
+    CommonsMultipartResolver commonsMultipartResolver = new CommonsMultipartResolver();
+    commonsMultipartResolver.setMaxUploadSize(512000000);
+    return commonsMultipartResolver;
+}
+```
+
+
 
 #### 4.2.3.2  LocaleResolver
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image080.jpg)
+```java
+@Bean
+public CookieLocaleResolver localeResolver(){//组件id为固定值
+    CookieLocaleResolver cookieLocaleResolver = new CookieLocaleResolver();
+    cookieLocaleResolver.setCookieName("language");
+    cookieLocaleResolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
+    return cookieLocaleResolver;
+}
+```
+
+
 
 #### 4.2.3.3  mvc:resources
 
 静态资源映射： mapping location
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image082.jpg)
+```java
+//mvc:resources
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    //       mapping属性                                location属性
+    registry.addResourceHandler("/pic/**").addResourceLocations("file:d://stone/spring/");
+    registry.addResourceHandler("/pic2/**").addResourceLocations("/");
+    registry.addResourceHandler("/pic3/**").addResourceLocations("classpath:/picture/");
+
+}
+```
+
+
 
 #### 4.2.3.4  mvc:interceptors
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image084.jpg)
+```java
+//mvc:interceptors
+//作用范围什么 interceptor是谁
+@Override
+public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(new CustomHandlerInterceptor());//作用范围全局
+    registry.addInterceptor(new CustomHandlerInterceptor2()).addPathPatterns("/hello/**");//局部范围
+}
+```
+
+
 
 #### 4.2.3.5  converter
 
@@ -5473,17 +5786,40 @@ formattingConversionServiceFactoryBean → converters（set）
 
 mvc:annotation-driven conversion-service
 
+```java
+//自定义转换器
+@Override
+public void addFormatters(FormatterRegistry registry) {
+    registry.addConverter(new String2DateConverter());
+}
+//自定义转换器2//这种方法很繁琐，不常用
+@Autowired
+ConfigurableConversionService conversionService;//取出来
+@PostConstruct
+public void addConverter(){
+    conversionService.addConverter(new String2DateConverter());//增加上
+}
+@Primary//由于又放了一个相同类型的ConfigurableConversionService实例，这个注解将使新加的具有优先被使用权
+@Bean
+public ConfigurableConversionService conversionService(){
+    return conversionService;//放回去
+}
+```
+
  
-
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image086.jpg)
-
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image088.jpg)
 
 #### 4.2.3.6  validator
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image090.jpg)
-
- 
+```java
+@Override
+public Validator getValidator() {
+    //注意看源码这个LocalValidatorFactoryBean是implements Validator
+    //这个FactoryBean本质上是一个Validator，和其他FactoryBean不同
+    LocalValidatorFactoryBean localValidatorFactoryBean = new LocalValidatorFactoryBean();
+    localValidatorFactoryBean.setProviderClass(HibernateValidator.class);
+    return localValidatorFactoryBean;
+}
+```
 
  
 
