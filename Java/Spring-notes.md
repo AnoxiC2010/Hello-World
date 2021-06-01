@@ -3377,7 +3377,7 @@ xml注册组件 → java方法来注册
 以方法的形式存在
 
 ```java
-@Configuration
+@Configuration//注册为容器组件和作为配置类
 public class SpringConfiguration {
     /**
     * 组件注册
@@ -3413,7 +3413,7 @@ public class SpringConfiguration {
 同理其他配置
 
 ```java
-@Configuration//注册为组件和配置类
+@Configuration//注册为容器组件和作为配置类
 @ComponentScan("com.cskaoyan")//扫描包
 @PropertySource("classpath:db.properties")//配置文件路径
 @EnableAspectJAutoProxy//aspectj注解配置
@@ -3422,6 +3422,8 @@ public class SpringConfiguration {
 
     @Value("${db.username}")//从配置文件获取参数，如配置datasource用
     String username;
+    //注意用junit测试发现这是读取不到的，日志提示：INFO: Cannot enhance @Configuration bean definition 'springConfiguration' since its singleton instance has been created too early. The typical cause is a non-static @Bean method with a BeanDefinitionRegistryPostProcessor return type: Consider declaring such methods as 'static'.
+    //应该是实例化顺序的问题，这在springboot中应该不存在这问题
     /**
      * 组件注册
      * 返回值：对应的组件的class或者其接口
@@ -3505,6 +3507,8 @@ public class SpringConfiguration {
 ```
 
 
+
+在config类中使用bean注解把不是我们自己写的类的实例注册为组件，而@Bean注解也可以用于我们自己写的类，只需要提供一个返回对象的方法。
 
 ## 功能性配置
 
@@ -3620,6 +3624,10 @@ SpringMVC的核心流程
 ![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image004-1622211001072.jpg)
 
 在初始化DispatcherServlet的过程中构建了Spring容器
+
+
+
+HandlerMapping映射url到handler， HandlerAdapter请求参数类型转换和参数校验等等...
 
 # 入门案例1
 
@@ -4498,6 +4506,14 @@ public class Order {
 
 
 
+关于URL编码
+
+[关于URL编码 - 阮一峰的网络日志 (ruanyifeng.com)](http://www.ruanyifeng.com/blog/2010/02/url_encoding.html)
+
+[UrlEncode编码/UrlDecode解码 - 站长工具 (chinaz.com)](http://tool.chinaz.com/tools/urlencode.aspx)
+
+
+
 ## Json数据的接收
 
 ### 构造Json的请求
@@ -4938,11 +4954,536 @@ public class ExceptionControllerAdvice {
 
 
 
-# 5    拦截器
+顶顶顶
 
-# 6    validator
 
-# 7    JavaConfig
+
+# 1    拦截器
+
+filter
+
+## 1.1   CharacterEncodingFilter
+
+字符编码 👉 设定字符集
+
+POST请求过程中携带中文字符会乱码
+
+```xml
+<!--CharacterEncodingFilter-->
+<filter>
+    <filter-name>characterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+        <param-name>encoding</param-name>
+        <param-value>utf-8</param-value>
+    </init-param>
+    <init-param>
+        <param-name>forceEncoding</param-name>
+        <param-value>true</param-value>
+    </init-param>
+</filter>
+<filter-mapping>
+    <filter-name>characterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+```
+
+
+
+## 1.2   HandlerInterceptor
+
+handler方法的拦截器 👉 对Handler方法做增强
+
+ 
+
+### 1.2.1 执行过程
+
+HandlerMapping 👉 执行计划
+
+ 
+
+`HandlerExecutionChain` 👉 `Handler`、`List<HandlerInterceptor>`
+
+```java
+package org.springframework.web.servlet;
+public class DispatcherServlet extends FrameworkServlet {
+    //这里调用到getHandler方法
+    protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    	...
+        mappedHandler = this.getHandler(processedRequest);
+  		...
+    }
+     @Nullable
+    protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+        if (this.handlerMappings != null) {
+            Iterator var2 = this.handlerMappings.iterator();
+
+            while(var2.hasNext()) {
+                HandlerMapping mapping = (HandlerMapping)var2.next();
+                HandlerExecutionChain handler = mapping.getHandler(request);
+                if (handler != null) {
+                    return handler;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+```
+
+```java
+package org.springframework.web.servlet;
+public class HandlerExecutionChain {
+    private static final Log logger = LogFactory.getLog(HandlerExecutionChain.class);
+    private final Object handler;//handler方法
+    @Nullable
+    private HandlerInterceptor[] interceptors;
+    @Nullable
+    private List<HandlerInterceptor> interceptorList;//拦截链
+    private int interceptorIndex;
+}
+```
+
+
+
+### 1.2.2 HandlerInterceptor接口
+
+preHandle 👉 Handler方法 👉 postHandle 👉 afterCompletion
+
+```java
+package org.springframework.web.servlet;
+public interface HandlerInterceptor {
+    //返回布尔类型
+    default boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler/*handler方法*/) throws Exception {
+        return true;//如果为true可以继续流程，为false则中断流程
+    }
+	//Handler方法如果已经响应了Jsom，这里可以修改最终结果
+    //response采用JavaEE方式做修改
+    default void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable ModelAndView modelAndView/*Handler方法响应的ModelAndView如果响应的是json，该值为null*/) throws Exception {
+    }
+	//最终处理的方法→类似于finally→如果当前的preHandler执行结果为true，则一定可以执行到当前的afterCompletion方法
+    default void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws Exception {
+    }
+}
+```
+
+
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image010-1622554259767.jpg)
+
+### 1.2.3 HandlerInterceptor的配置
+
+```java
+@Component
+public class CustomHandlerInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("preHandle");
+        return true;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        System.out.println("postHandle");
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        System.out.println("afterCompletion");
+    }
+}
+```
+
+
+
+```xml
+<!--application.xml-->    
+<!--mvc:interceptors-->
+<mvc:interceptors>
+    <!--之前讲converter的时候也使用过bean子标签和ref子标签-->
+    <!--<bean class="com.cskaoyan.interceptor.CustomHandlerInterceptor"/>-->
+    <ref bean="customHandlerInterceptor"/><!--注册为组件后可以用bean子标签引用id-->
+</mvc:interceptors>
+```
+
+
+
+### 1.2.4 作用范围
+
+局部范围
+
+```xml
+<!--application.xml-->
+<!--mvc:interceptors-->
+<mvc:interceptors>
+
+    <!--使用bean标签或ref标签的时候，并没有指定作用范围 👉 全局范围（所有的Handler方法） 👉 DispatcherServlet作用范围下的全局-->
+    <!--之前讲converter的时候也使用过bean子标签和ref子标签-->
+    <!--<bean class="com.cskaoyan.interceptor.CustomHandlerInterceptor"/>-->
+    <!--<ref bean="customHandlerInterceptor"/>-->
+    <mvc:interceptor>
+        <!--path属性：指定当前interceptor的作用范围
+                bean标签或ref标签：interceptor是谁
+
+                path属性的语法：
+                    /hello/** 所有以hello作为开头的请求url
+                    /hello/* 通配一级目录 /hello/abc
+                    /hello   特定的请求
+                /user/** 👉 针对于user相关的请求 ← 可对应经过窄化请求的特定的Controller里的Handler方法
+            -->
+        <mvc:mapping path="/hello/**"/>
+        <ref bean="customHandlerInterceptor"/>
+    </mvc:interceptor>
+</mvc:interceptors>
+```
+
+
+
+### 1.2.5 多个interceptor的执行顺序
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image018-1622554259767.jpg)![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image020-1622554259768.jpg)
+
+preHandler1
+
+preHandler1
+
+preHandler1
+
+hello world
+
+postHandler3
+
+postHandler2
+
+postHandler1
+
+afterCompletion3
+
+afterCompletion2
+
+afterCompletion1
+
+
+
+### 1.2.6 如果HandlerInterceptor的preHandle返回值为false
+
+如果preHandle返回值为true，则继续流程。并且当前interceptor的afterCompletion一定可以执行到；
+
+如果preHandle返回值为false，则中断流程。
+
+#### 1.2.6.1  preHandle1返回值为false
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image024-1622554259768.jpg)
+
+#### 1.2.6.2  preHandle2返回值为false
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image026-1622554259768.jpg)
+
+#### 1.2.6.3  preHandle3返回值为false
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image028-1622554259768.jpg)
+
+#### 1.2.6.4  提问
+
+如果我有5个HandlerInterceptor
+
+返回值为true 👉 12345 54321 54321
+
+如果只有3的preHandle返回值为false 👉 123 21
+
+如果只有2和4的preHandle为false 👉 12 1
+
+ 
+
+#### 1.2.6.5  练习
+
+/hello请求 👉 把所有的user信息都以json数据的形式响应（只有完成登录才能够访问其他的请求）
+
+/login请求 👉 登录操作 👉 如果登录成功 👉 /hello请求就可以访问
+
+ 
+
+HandlerInterceptor 👉 作用范围是什么？preHandle方法中做什么业务
+
+# 2    Validator
+
+Hibernate-validator 校验器 👉 参数校验
+
+ 
+
+之前针对每个参数都要写代码 👉 校验逻辑繁琐 👉 多次反复使用 👉 controller、service
+
+ 
+
+将校验逻辑和Model绑定 👉 JavaBean
+
+ 
+
+校验的是请求参数 👉 JavaBean来接收请求参数 👉 成员变量
+
+ 
+
+校验逻辑 👉 JavaBean中的成员变量
+
+## 2.1   搭建一个login的业务场景
+
+```java
+@RestController
+public class UserController {
+
+    //localhost:8080/login?username=xxx&password=xxx
+    //username的长度至少6位
+    //password的长度在6到10位
+    @RequestMapping("login")
+    public BaseRespVo login(User user){
+        /*String username = user.getUsername();
+        if (username == null || username.length() < 6) {
+            return BaseRespVo.fail("username长度至少是6位");
+        }
+        String password = user.getPassword();
+        if (password == null || password.length() < 6 || password.length() > 10) {
+            return BaseRespVo.fail("password的长度在6到8位");
+        }*/
+        return BaseRespVo.ok();
+    }
+}
+```
+
+
+
+## 2.2   引入依赖
+
+hibernate-validator
+
+```xml
+<!--pom.xml-->        
+<dependency>
+    <groupId>org.hibernate.validator</groupId>
+    <artifactId>hibernate-validator</artifactId>
+    <version>6.1.7.Final</version>
+</dependency>
+```
+
+
+
+## 2.3   注册组件
+
+```xml
+<!--applicatiom.xml-->
+<mvc:annotation-driven validator="validator"/>
+<!--看源码会发现这个FactoryBean本质上是一个Validator，和其他FactoryBean有区别-->
+<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+    <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+</bean>
+```
+
+
+
+## 2.4   校验注解
+
+```java
+@Data
+public class User {
+    @Length(min = 6)//校验功能的注解直接绑定在成员变量上
+    String username;
+    @Length(min = 6, max = 10)
+    String password;
+} 
+```
+
+```java
+    //localhost:8080/login?username=xxx&password=xxx
+    //username的长度至少6位
+    //password的长度在6到10位
+    @RequestMapping("login")
+    //public BaseRespVo login(@Valid User user){//@Valid或@Validated注解告知SpringMVC请求参数需要校验
+    public BaseRespVo login(@Validated User user, BindingResult bindingResult){
+        //可以根据校验结果做个性化的处理
+        if (bindingResult.hasFieldErrors()) { //校验结果中有否有错误
+            return ValidUtil.valid(bindingResult);
+        }
+
+        /*String username = user.getUsername();
+        if (username == null || username.length() < 6) {
+            return BaseRespVo.fail("username长度至少是6位");
+        }
+        String password = user.getPassword();
+        if (password == null || password.length() < 6 || password.length() > 10) {
+            return BaseRespVo.fail("password的长度在6到8位");
+        }*/
+        return BaseRespVo.ok();
+    }
+```
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image038-1622554259768.jpg)
+
+## 2.5   常见的注解
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image040-1622554259769.jpg)
+
+## 2.6   处理校验结果
+
+给到的页面是400 👉 Json
+
+而当前我们并没有进入到Handler方法中
+
+ 
+
+要获得校验结果并且要进入到Handler方法中 👉 形参中增加一个BindingResult（参数校验的结果）
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image042-1622554259769.jpg)
+
+## 2.7   default-message
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image044-1622554259769.jpg)
+
+## 2.8   提供外部的配置文件
+
+提供消息 👉 MessageSource
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image046-1622554259769.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image048-1622554259769.jpg)
+
+# 3    国际化i18n
+
+针对于同一个key在不同的地区下是不同的message
+
+hello 
+
+中文 你好
+
+泰文 萨瓦迪卡 
+
+ 
+
+Locale 👉 地区信息
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image050-1622554259769.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image052-1622554259770.jpg)
+
+## 3.1   Locale信息能做什么
+
+MessageSource 👉 国际化的配置文件properties
+
+ 
+
+新增多个配置文件，每个配置文件 对应一个locale信息，将多个配置文件当成是一组配置文件
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image054-1622554259770.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image056-1622554259769.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image058-1622554259771.jpg)
+
+## 3.2   我们做的message和locale也可以直接给到validator使用
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image060-1622554259773.jpg)
+
+# 4    JavaConfig
+
+## 4.1   使用xml配置
+
+将一个容器变为两容器 WebApplicationContext 👉 父容器、子容器
+
+**父容器不能使用子容器中的组件，子容器可以使用父容器中的组件**
+
+**为什么要分家？**
+
+**不分开行不行？** **行**
+
+**分开也行？** **行**
+
+ 
+
+**应用程序启动之后，第一次访问请求的时候，稍微慢一点，如果组件比较多，启动过程会比较慢**
+
+ 
+
+**让和SpringMVC****没有直接关系的组件** **先注册**
+
+ 
+
+**ContextLoaderLoaderListener**
+
+### 4.1.1  web.xml
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image062-1622554259773.jpg)
+
+### 4.1.2 spring配置文件
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image064-1622554259773.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image066.jpg)
+
+### 4.1.3 springmvc的配置文件
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image068.jpg)
+
+## 4.2   JavaConfig
+
+干掉配置文件
+
+web.xml 👉 加载Spring配置文件、加载SpringMVC配置文件、servlet-mapping
+
+application.xml 👉 扫描包、组件注册
+
+application-mvc.xml 👉 扫描包、mvc:annotation-driven、mvc的相关配置
+
+### 4.2.1 web.xml 👉 AACDSI
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image070.jpg)
+
+#### 4.2.1.1  characterEncodingFilter
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image072.jpg)
+
+### 4.2.2 Spring配置类
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image074.jpg)
+
+### 4.2.3 SpringMVC配置类
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image076.jpg)
+
+#### 4.2.3.1  MultipartResolver
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image078.jpg)
+
+#### 4.2.3.2  LocaleResolver
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image080.jpg)
+
+#### 4.2.3.3  mvc:resources
+
+静态资源映射： mapping location
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image082.jpg)
+
+#### 4.2.3.4  mvc:interceptors
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image084.jpg)
+
+#### 4.2.3.5  converter
+
+formattingConversionServiceFactoryBean → converters（set）
+
+mvc:annotation-driven conversion-service
+
+ 
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image086.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image088.jpg)
+
+#### 4.2.3.6  validator
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image090.jpg)
+
+ 
 
  
 
@@ -4954,7 +5495,9 @@ public class ExceptionControllerAdvice {
 
 Facets 为web配置到src\main\webapp
 
-在pom.xml里添加`<packaging>`标签IDEA会自动把webapp目录变色同时生成Facets和Artifacts设置，并且在maven依赖发生变化时会自动重新打包,项目会编译到target目录下artifact-version，自动在WEB-INF/lib下打包更新依赖。
+在pom.xml里添加`<packaging>`标签IDEA会自动把webapp目录变色同时生成Project Structure的Facets和Artifacts设置，并且在maven依赖发生变化时会自动重新打包Artifacts,项目会编译到target目录下artifact-version，自动在WEB-INF/lib下打包更新依赖。
+
+而手动添加的artifact在maven依赖变化后不会自动打包artifact依赖，需要自己在Project Structure→Artifacts→Available Elements下的Artifacts下手动点击put新的依赖到lib目录中。
 
 ```
 <!--pom.xml-->
@@ -4972,6 +5515,22 @@ Facets 为web配置到src\main\webapp
 ![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image040-1622211001074.jpg)
 
 Cookie、Json请求
+
+
+
+
+
+@Validated @Valid  BindingResult 必须放在校验参数后面，中间不能相隔其他参数
+
+放在前面，报这个异常，中间有其他参数则校验失败也不会进入Handler方法
+
+ java.lang.IllegalStateException: An Errors/BindingResult argument is expected to be declared immediately after the model attribute, the @RequestBody or the @RequestPart arguments to which they apply: public com.cskaoyan.bean.vo.BaseRespVo com.cskaoyan.controller.UserController.login(org.springframework.validation.BindingResult,com.cskaoyan.bean.LoginUserBO,javax.servlet.http.HttpSession)
+
+
+
+
+
+mybatiss index binding 异常
 
  
 
