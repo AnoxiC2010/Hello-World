@@ -121,6 +121,40 @@ IDEA
 
 不要在路径中使用空格
 
+
+
+##  java.lang.IllegalStateException: An Errors/BindingResult argument is expected to be declared immediately after the model attribute, the @RequestBody or the @RequestPart arguments to which they apply: public com.cskaoyan.bean.vo.BaseRespVo com.cskaoyan.controller.UserController.login(org.springframework.validation.BindingResult,com.cskaoyan.bean.LoginUserBO,javax.servlet.http.HttpSession)
+
+使用spring-mvc框架配置参数校验时发生的错误
+
+```java
+@PostMapping("login")
+public BaseRespVo login(@Valid LoginUserBO bo, BindingResult bindingResult, HttpSession session) {
+    if (bindingResult.hasFieldErrors()) {//参数校验
+        return ValidateUtils.paramsValidate(bindingResult);
+    }
+    ...
+}
+```
+
+描述：
+
+当把参数中的BindingResult放在HttpSession之后，参数校验不通过也不会进入到这个Handler方法中的断点，没有任何错误提示；当把BindingResult放在第一位即@Valid标记参数之前才会复现这个错误。
+
+从这个错误得知BindingResult作为参数必须放在@Validated @Valid 标记需要校验的参数紧挨着的下一位，中间不能相隔其他参数，最坏的情况是连提示都没有。
+
+ 
+
+## org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): com.cskaoyan.mapper.UserMapper.getUsers
+
+当把前一个项目的代码复制到新项目时，运行时报错。确认spring整合mybatis配置没有问题，且复制的dao层没有问题。tomcat点击热deploy也不行。
+
+尝试删除target目录并再次build生成artifact产生新的target目录，再次运行tomcat目录异常解决。
+
+总结应该是IDEA在编译时可能没有正确的编译mapper的xml文件或接口，再出现这种问题后确认代码没有问题就应该检查项目的target目录看看dao层的编译是否正常。或者直接删除旧的target或用maven的clean，之后再次编译生成新的target。
+
+
+
 # Java的诡异运行结果
 
 当代码运行结果和自我预测的结果不一致时，一定是我的认知浅薄。
@@ -342,3 +376,12 @@ public void testForIO() {
 }
 ```
 
+
+
+
+
+
+
+
+
+ 
