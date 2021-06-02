@@ -5825,6 +5825,737 @@ public Validator getValidator() {
 
 
 
+# 1    SpringBoot
+
+快速启动（搭建）一个Spring应用
+
+ 
+
+**更方便的引入一些其他的框架**
+
+**更轻量、更灵活**
+
+**约定大于配置** **→** **默认值**
+
+**不需要外部的JavaEE****容器，内置了JavaEE****容器（环境的统一）**
+
+**可以以Jar****包的方式运行 java -jar xxx.jar**
+
+ 
+
+**jy** **和女朋友去逛街**
+
+**看到一点点** **，我要喝一点点** **→** **一点点**
+
+**我要喝一点点** **→** **一点点**
+
+**如果我没告诉买什么牌子的奶茶，就买一点点**
+
+**我要喝奶茶** **→** **一点点**
+
+**我要喝喜茶** **→** **喜茶** **（指定了，以指定的为准）**
+
+ 
+
+**给到一个默认值（注册默认组件），如果我们指定了，默认值失效**
+
+ 
+
+ 
+
+Rod Johnson Spring → JavaEE
+
+Google → Android 2.3、4.0
+
+ 
+
+S轻量级的开源框架、配置地狱、魔鬼
+
+ 
+
+SpringBoot更轻量 
+
+ 
+
+# 2    搭建一个SpringBoot应用
+
+## 2.1   官网搭建
+
+start.spring.io
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image002-1622638493050.jpg)
+
+## 2.2   idea
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image004-1622638493051.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image006-1622638493051.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image008-1622638493051.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image010-1622638493051.jpg)
+
+# 3    SpringBoot应用
+
+## 3.1   启动类
+
+```java
+@SpringBootApplication//包含了扫描包的配置：启动类所在的包目录
+public class Demo1Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Demo1Application.class, args);
+    }
+}
+```
+
+
+
+## 3.2   pom.xml
+
+```xml
+<!--pom.xml-->
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId><!--固定写法-->
+    <version>2.1.5.RELEASE</version><!--使用的SpringBoot应用的版本-->
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<groupId>com.cskaoyan</groupId><!--创建SpringBoot应用时选择的信息-->
+<artifactId>demo</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<name>demo</name>
+<description>Demo project for Spring Boot</description>
+<properties>
+    <java.version>1.8</java.version>
+</properties>
+```
+
+
+
+当我们引入依赖的时候，有些依赖没有写版本号，给到了一个默认的版本号，如果你指定了版本号，以你指定的为准
+
+```xml
+<!--spring-boot-starter-parent-2.1.5.RELEASE.pom-->  
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-dependencies</artifactId>
+    <version>2.1.5.RELEASE</version>
+    <relativePath>../../spring-boot-dependencies</relativePath>
+  </parent>
+  <artifactId>spring-boot-starter-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>Spring Boot Starter Parent</name>
+  <description>Parent pom providing dependency and plugin management for applications
+		built with Maven</description>
+  <url>https://projects.spring.io/spring-boot/#/spring-boot-starter-parent</url>
+```
+
+```xml
+<!--spring-boot-dependencies-2.1.5.RELEASE.pom-->
+<mysql.version>8.0.16</mysql.version><!--这是默认的版本号-->
+...
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>${mysql.version}</version>
+    <exclusions>
+        <exclusion>
+            <artifactId>protobuf-java</artifactId>
+            <groupId>com.google.protobuf</groupId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+
+
+## 3.3   starter依赖
+
+1、 引入该框架所支持的依赖
+
+2、 引入自动配置（约定大于配置）的依赖 → 自动注册默认的组件
+
+org.springframework.boot:spring-boot.autoconfigure.2.1.5.RELEASE
+
+xxx-autoconfigurer
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image022-1622638493052.jpg)
+
+starter依赖会带来一个特性：当我们想要使用一个框架的时候，基本上我们只需要引入它的starter依赖，我们就已经配置好了这个框架，也有一些框架需要做极少的配置
+
+# 4    约定大于配置
+
+自动配置默认值 → 默认值 默认的组件 → JavaConfig
+
+## 4.1   配置文件中的值
+
+springboot配置文件application.properties
+
+### 4.1.1 @Value
+
+之前使用@Value能够获得properties配置文件中的值
+
+```java
+@RestController
+public class FileController {
+
+    @Value("${file.path}")//获得配置文件中的值
+    String filePath;
+
+    @RequestMapping("file/upload")
+    public BaseRespVo fileUpload(){
+        return BaseRespVo.ok(filePath);
+    }
+}
+```
+
+```java
+@Configuration
+public class DataSourceConfiguration {
+
+    @Value("${db.driverClassName}")//获得配置文件中的值，完成组件注册
+    String driverClassName;
+    @Value("${db.url}")
+    String url;
+    @Value("${db.username}")
+    String username;
+    @Value("${db.password}")
+    String password;
+
+    @Bean
+    public DruidDataSource dataSource(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName(driverClassName);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        return dataSource;
+    }
+}
+```
+
+
+
+### 4.1.2 @ConfigurationProperties
+
+从配置文件中取出值 → 根据成员变量名
+
+```properties
+# application.properties
+file.path=d://stone/spring/
+db.driverClassName=com.mysql.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/j30_db?useUnicode=true&characterEncoding=utf-8
+db.username=root
+db.password=123456
+```
+
+```java
+/**
+ * @ConfigurationProperties注解要和组件注册功能的注解一起使用
+ * 使用到了set方法 → 需要提供set
+ * @ConfigurationProperties注解的prefix属性值 + 成员变量名 == 配置文件中的key
+ */
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "db")//这里很奇怪会飘红，提示没有注册组件或者@EnableConfigurationProperties引用，但是不影响运行，因为@Configuration或者RestController等就是注册组件
+public class DataSourceConfiguration2 {
+
+    String driverClassName;
+    String url;
+    String username;
+    String password;
+    String size;
+
+    @Bean
+    public DruidDataSource dataSource(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName(driverClassName);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        return dataSource;
+    }
+}
+```
+
+
+
+### 4.1.3 @EnableConfigurationProperties
+
+引入一个参数类，在参数类中使用@ConfigurationProperties
+
+```java
+@Data
+@ConfigurationProperties(prefix = "db")
+public class DataSourceProperties {//单独写一个参数类→提供来源于配置文件中的值
+    String driverClassName;
+    String url;
+    String username;
+    String password;
+}
+```
+
+ 
+
+引入参数类
+
+```java
+/**
+ * 在配置类中不直接写 参数
+ * 而是提供一个参数类对象 → 参数类中封装这些对象
+ */
+@Configuration//引入参数类（包含@ConfigurationProperties注解的类）
+@EnableConfigurationProperties(DataSourceProperties.class)
+public class DataSourceConfiguration3 {
+
+    DataSourceProperties properties;//提供成员变量以及有参构造方法
+
+    public DataSourceConfiguration3(DataSourceProperties properties) {
+        this.properties = properties;
+    }
+
+    @Bean
+    public DruidDataSource dataSource(){
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName(properties.getDriverClassName());
+        dataSource.setUrl(properties.getUrl());
+        dataSource.setUsername(properties.getUsername());
+        dataSource.setPassword(properties.getPassword());
+        return dataSource;
+    }
+}
+```
+
+
+
+### 4.1.4 配置的提示
+
+@ConfigurationProperties（prefix）
+
+```xml
+<!--pom.xml--> <!--引入依赖之后，重新run一下应用程序-->      
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <optional>true</optional>
+</dependency>
+```
+
+
+
+如果不行的话，打开build重新build一下
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image038-1622638493055.jpg)
+
+## 4.2   约定大于配置原理
+
+SpringBoot核心 → 默认组件
+
+ 
+
+starter依赖中包含了xxx-autoconfigure → 提供了自动配置类
+
+### 4.2.1 找到自动配置类
+
+xxx-autoconfigurer依赖中/META-INF/spring.factories, `AutoConfiguration=List<String>`
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image040-1622638493056.jpg)
+
+```properties
+# spring-boot-autoconfigure-2.5.0.jar!/META-INF/spring.factories
+# 自动配置类
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
+org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
+...
+```
+
+
+
+### 4.2.2 启动类
+
+```java
+@SpringBootApplication
+public class Demo1Application {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+```
+
+```java
+package org.springframework.boot.autoconfigure;
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration//这里启动了自动配置
+@ComponentScan(
+    excludeFilters = {@Filter(
+    type = FilterType.CUSTOM,
+    classes = {TypeExcludeFilter.class}
+), @Filter(
+    type = FilterType.CUSTOM,
+    classes = {AutoConfigurationExcludeFilter.class}
+)}
+)
+public @interface SpringBootApplication {}
+```
+
+```java
+package org.springframework.boot.autoconfigure;
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import({AutoConfigurationImportSelector.class})//筛选自动配置类
+public @interface EnableAutoConfiguration {
+    String ENABLED_OVERRIDE_PROPERTY = "spring.boot.enableautoconfiguration";
+
+    Class<?>[] exclude() default {};
+
+    String[] excludeName() default {};
+}
+```
+
+```java
+package org.springframework.boot.autoconfigure;
+public class AutoConfigurationImportSelector implements DeferredImportSelector, BeanClassLoaderAware, ResourceLoaderAware, BeanFactoryAware, EnvironmentAware, Ordered {
+	...
+    public String[] selectImports(AnnotationMetadata annotationMetadata) {
+        if (!this.isEnabled(annotationMetadata)) {
+            return NO_IMPORTS;
+        } else {
+            AutoConfigurationImportSelector.AutoConfigurationEntry autoConfigurationEntry = this.getAutoConfigurationEntry(annotationMetadata);//这个this.get方法返回了一个xxxEntry对象
+            return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
+            //将Collection转换为String[]  -- xxxEntry的getConfigurations()方法返回的是一个集合
+        }
+    }
+    ...
+    protected AutoConfigurationImportSelector.AutoConfigurationEntry getAutoConfigurationEntry(AnnotationMetadata annotationMetadata) {
+        if (!this.isEnabled(annotationMetadata)) {
+            return EMPTY_ENTRY;
+        } else {
+            AnnotationAttributes attributes = this.getAttributes(annotationMetadata);
+            //看这里返回了一个配置的字符串集合
+            List<String> configurations = this.getCandidateConfigurations(annotationMetadata, attributes);
+            configurations = this.removeDuplicates(configurations);
+            Set<String> exclusions = this.getExclusions(annotationMetadata, attributes);
+            this.checkExcludedClasses(configurations, exclusions);
+            configurations.removeAll(exclusions);
+            configurations = this.getConfigurationClassFilter().filter(configurations);
+            this.fireAutoConfigurationImportEvents(configurations, exclusions);
+            return new AutoConfigurationImportSelector.AutoConfigurationEntry(configurations, exclusions);
+        }
+    }
+    ...
+       protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+        //看这个SpringFactoriesLoader.loadFactoryNames
+        List<String> configurations = SpringFactoriesLoader.loadFactoryNames(this.getSpringFactoriesLoaderFactoryClass(), this.getBeanClassLoader());
+        Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you are using a custom packaging, make sure that file is correct.");
+        return configurations;
+    }
+}
+```
+
+```java
+package org.springframework.core.io.support;
+public final class SpringFactoriesLoader {
+    ...
+        public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader) {
+        ClassLoader classLoaderToUse = classLoader;
+        if (classLoader == null) {
+            classLoaderToUse = SpringFactoriesLoader.class.getClassLoader();
+        }
+
+        String factoryTypeName = factoryType.getName();
+        return (List)loadSpringFactories(classLoaderToUse).getOrDefault(factoryTypeName, Collections.emptyList());
+        //这个loadSpringFactories(classLoaderToUse)是一个Map<String, List<String>>
+    }
+    
+    private static Map<String, List<String>> loadSpringFactories(ClassLoader classLoader) {
+        Map<String, List<String>> result = (Map)cache.get(classLoader);
+        if (result != null) {
+            return result;
+        } else {
+            HashMap result = new HashMap();
+				 //加载这个文件，最终响应一个 Map<String, List<String>>
+            try {//我们最终需要的EnableAutoConfiguration这个key对应的字符串list
+                Enumeration urls = classLoader.getResources("META-INF/spring.factories");
+                ...
+            }
+        }
+    }
+}
+```
+
+
+
+### 4.2.3 自动配置类
+
+JavaConfig风格去写的配置类
+
+ 
+
+@ConditionalOnXXX 当我满足XXX条件的时候生效
+
+@ConditionalOnMissingXXX 当满足不包含XXX条件的时候生效
+
+ **非常重要**
+
+```properties
+# .../spring-boot-autoconfigure-2.5.0.jar!/META-INF/spring.factories
+# Auto Configure
+org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration,\
+```
+
+```java
+package org.springframework.boot.autoconfigure.jdbc;
+@Configuration(
+    proxyBeanMethods = false
+)
+//此注解要求当你包含一些类的时候生效→当你引入一些依赖的时候→通常是starter依赖
+@ConditionalOnClass({JdbcTemplate.class, TransactionManager.class})
+@AutoConfigureOrder(2147483647)
+@EnableConfigurationProperties({DataSourceProperties.class})
+public class DataSourceTransactionManagerAutoConfiguration {
+    public DataSourceTransactionManagerAutoConfiguration() {
+    }
+    
+    @Configuration(
+        proxyBeanMethods = false
+    )
+    //此注解要求容器中要注册一个DataSource组件
+    @ConditionalOnSingleCandidate(DataSource.class)
+    static class JdbcTransactionManagerConfiguration {
+        JdbcTransactionManagerConfiguration() {
+        }
+
+        @Bean
+        //此注解：当容器中没有这个组件的时候生效→我们自己没有注册的时候→生效后做了什么事情→注册了一个默认的组件
+        @ConditionalOnMissingBean({TransactionManager.class})
+        DataSourceTransactionManager transactionManager(Environment environment, DataSource dataSource, ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
+            DataSourceTransactionManager transactionManager = this.createTransactionManager(environment, dataSource);
+            transactionManagerCustomizers.ifAvailable((customizers) -> {
+                customizers.customize(transactionManager);
+            });//当我们没有注册组件的时候→注册一个默认组件，当我们自己注册，就不提供默认组件了
+            return transactionManager;
+        }
+
+        private DataSourceTransactionManager createTransactionManager(Environment environment, DataSource dataSource) {
+            return (DataSourceTransactionManager)((Boolean)environment.getProperty("spring.dao.exceptiontranslation.enabled", Boolean.class, Boolean.TRUE) ? new JdbcTransactionManager(dataSource) : new DataSourceTransactionManager(dataSource));
+        }
+    }
+}
+```
+
+
+
+### 4.2.4 web的自动配置类
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image064-1622638493081.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image066-1622638493081.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image068-1622638493081.jpg)
+
+SpringBoot中要使用Converter，只需要注册到容器中即可
+
+ 
+
+静态资源映射的配置
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image070-1622638493081.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image072-1622638493081.jpg)
+
+### 4.2.5 springboot的默认配置
+
+**/META-INF/(xxx-)spring-configuration-metadata.json**
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image074-1622638493081.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image076-1622638493081.jpg)
+
+# 5    SpringBoot的配置文件
+
+## 5.1   tomcat相关的配置
+
+端口号: **server.port**
+
+context-path: 上下文路径 **server.servlet.context-path**
+
+## 5.2   配置文件的格式
+
+application.properties
+
+application-xxx.properties
+
+ 
+
+application.yml
+
+application-xxx.yml
+
+## 5.3   y(a)ml文件的语法
+
+表达的含义和properties是一样的 → key=value
+
+ 
+
+properties 👉 yml
+
+1、 遇到了点 👉 冒号、换行、空格缩进
+
+2、 遇到等于 👉 冒号、一个空格
+
+3、 同一级要对齐
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image078-1622638493081.jpg)
+
+## 5.4   提供其他类型的值
+
+### 5.4.1 properties语法
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image080-1622638493081.jpg)
+
+### 5.4.2 yml语法
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image082-1622638493081.jpg)
+
+## 5.5   多配置文件
+
+引入多个配置文件
+
+application-xxx.properties
+
+application-xxx.yml
+
+ 
+
+激活配置文件
+
+主配置文件application.properties(yml) 👉 主配置文件中选择激活分配置文件
+
+分配置文件application-xxx.properties(yml)
+
+### 5.5.1 分流
+
+将应用程序部署在不同的服务器alpha\beta\sigma
+
+file.location=d:/alpha
+
+file.location=d:/beta
+
+file.location=d:/sigma
+
+同一个配置项，放入到不同的配置文件中 👉 选择激活哪一个配置文件
+
+选择
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image084-1622638493081.jpg)
+
+### 5.5.2 解耦
+
+不同的功能的配置放在不同的配置文件中
+
+ 
+
+web👉 application-web.yml
+
+datasource 👉 application-db.yml
+
+rocketmq 👉 application-mq.yml
+
+ydy 👉 application-ydy.yml
+
+ 
+
+激活多个配置文件 👉 spring.profiles.active
+
+### 5.5.3 yml可以表达多个配置文件
+
+一个yml配置文件当多个配置文件用
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image086-1622638493081.jpg)
+
+### 5.5.4 配置文件中的占位符
+
+file.location=d:/stone/spring
+
+file.jpg.location
+
+file.png.location
+
+file.xml.location
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image088-1622638493082.jpg)
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image090-1622638493081.jpg)
+
+## 5.6   web整合
+
+spring-boot-starter-web
+
+ 
+
+额外的配置：JavaConfig的配置类
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image092.jpg)
+
+
+
+
+
+Interceptor还是按照springMVC的方法配置
+
+SpringBoot没有编码问题，不用自己做编码设置
+
+```properties
+# application.properties 可以配，但是没必要，参见自动配置类下的json文件，里面已经配置了默认值了
+spring.http.encoding.enabled=true
+spring.http.encoding.force=true
+spring.http.encoding.charset=UTF-8
+```
+
+
+
+## 5.7   mybatis
+
+mybatis-spring-boot-starter
+
+mysql-connector-java 5.1.47
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image094.jpg)
+
+### 5.7.1 datasource
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image096.jpg)
+
+### 5.7.2 mapper
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image098.jpg)
+
+### 5.7.3 Mybatis的相关配置
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image100.jpg)
+
+以mybatis作为前缀
+
+![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image102.jpg)
+
+ 
+
+ 
+
+### 
+
 # 附录
 
 ## packaging=war
