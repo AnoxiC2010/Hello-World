@@ -1527,14 +1527,16 @@ select …  from … [where…] [ group by … [having… ]] [ order by … ]
 
 ## 数据库备份： cmd命令下
 
-mysqldump -u root -p test(数据库名称)>test.sql
+mysqldump -u root -p test(数据库名称) > test.sql
+
+会默认保存到用户目录
 
 
 
 数据库恢复：
 创建数据库并选择该数据库
 
-- 在cmd命令下：mysql -u root -p test<test.sql
+- 在cmd命令下：mysql -u root -p test < test.sql
   或者：
 - 在mysql >命令行下 执行  SOURCE 数据库文件
   先创建一个空的数据库
