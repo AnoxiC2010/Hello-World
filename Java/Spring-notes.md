@@ -6359,11 +6359,118 @@ public class DataSourceTransactionManagerAutoConfiguration {
 
 ### 4.2.4 web的自动配置类
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image064-1622638493081.jpg)
+```properties
+# .../spring-boot-autoconfigure-2.5.0.jar!/META-INF/spring.factories
+# Auto Configure
+org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration,\
+```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image066-1622638493081.jpg)
+```java
+package org.springframework.boot.autoconfigure.web.servlet;
+@Configuration(
+    proxyBeanMethods = false
+)
+@ConditionalOnWebApplication(
+    type = Type.SERVLET
+)
+@ConditionalOnClass({Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class})
+@ConditionalOnMissingBean({WebMvcConfigurationSupport.class})
+@AutoConfigureOrder(-2147483638)
+@AutoConfigureAfter({DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class, ValidationAutoConfiguration.class})
+public class WebMvcAutoConfiguration {
+    ...
+    @Configuration(
+        proxyBeanMethods = false
+    )
+    @Import({WebMvcAutoConfiguration.EnableWebMvcConfiguration.class})
+        //这里引入了三个参数类
+    @EnableConfigurationProperties({WebMvcProperties.class, ResourceProperties.class, WebProperties.class})
+    @Order(0)
+    public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ServletContextAware {
+        private static final Log logger = LogFactory.getLog(WebMvcConfigurer.class);
+        private final Resources resourceProperties;
+        private final WebMvcProperties mvcProperties;
+        private final ListableBeanFactory beanFactory;
+        private final ObjectProvider<HttpMessageConverters> messageConvertersProvider;
+        private final ObjectProvider<DispatcherServletPath> dispatcherServletPath;
+        private final ObjectProvider<ServletRegistrationBean<?>> servletRegistrations;
+        private final WebMvcAutoConfiguration.ResourceHandlerRegistrationCustomizer resourceHandlerRegistrationCustomizer;
+        private ServletContext servletContext;
+		//这里使用了引入的三个参数类
+        public WebMvcAutoConfigurationAdapter(ResourceProperties resourceProperties, WebProperties webProperties, WebMvcProperties mvcProperties, ListableBeanFactory beanFactory, ObjectProvider<HttpMessageConverters> messageConvertersProvider, ObjectProvider<WebMvcAutoConfiguration.ResourceHandlerRegistrationCustomizer> resourceHandlerRegistrationCustomizerProvider, ObjectProvider<DispatcherServletPath> dispatcherServletPath, ObjectProvider<ServletRegistrationBean<?>> servletRegistrations) {
+            this.resourceProperties = (Resources)(resourceProperties.hasBeenCustomized() ? resourceProperties : webProperties.getResources());
+            this.mvcProperties = mvcProperties;
+            this.beanFactory = beanFactory;
+            this.messageConvertersProvider = messageConvertersProvider;
+            this.resourceHandlerRegistrationCustomizer = (WebMvcAutoConfiguration.ResourceHandlerRegistrationCustomizer)resourceHandlerRegistrationCustomizerProvider.getIfAvailable();
+            this.dispatcherServletPath = dispatcherServletPath;
+            this.servletRegistrations = servletRegistrations;
+            this.mvcProperties.checkConfiguration();
+        }
+        ...
+    }
+    ...
+        //这个关于注册Formatters的方法能联想到SpringMVC注册日期Converter
+    public void addFormatters(FormatterRegistry registry) {
+        //关注这里调用了addBeans方法 做的事
+        ApplicationConversionService.addBeans(registry, this.beanFactory);
+    }
+    //这个方法做静态资源映射配置
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        if (!this.resourceProperties.isAddMappings()) {
+            logger.debug("Default resource handling disabled");
+        } else {
+            this.addResourceHandler(registry, "/webjars/**", "classpath:/META-INF/resources/webjars/");
+            //getStaticPathPattern()相当于xml或SpringMvcConfiguration配置类时配置的mapping
+            //addResourceLocations相当于xml或SpringMvcConfiguration配置类时配置的Location
+            this.addResourceHandler(registry, this.mvcProperties.getStaticPathPattern(), (registration) -> {
+                registration.addResourceLocations(this.resourceProperties.getStaticLocations());
+                if (this.servletContext != null) {
+                    ServletContextResource resource = new ServletContextResource(this.servletContext, "/");
+                    registration.addResourceLocations(new Resource[]{resource});
+                }
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image068-1622638493081.jpg)
+            });
+        }
+    }
+    ...
+}
+```
+
+```java
+package org.springframework.boot.convert;
+public class ApplicationConversionService extends FormattingConversionService {
+    ...
+     public static void addBeans(FormatterRegistry registry, ListableBeanFactory beanFactory) {
+        Set<Object> beans = new LinkedHashSet();
+        beans.addAll(beanFactory.getBeansOfType(GenericConverter.class).values());
+        //这里找到所有的Converter组件，添加到set里
+        beans.addAll(beanFactory.getBeansOfType(Converter.class).values());
+        beans.addAll(beanFactory.getBeansOfType(Printer.class).values());
+        beans.addAll(beanFactory.getBeansOfType(Parser.class).values());
+        Iterator var3 = beans.iterator();
+		//这里用iterator取做遍历
+        while(var3.hasNext()) {
+            Object bean = var3.next();
+            if (bean instanceof GenericConverter) {
+                registry.addConverter((GenericConverter)bean);
+            } else if (bean instanceof Converter) {
+                //如果是Converter类型的组件 →  registry.addConverter
+                registry.addConverter((Converter)bean);
+            } else if (bean instanceof Formatter) {
+                registry.addFormatter((Formatter)bean);
+            } else if (bean instanceof Printer) {
+                registry.addPrinter((Printer)bean);
+            } else if (bean instanceof Parser) {
+                registry.addParser((Parser)bean);
+            }
+        }
+
+    }
+}
+```
+
+由此得出：
 
 SpringBoot中要使用Converter，只需要注册到容器中即可
 
