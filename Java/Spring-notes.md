@@ -6416,6 +6416,7 @@ public class WebMvcAutoConfiguration {
         ApplicationConversionService.addBeans(registry, this.beanFactory);
     }
     //这个方法做静态资源映射配置
+    //说明静态资源映射可以在application.yml/properties中做对应配置，见下方静态资源映射配置
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         if (!this.resourceProperties.isAddMappings()) {
             logger.debug("Default resource handling disabled");
@@ -6472,23 +6473,66 @@ public class ApplicationConversionService extends FormattingConversionService {
 
 由此得出：
 
-SpringBoot中要使用Converter，只需要注册到容器中即可
+#### Converter配置
+
+SpringBoot中要使用Converter，只需要注册组件到容器中即可
 
  
 
-静态资源映射的配置
+#### 静态资源映射的配置
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image070-1622638493081.jpg)
+```properties
+#静态资源映射 mapping
+spring.mvc.static-path-pattern=/pic/**
+spring.web.resources.static-locations=file:d:/stone/spring/
+```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image072-1622638493081.jpg)
+对应上面源码中的这部分
+
+```java
+package org.springframework.boot.autoconfigure.web.servlet;
+public class WebMvcAutoConfiguration {
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        ...
+        this.mvcProperties.getStaticPathPattern()
+        this.resourceProperties.getStaticLocations()
+        ...
+    }
+}
+```
+
+
 
 ### 4.2.5 springboot的默认配置
 
 **/META-INF/(xxx-)spring-configuration-metadata.json**
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image074-1622638493081.jpg)
+e.g. 在org.springframework.boot:spring-boot.autoconfigure:2/5.0包下或其他自动配置类包下能找到两个`.json`文件，都包含springboot的默认配置。
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image076-1622638493081.jpg)
+其中spring-boot-autoconfigure-2.5.0.jar!/META-INF/spring-configuration-metadata.json如下：
+
+```json
+...
+{
+    "name": "spring.resources.static-locations",
+    "type": "java.lang.String[]",
+    "description": "Locations of static resources. Defaults to classpath:[\/META-INF\/resources\/, \/resources\/, \/static\/, \/public\/].",
+    "sourceType": "org.springframework.boot.autoconfigure.web.ResourceProperties",
+    "defaultValue": [
+        "classpath:\/META-INF\/resources\/",
+        "classpath:\/resources\/",
+        "classpath:\/static\/",
+        "classpath:\/public\/"
+    ],
+    "deprecated": true,
+    "deprecation": {
+        "replacement": "spring.web.resources.static-locations"
+    }
+}
+...
+```
+
+
 
 # 5    SpringBoot的配置文件
 
@@ -6497,6 +6541,22 @@ SpringBoot中要使用Converter，只需要注册到容器中即可
 端口号: **server.port**
 
 context-path: 上下文路径 **server.servlet.context-path**
+
+```properties
+# aplication.properties
+server.port=8082
+server.servlet.context-path=/demo1
+```
+
+```yaml
+# application.yml
+server:
+  port: 8082
+  servlet:
+    context-path: /demo2
+```
+
+
 
 ## 5.2   配置文件的格式
 
@@ -6524,17 +6584,133 @@ properties 👉 yml
 
 3、 同一级要对齐
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image078-1622638493081.jpg)
+```yaml
+# application.yml
+server:
+  port: 8082
+  servlet:
+    context-path: /demo2
+
+db:
+  driver-class-name: com.mysql.jdbc.Driver
+  url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8
+  username: root
+  password: 123456
+  size: 10
+```
+
+
 
 ## 5.4   提供其他类型的值
 
 ### 5.4.1 properties语法
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image080-1622638493081.jpg)
+```properties
+# application.properties
+#基本类型、包装类、字符串 👉 直接写
+db.size=10
+db.open=true
+
+#数组或list 👉
+#            1、通过逗号分隔多条数据
+#            2、可以使用下标
+db.array1=data1,data2,data3
+db.array2[0]=data1
+db.array2[1]=data2
+db.array2[2]=data3
+
+db.list1=data1,data2,data3
+db.list2[0]=data1
+db.list2[1]=data2
+db.list2[2]=data3
+
+#map或javabean
+db.map1.key1=value1
+db.map1.key2=value2
+db.map1.key3=value3
+
+db.map2[key1]=value1
+db.map2[key2]=value2
+db.map2[key3]=value3
+
+db.user1.username=songge
+db.user1.password=yuanzhi
+
+db.user2[username]=songge
+db.user2[password]=yuanzhi
+```
+
+```java
+@Data
+@ConfigurationProperties(prefix = "db")
+public class DataSourceProperties {
+    String driverClassName;
+    String url;
+    String username;
+    String password;
+
+    //提供一些其他类型的参数 👉 SpringBoot自动配置类 👉 加载配置文件中的值 👉 如何提供一些其他类型的值
+    Integer size;
+    boolean open;
+
+    //数组或list 👉 语法完全一样
+    String[] array1;
+    String[] array2;
+
+    List<String> list1;
+    List<String> list2;
+
+    //Map或JavaBean 👉 语法完全一样
+    Map map1;
+    Map map2;
+
+    User user1;
+    User user2;
+}
+```
+
+
 
 ### 5.4.2 yml语法
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image082-1622638493081.jpg)
+```yaml
+# application.yml
+server:
+  port: 8082
+  servlet:
+    context-path: /demo2
+
+db:
+  driver-class-name: com.mysql.jdbc.Driver
+  url: jdbc:mysql://localhost:3306/j30_db?useUnicode=true&characterEncoding=utf-8
+  username: root
+  password: 123456
+  size: 10
+  open: true
+  array1: data1,data2,data3
+# 这种写法是 换行空格-空格
+  array2:
+    - data1
+    - data2
+    - data3
+  list1: data1,data2,data3
+  list2:
+    - data1
+    - data2
+    - data3
+  map1:
+    key1: value1
+    key2: value2
+    key3: value3
+# 使用大括号，key后面的冒号后面有空格
+  map2: {key1: value1, key2: value2, key3: value3}
+  user1:
+    username: songge
+    password: yuanzhi
+  user2: {username: ligenli, password: tianming}
+```
+
+
 
 ## 5.5   多配置文件
 
@@ -6566,7 +6742,19 @@ file.location=d:/sigma
 
 选择
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image084-1622638493081.jpg)
+```yaml
+# application.yml
+# 在application.yml中选择激活application-alpha/beta/sigma/lzl.yml中的一个或几个
+# 这几个都放在resources目录下即可
+spring:
+  profiles:
+    active:
+      - sigma
+      - lzl
+#    active: sigma,lzl
+```
+
+
 
 ### 5.5.2 解耦
 
@@ -6590,7 +6778,31 @@ ydy 👉 application-ydy.yml
 
 一个yml配置文件当多个配置文件用
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image086-1622638493081.jpg)
+```yaml
+# application.yml
+spring:
+  profiles:
+    active: alpha
+---
+spring:
+  profiles: alpha
+server:
+  port: 8080
+
+---
+spring:
+  profiles: beta
+server:
+  port: 8081
+
+---
+spring:
+  profiles: sigma
+server:
+  port: 8082
+```
+
+
 
 ### 5.5.4 配置文件中的占位符
 
@@ -6602,9 +6814,27 @@ file.png.location
 
 file.xml.location
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image088-1622638493082.jpg)
+```yaml
+# application.yml
+spring:
+  profiles:
+    active: alpha
+  web:
+    resources:
+    # 这里静态资源和文件上传使用了同一个路径
+      static-locations: file:${file.location}
+# 多个配置项有关联的时候，来引用其他配置项的key，这里用${file.location}
+file:
+  location: e:/stone/spring
+  png-location: ${file.location}/png
+  jpg-location: ${file.location}/jpg
+  xml-location: ${file.location}/xml
+---
+```
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image090-1622638493081.jpg)
+
+
+
 
 ## 5.6   web整合
 
@@ -6614,18 +6844,40 @@ spring-boot-starter-web
 
 额外的配置：JavaConfig的配置类
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image092.jpg)
+```java
+//@ComponentScan("com.cskaoyan.controller")//不需要，SpringBoot自动扫描启动类所在的包
+//@EnableWebMvc    //全面接管
+@Configuration   //配置的补充
+public class MvcConfiguration implements WebMvcConfigurer {
+}
+```
 
 
 
+Handler拦截器配置
 
+还是按照springMVC的方法配置
 
-Interceptor还是按照springMVC的方法配置
+​	自己写HandlerInterceptor并在自己写的MvcConfiguration配置类中重写addInterceptor方法
+
+```java
+@Configuration//配置的补充
+public class MvcConfiguration implements WebMvcConfigurer {
+    @Override//配置Handler方法的拦截器
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new UserHandlerInterceptor()).addPathPatterns("/hello");
+    }
+}
+//不需要注册为组件
+public class UserHandlerInterceptor implements HandlerInterceptor {}
+```
+
+编码配置
 
 SpringBoot没有编码问题，不用自己做编码设置
 
 ```properties
-# application.properties 可以配，但是没必要，参见自动配置类下的json文件，里面已经配置了默认值了
+# application.properties 可以这么配，但是没必要，参见自动配置类下的json文件，里面已经配置了默认值了
 spring.http.encoding.enabled=true
 spring.http.encoding.force=true
 spring.http.encoding.charset=UTF-8
@@ -6639,29 +6891,134 @@ mybatis-spring-boot-starter
 
 mysql-connector-java 5.1.47
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image094.jpg)
+```xml
+<!--pom.xml-->
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>2.1.4</version>
+</dependency>
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.47</version><!--不指定SpringBoot会用默认版本号-->
+    <scope>runtime</scope>
+</dependency>
+```
+
+
 
 ### 5.7.1 datasource
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image096.jpg)
+```yaml
+# application.yml
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+#    默认的数据源的类型 HikariDataSource
+```
+
+
 
 ### 5.7.2 mapper
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image098.jpg)
+在启动类上做mapper扫描包的配置
+
+```java
+@SpringBootApplication
+@MapperScan("com.cskaoyan.mapper")
+public class Demo4Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Demo4Application.class, args);
+    }
+}
+```
 
 ### 5.7.3 Mybatis的相关配置
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image100.jpg)
+```yaml
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/j30_db
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+#    默认的数据源的类型 HikariDataSource
+mybatis:
+  type-aliases-package: com.cskaoyan.bean
+  configuration:
+    cache-enabled: true
+    lazy-loading-enabled: true
+
+```
+
+
 
 以mybatis作为前缀
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-notes.assets\clip_image102.jpg)
+```java
+package org.mybatis.spring.boot.autoconfigure;
+@ConfigurationProperties(//这里说明在配置文件写mybatis相关配置要以mybatis开始
+    prefix = "mybatis"
+)
+public class MybatisProperties {...}
+```
 
- 
+
 
  
 
 ### 
+
+```yaml
+# application.yml
+spring:
+  profiles:
+    active: mybatis
+# 数据源配置
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: 123456
+# 静态资源映射配置
+  mvc:
+    # urlmapping默认配置有/**
+    static-path-pattern: /**
+  web:
+    resources:
+      # location默认的配置有 classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, classpath:/public/
+      static-locations: file:C:/D/test/
+server:
+# tomcat端口 默认是8080
+  port: 8080
+  servlet:
+# tomcat应用路径默认是/
+    context-path: /
+# sui自定义一个文件上传的路径
+file:
+  upload:
+    icon-path: ${spring.web.resources.static-locations}/upload/
+    jpg: C:/D/jpg/
+    png: C:/D/png/
+
+---
+# mybatis 配置 可以分开文件写也可以写在一起
+spring:
+     profiles: mybatis
+mybatis:
+  configuration:
+    cache-enabled: true
+    lazy-loading-enabled: true
+  type-aliases-package: com.cskaoyan.bean
+```
+
+
 
 # 附录
 
