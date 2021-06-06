@@ -2517,7 +2517,7 @@ public class UserServiceImpl implements UserService{
  */
 @Component//没有实现接口和继承类
 public class CustomAspect {
-
+	//需要的话可以传入参数 JointPoint
     public void methodBefore() {
         System.out.println("before通知的方法");
     }
