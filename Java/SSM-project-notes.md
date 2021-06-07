@@ -2,10 +2,13 @@
 
 # TypeHandler
 
+## Integer[] <=> String
+
 ```java
 @Data
 public class Admin {
 	    private Integer[] roleIds;//配置类型转换器
+    //数据库 [1,2,4]
 }
 ```
 
@@ -77,7 +80,7 @@ mybatis:
   type-handlers-package: com.cskaoyan.typehandler
 ```
 
-
+## String[] <=> String
 
 ```java
 @MappedTypes(String[].class)
@@ -125,7 +128,7 @@ public class StringArrayTypeHandler implements TypeHandler<String[]> {
 }
 ```
 
-
+配置同Integer[]类型转换
 
 # BeanUtils转换bean
 
@@ -175,7 +178,7 @@ mall:
 
 
 
-# 密码散列
+# 密码散列(注解+切面)
 
 ```java
 /**
@@ -237,7 +240,76 @@ public class HashPasswordAspect {
 
 
 
-# 操作日志记录
+# 统一参数校验响应（切面）
+
+```java
+/**
+ * HJL
+ * 参数检验失败响应切面
+ * 全面接管所有参数校验失败的Handler方法的响应
+ * 不需要在每个需要参数校验的Handler方法内都做失败响应。
+ *
+ */
+@Aspect
+@Component
+public class ParamValidAspect {
+    //切点
+    @Pointcut("execution(* com.cskaoyan.controller.*.*(..,org.springframework.validation.BindingResult,..))")
+    public void paramValidPointcut() {
+    }
+
+    /**
+     * 检查参数包含BindingResult的方法，接管校验失败的响应
+     * @param joinPoint
+     * @return
+     */
+    @Around("paramValidPointcut()")
+    public Object paramValidCheck(ProceedingJoinPoint joinPoint) throws Throwable {
+        //校验失败响应
+        Object[] args = joinPoint.getArgs();
+        for (Object arg : args) {
+            if (arg instanceof BindingResult) {
+                BindingResult bindingResult = (BindingResult) arg;
+                if (bindingResult.hasFieldErrors()) {
+                    return ValidateUtils.valid(bindingResult);
+                }
+            }
+        }
+        //校验通过，正常响应
+        return joinPoint.proceed();
+    }
+
+
+}
+```
+
+
+
+# 操作日志记录（切面）
+
+HandlerInterceptor
+
+`/**`
+
+
+
+# 静态资源映射配置
+
+
+
+# 事务咨询老师
+
+为解决的事务 死锁
+
+事务的propagation
+
+
+
+一个方法内 几个修改语句是那种传播
+
+一个方法内 调用另一个方法 两个方法都加了事务注解 那种传播
+
+# Redis 存储固定数据
 
 
 
