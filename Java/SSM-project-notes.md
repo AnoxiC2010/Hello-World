@@ -1,5 +1,13 @@
 
 
+# PageHelper
+
+
+
+# Mybatis-Generator
+
+逆向工程
+
 # TypeHandler
 
 ## Integer[] <=> String
@@ -295,6 +303,46 @@ HandlerInterceptor
 
 # 静态资源映射配置
 
+springBoot不能像在配置类中加addResourceHandler一样配置多组静态资源映射url和静态资源映射路径
+
+```java
+//例如这样可以注册多组
+@Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+                registry.addResourceHandler("/aligenie/**").addResourceLocations("classpath:/aligenie/");
+       //在这里注册多组
+    }
+
+```
+
+application.yml这里的location和pattern不能配置多组，只有location能配置多个
+
+```yaml
+spring:
+# 文件上传配置
+  servlet:
+    multipart:
+      # 启用
+      enabled: true
+      max-file-size: 1MB
+      # 上传是产生的临时文件目录 位于 例如/tmp/tomcat.6574404581312272268.18333/work/Tomcat/localhost/ROOT + /temp
+      location: /temp
+# 静态资源映射
+  web:
+    resources:
+      # 映射文件夹
+      static-locations: file:${mall.storage-base-path}
+  mvc:
+    # 映射url
+    static-path-pattern: ${mall.static-path-pattern-prefix}*
+```
+
+
+
+# shiro权限管理配置
+
+
+
 
 
 # 事务咨询老师
@@ -313,6 +361,12 @@ HandlerInterceptor
 
 
 
+# 疑问咨询老师
+
+1. 是否每个方法都要判空 判属性空 controller service...
+
+
+
 # bug
 
 public int deleteAdmin(DeleteAdminBO bo) {
@@ -320,3 +374,4 @@ public int deleteAdmin(DeleteAdminBO bo) {
 两个update语句存在时
 
  Cause: com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Lock wait timeout exceeded; try restarting transaction
+
