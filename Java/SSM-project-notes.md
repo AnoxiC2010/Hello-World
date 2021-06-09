@@ -1,5 +1,31 @@
 
 
+# 跨域配置
+
+```java
+ * Function:ajax跨域请求配置
+ */
+@Configuration
+public class CorsConfig {
+    private CorsConfiguration buildConfig() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedOrigin("*"); // 1 设置访问源地址
+        corsConfiguration.addAllowedHeader("*"); // 2 设置访问源请求头
+        corsConfiguration.addAllowedMethod("*"); // 3 设置访问源请求方法
+        return corsConfiguration;
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", buildConfig()); // 4 对接口配置跨域设置
+        return new CorsFilter(source);
+    }
+}
+```
+
+
+
 # PageHelper
 
 
@@ -291,6 +317,8 @@ public class ParamValidAspect {
 }
 ```
 
+# 异常响应 主要用于事务
+
 
 
 # 操作日志记录（切面）
@@ -360,6 +388,25 @@ spring:
 # Redis 存储固定数据
 
 
+
+# JsonFromat
+
+```
+@JsonInclude(JsonInclude.Include.NON_NULL) //忽略掉null的成员变量
+```
+
+# 短信服务
+
+AccessKey ID
+LTAI5tSHBBV5b1PkUocrkr4M 
+AccessKey Secret
+shGJrj1mxSK0jcgGy5WDtgTMabyvo4 
+
+
+
+大家如果使用短信服务和OSS可以使用的AccessKey和Secret
+
+不要公开
 
 # 疑问咨询老师
 

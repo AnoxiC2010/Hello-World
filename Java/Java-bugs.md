@@ -165,6 +165,8 @@ public BaseRespVo login(@Valid LoginUserBO bo, BindingResult bindingResult, Http
 
 朋友介绍国企编制18k的驻外工作，很香，一个小人一直推着我去。想了很多，问了些人，这平平无奇的生活中我最想解决的bug是拥有随时脱离熟悉的环境在陌生的地方一个人生活下去的能力，实在不能就删号吧。就先做一个贫弱的码农吧，这总让我联想到不好的事情，但是
 
+反复横跳还是拒绝了这个在编躺平的机会，我意识到折磨自己已经成为了快乐的来源
+
 # <mark>IDEA和Tomcat环境中 代码运行矛盾</mark>
 
 WIN10 - IDEA 2018.3.6 - tomcat 8.5.37 - Project SDK 1.8.0_281
