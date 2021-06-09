@@ -387,6 +387,116 @@ spring:
 
 # Redis 存储固定数据
 
+```xml
+<!--
+pom.xml 
+redis-->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-pool2</artifactId>
+</dependency>
+```
+
+
+
+```yaml
+spring:
+# redis配置 这些是瞎配的
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 10000
+    lettuce:
+      pool:
+        max-active: 8
+        min-idle: 10
+        max-idle: 30
+        max-wait: -1ms
+# 日志
+logging:
+  level:
+    com.cskaoyan.mapper: debug
+    # 不配这个日志级别 眼睛都被lettuce的重连晃瞎了
+    io.lettuce.core.protocol: error
+```
+
+不配lettuce的日志级别会反复报重连错误，没几秒一次
+
+```
+io.lettuce.core.protocol.CommandHandler connection was forcibly closed by the remote host
+```
+
+```java
+//加载需要返回固定配置数据的service方法上
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RedisCache {
+}
+```
+
+```java
+@Aspect
+@Component
+public class RedisCacheAspect {
+    private static final Logger logger = Logger.getGlobal();
+    @Autowired
+    private RedisService redisService;
+
+    @Pointcut("@annotation(com.cskaoyan.anno.RedisCache)")
+    public void requireRedisCache() {
+    }
+
+    @Around("requireRedisCache()")
+    public Object redisCacheSupport(ProceedingJoinPoint joinPoint) throws Throwable {
+        //从缓存取
+        HttpServletRequest request = HttpUtils.getHttpRequest();
+        String methodName = joinPoint.getSignature().getName();
+        String permission = StringUtils.uriToPermission(request.getRequestURI());
+        String key = permission + ":" + methodName;//key 格式 admin:role:permission:service方法名
+
+        Object value = redisService.get(key);
+        if (value != null) {
+            logger.info("使用缓存 " + key);
+            return value;
+        }
+
+        //从数据库取
+        Object result = joinPoint.proceed();
+
+        //放入缓存
+        redisService.set(key, result);
+        logger.info("使用缓存失败，从数据库获取 " + key);
+
+        return result;
+    }
+
+}
+
+```
+
+```java
+@Service
+public class RedisServiceImpl implements RedisService {
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Override
+    public void set(String key, Object value) {
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    @Override
+    public Object get(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
+}
+```
+
 
 
 # JsonFromat
@@ -394,6 +504,33 @@ spring:
 ```
 @JsonInclude(JsonInclude.Include.NON_NULL) //忽略掉null的成员变量
 ```
+
+# 任意处获取HttpServletRequest
+
+[SpringBoot在AOP中获取HttpServletRequest信息_Mr.Xie的博客-CSDN博客](https://blog.csdn.net/lihua5419/article/details/98479793)
+
+ AOP中获取HttpServletRequest信息
+
+```java
+//获取当前登录人信息
+//Subject subject = SecurityUtils.getSubject();
+//SysUser user = (SysUser)subject.getPrincipal();
+//获取RequestAttributes
+RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+//从获取RequestAttributes中获取HttpServletRequest的信息
+HttpServletRequest request = (HttpServletRequest) requestAttributes.resolveReference(RequestAttributes.REFERENCE_REQUEST);
+String token = request.getHeader("token");
+Long userid= jwtUtil.parseToken(token).getId();
+SysUser user=userService.selectUserById(userid);
+```
+
+ AOP中获取HttpSession信息
+
+```java
+HttpSession session = (HttpSession) requestAttributes.resolveReference(RequestAttributes.REFERENCE_SESSION);
+```
+
+
 
 # 短信服务
 
