@@ -167,6 +167,8 @@ public BaseRespVo login(@Valid LoginUserBO bo, BindingResult bindingResult, Http
 
 反复横跳还是拒绝了这个在编躺平的机会，我意识到折磨自己已经成为了快乐的来源
 
+诅咒已经生效了呀
+
 # <mark>IDEA和Tomcat环境中 代码运行矛盾</mark>
 
 WIN10 - IDEA 2018.3.6 - tomcat 8.5.37 - Project SDK 1.8.0_281
