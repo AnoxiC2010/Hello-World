@@ -385,6 +385,25 @@ spring:
 
 一个方法内 调用另一个方法 两个方法都加了事务注解 那种传播
 
+```java
+@Transactional
+public Object delete(LitemallGoods goods) {
+    Integer id = goods.getId();
+    if (id == null) {
+        return ResponseUtil.badArgument();
+    }
+
+    Integer gid = goods.getId();
+    goodsService.deleteById(gid);
+    specificationService.deleteByGid(gid);
+    attributeService.deleteByGid(gid);
+    productService.deleteByGid(gid);
+    return ResponseUtil.ok();
+}
+```
+
+
+
 # Redis 存储固定数据
 
 ```xml
@@ -505,6 +524,19 @@ public class RedisServiceImpl implements RedisService {
 @JsonInclude(JsonInclude.Include.NON_NULL) //忽略掉null的成员变量
 ```
 
+时间格式通用配置
+
+```yaml
+# application.yml
+spring:
+  # jackson时间通用配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+```
+
+
+
 # 任意处获取HttpServletRequest
 
 [SpringBoot在AOP中获取HttpServletRequest信息_Mr.Xie的博客-CSDN博客](https://blog.csdn.net/lihua5419/article/details/98479793)
@@ -532,18 +564,25 @@ HttpSession session = (HttpSession) requestAttributes.resolveReference(RequestAt
 
 
 
+
+
+
+
 # 短信服务
 
-AccessKey ID
-LTAI5tSHBBV5b1PkUocrkr4M 
-AccessKey Secret
-shGJrj1mxSK0jcgGy5WDtgTMabyvo4 
+
+
+aliyun文本短信 签名: stone4j
+
+模板code: SMS_173765187
 
 
 
-大家如果使用短信服务和OSS可以使用的AccessKey和Secret
+# oos
 
-不要公开
+bucket: cskaoyan
+
+endPoint: oos-cn-beijing.aliyuncs.com 
 
 # 疑问咨询老师
 
@@ -559,3 +598,49 @@ public int deleteAdmin(DeleteAdminBO bo) {
 
  Cause: com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Lock wait timeout exceeded; try restarting transaction
 
+
+
+
+
+系统管理演示摘要
+
+文件上传： 阿里云
+
+- 异常控制通知
+
+  service层抛SQL异常主动回滚事务。同时异常message响应为BasResVo并写入日志
+
+- 切面
+
+  - md5密码散列切面+注解配置（没法演示）
+
+    被注解的方法进入时参数里的密码就已经被md5散列值取代
+
+  - 统一全局参数校验响应切面（修改管理员密码演示 长度限制6-9）
+
+    检测所有包含(BindingResult)参数，在进入hanler方法前返回错误信息，并录入日志
+
+  - 管理员日志记录切面（需要在演示 修改密码参数错误 和 liming@qq.com最为用户名时抛异常 后看日志）
+
+    用admin:order:list的格式记录所有 result=BasRespVo.msg , comment = 异常信息
+
+  - Redis缓存切面+注解（注解加载查询系统固定配置的方法上，优先从缓存取）
+
+    有从redis取，没有库里查，在存如redis
+
+    如admin/admin/permissions返回数据库系统配置
+
+- Redis
+
+  1. 注解缓存固定配置数据
+  2. 短信验证码利用redis的set来存储和保证是最新的
+
+
+
+
+
+1. 管理员
+2. 操作日志
+3. 角色管理
+4. 对象存储
+5. 
