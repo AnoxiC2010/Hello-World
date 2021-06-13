@@ -821,3 +821,4 @@ flush privileges; # 生效
 重启mysql服务
 
 主机图形界面即可连接虚拟机mysql
+
