@@ -588,7 +588,13 @@ systemctl stop sshd
 ifconfig
 ```
 
-没有的话需要安装net tools，系统会提示
+没有的话需要安装net-tools，系统会提示
+
+```
+sudo apt install net-tools
+```
+
+
 
 ##### 3.7.2 查看⽹络端⼝占⽤情况
 
@@ -606,6 +612,8 @@ netstat -anp | grep 3306
 ```bash
 lsof -i: [端⼝号]
 ```
+
+冒号之后不要有空格
 
 ##### 3.7.3 查看⽹络是否正常
 
@@ -691,17 +699,17 @@ FTP（File Transfer Protocol，⽂件传输协议） 是 TCP/IP 协议组中的�
 sudo mkdir /usr/local/java
 cd /usr/local/java
 sudo tar -zxvf jdk-8u231-linux-x64.tar.gz
-sudo mv jdk1.8.0_231/ jdk
+sudo mv jdk1.8.0_231/ jdk # 可改可不改
 sudo vim /etc/profile
 ```
 
 配置环境变量，添加下⾯⼏句
 
 ```bash
-export JAVA_HOME=/usr/local/java/jdk/jdk1.8.0_231
+export JAVA_HOME=/usr/local/java/jdk/jdk1.8.0_231 # 路径改为自己设置的对应的路径
 export JRE_HOME=/usr/local/java/jdk/jdk1.8.0_231/jre
 export CLASSPATH=.:$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
-export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
+export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH # 最后的$PATH是指在原来的PATH环境变量基础上增加新的，注意冒号分隔
 ```
 
 执⾏命令 source /etc/profile 使环境变量配置⽂件⽣效
@@ -715,10 +723,10 @@ export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
 #先把tomcat压缩包丢进服务器⾥⾯去
 mkdir /usr/local/tomcat
 sudo tar -zxvf apache-tomcat-8.5.50.tar.gz
-chmod -R 777 *
-cd bin
+chmod -R 777 * # 不该权限也能用
+cd bin/
 #启动tomcat
-./start.sh
+./startup.sh
 ```
 
 
@@ -739,17 +747,37 @@ Ubuntu18.04 安装完之后修改mysql密码
 sudo cat /etc/mysql/debian.cnf
 ```
 
-![image-20210612225258323](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Linux\Linux-notes.assets\image-20210612225258323.png)
+```bash
+anoxic2010@ubuntu:/usr/local$ sudo cat /etc/mysql/debian.cnf
+# Automatically generated for Debian scripts. DO NOT TOUCH!
+[client]
+host     = localhost
+user     = debian-sys-maint
+password = JUqSB9QxVnIrEhwj
+socket   = /var/run/mysqld/mysqld.sock
+[mysql_upgrade]
+host     = localhost
+user     = debian-sys-maint
+password = JUqSB9QxVnIrEhwj
+socket   = /var/run/mysqld/mysqld.sock
+```
+
+使用如上的缺省账号密码登录。
+
+【然而实测直接 sudo mysql就能直接登入了】
+
+库mysql中的表user里有root用户但是没有设置密码，下面给root设置密码
 
 ```bash
-#登陆mysql
+#缺省账号登陆mysql
 mysql -u debian-sys-maint -p
+# 输入缺省密码
 #修改⽤户名密码
 use mysql;#连接到mysql数据库
 update mysql.user set authentication_string=password('123456') where
-user='root' and Host ='localhost' #修改密码123456是密码
-update user set plugin="mysql_native_password" 
-flush privileges
+User='root' and Host ='localhost' #修改密码123456是密码
+update user set plugin="mysql_native_password"  #使用本地验证插件才能生效
+flush privileges #生效
 quit
 ```
 
@@ -758,3 +786,38 @@ quit
 sudo service mysql restart
 ```
 
+
+
+主机的navicat（图形界面）链接虚拟机的mysql需要做一些配置
+
+```
+cd /etc/mysql/mysql.conf.d/
+sudo vim mysqld.cnf
+```
+
+```bash
+# 这是mysqld.cnf文件的部分内容
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+bind-address            = 127.0.0.1
+# 这里默认绑定的主机地址是本机，修改为bind-address = 0.0.0.0 允许任意主机来连接
+```
+
+```bash
+:wq # 保存退出
+```
+
+使用主机navicat连接虚拟机mysql失败，还有设置没有完成
+
+原因是前面设置的root用户是localhost的，并不是对于任意主机都能使用的账号。
+
+所以需要在数据中在插入一个用户，为任意主机的root用户
+
+```bash
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION; #赋予来自所有主机的root用户所有权限
+flush privileges; # 生效
+```
+
+重启mysql服务
+
+主机图形界面即可连接虚拟机mysql
