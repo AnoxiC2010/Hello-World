@@ -566,9 +566,11 @@ HttpSession session = (HttpSession) requestAttributes.resolveReference(RequestAt
 
 
 
+# 阿里云服务
 
 
-# 短信服务
+
+## sms
 
 
 
@@ -578,11 +580,54 @@ aliyun文本短信 签名: stone4j
 
 
 
-# oos
+## oos 
+
+概念
 
 bucket: cskaoyan
 
 endPoint: oos-cn-beijing.aliyuncs.com 
+
+accessKeyId
+
+accessKeySecret
+
+[Java SDK 快速入门](https://help.aliyun.com/document_detail/195870.html?spm=a2c4g.11186623.6.605.22a82345ghRwn0)
+
+Java8依赖
+
+```xml
+<dependency>
+    <groupId>com.aliyun.oss</groupId>
+    <artifactId>aliyun-sdk-oss</artifactId>
+    <version>3.10.2</version>
+</dependency>
+```
+
+上传文件示例代码
+
+```java
+/ Endpoint以杭州为例，其它Region请按实际情况填写。
+String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+// 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录RAM控制台创建RAM账号。
+String accessKeyId = "<yourAccessKeyId>";
+String accessKeySecret = "<yourAccessKeySecret>";
+String bucketName = "<yourBucketName>";
+// <yourObjectName>上传文件到OSS时需要指定包含文件后缀在内的完整路径，例如abc/efg/123.jpg。
+String objectName = "<yourObjectName>";
+
+// 创建OSSClient实例。
+OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+
+// 上传文件到指定的存储空间（bucketName）并将其保存为指定的文件名称（objectName）。
+String content = "Hello OSS";
+ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(content.getBytes()));
+
+// 关闭OSSClient。
+ossClient.shutdown();    
+```
+
+下载列举等其他功能见官方文档
 
 # 疑问咨询老师
 
