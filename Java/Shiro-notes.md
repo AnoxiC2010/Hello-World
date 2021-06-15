@@ -330,15 +330,23 @@ cryptography：密码管理，提供了一套加密/解密的组件，方便开�
 
 ## 3.2   配置环境
 
+```xml
+<!--shiro的依赖--> 
+<dependency>     
+    <groupId>org.apache.shiro</groupId>     
+    <artifactId>shiro-core</artifactId>     
+    <version>1.4.1</version> 
+</dependency> 
+<dependency>    
+    <groupId>commons-logging</groupId>     
+    <artifactId>commons-logging</artifactId>     
+    <version>1.2</version> 
+</dependency>
 ```
- 
-```
 
-<!--shiro的依赖--> <dependency>     <groupId>org.apache.shiro</groupId>     <artifactId>shiro-core</artifactId>     <version>1.4.0</version> </dependency> <dependency>     <groupId>commons-logging</groupId>     <artifactId>commons-logging</artifactId>     <version>1.2</version> </dependency>
 
- 
 
- 
+
 
 ## 3.3   认证
 
@@ -354,9 +362,16 @@ cryptography：密码管理，提供了一套加密/解密的组件，方便开�
 
 通过此配置文件创建securityManager工厂。
 
- 
+ini配置文件
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Shiro-notes.assets\clip_image015.png)
+```ini
+# resources目录下的shiro-realm.ini配置文件
+[users]
+zhangsan=111111
+lisi=222222
+```
+
+
 
 #### 3.3.2.2  代码
 
@@ -366,9 +381,85 @@ import  org.apache.shiro.mgt.SecurityManager;
 
  
 
- 
+```java
+ @Test
+    public void testLoginAndLogout() {
+        //此示例获得ini的SecurityManager
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Shiro-notes.assets\clip_image017.jpg)
+        // 创建securityManager工厂，通过ini配置文件创建securityManager工厂
+        IniSecurityManagerFactory securityManagerFactory = new IniSecurityManagerFactory("classpath:shiro-realm.ini");
+        // 创建SecurityManager
+        SecurityManager securityManager = securityManagerFactory.getInstance();
+
+        // 将SecurityManager设置当前的运行环境中
+        SecurityUtils.setSecurityManager(securityManager);
+        // 从SecurityUtils里创建一个Subject
+        Subject subject = SecurityUtils.getSubject();
+
+        // 在认证提交前准备token（令牌）
+        // 这里的账号和密码 将来是由用户输入进去
+        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken("zhangsan", "111111");
+        try{
+        	//执行认证提交
+        	subject.login(usernamePasswordToken);
+        } catch( AuthenticationException e) {
+            e.printStackTrack();
+        }
+		//是否认证通过
+        boolean authenticated = subject.isAuthenticated();
+        System.out.println("是否认证通过：" + authenticated);
+        
+        //退出操作
+        subject.logout();
+    }
+```
+
+ 如果认证不同过则无法授权
+
+```ini
+[users]
+songge=zhenshuai,role1
+zhaoge=niubi,role2
+heidashuai=fangjia,role3
+[roles]
+role1=user:query,user:update
+role2=user:delete,user:insert
+role3=user:query,user:update,user:delete,user:insert
+```
+
+```java
+//基于角色的授权
+boolean role1 = subject.hasRole("role1");
+System.out.println("是否拥有role1的角色：" + role1);
+
+ArrayList<String> roleList = new ArrayList<>();
+roleList.add("role1");
+roleList.add("role2");
+roleList.add("role3");
+boolean[] hasRoles = subject.hasRoles(roleList);
+System.out.println("对role123分别拥有的角色：" + Arrays.toString(hasRoles));
+
+boolean hasAllRoles = subject.hasAllRoles(roleList); //判断list里的权限是否全部拥有
+System.out.println("是否拥有全部角色：" + hasAllRoles);
+```
+
+```java
+//基于权限的授权
+String insertPermission = "user:insert";
+String deletePermission = "user:delete";
+String updatePermission = "user:update";
+String queryPermission = "user:query";
+boolean[] permitteds = subject.isPermitted(insertPermission, deletePermission, updatePermission, queryPermission);//可变参数，或list
+System.out.println("增删改查多个的权限：" + Arrays.toString(permitteds));
+
+boolean permitted1 = subject.isPermitted(queryPermission);
+System.out.println("单个权限：" + permitted1);
+
+boolean permittedAll = subject.isPermittedAll(insertPermission, deletePermission, updatePermission, queryPermission);//可变参数，或list
+System.out.println("是否拥有全部权限：" + permittedAll);
+```
+
+
 
 #### 3.3.2.3  代码分析
 
@@ -378,7 +469,7 @@ import  org.apache.shiro.mgt.SecurityManager;
 
 2、调用subject.login方法主体提交认证，提交的token
 
-3、securityManager进行认证，securityManager最终由ModularRealmAuthenticator进行认证。
+3、securityManager进行认证，securityManager最终由<mark>ModularRealmAuthenticator</mark>进行认证。
 
 4、ModularRealmAuthenticator调用IniRealm(给realm传入token) 去ini配置文件中查询用户信息
 
@@ -396,6 +487,13 @@ import  org.apache.shiro.mgt.SecurityManager;
 
  
 
+```java
+package org.apache.shiro.authc.pam;
+public class ModularRealmAuthenticator extends AbstractAuthenticator {...}
+```
+
+
+
 ### 3.3.3        自定义realm实现认证（重点）
 
 将来实际开发需要realm从数据库中查询用户信息。
@@ -404,25 +502,106 @@ import  org.apache.shiro.mgt.SecurityManager;
 
 ```
 继承AuthorizingRealm
+继承的方法：
+c org.apache.shiro.realm.AuthorizingRealm
+	m doGetAuthorizationInfo(principalCollection:PrincipalCollection):AuthoriaztionInfo
+c org.apache.shiro.realm.AuthenticatingRealm
+	m doGetAuthenticatioInfo(authenticationToken:AuthenticationToken):AuthenticationInfo
 ```
 
  
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Shiro-notes.assets\clip_image019.jpg)
+```java
+public class CustomRealm extends AuthorizingRealm {
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Shiro-notes.assets\clip_image021.jpg)
+//    UserMapper userMapper;
+
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+        //通过token获得用户名信息（token中的信息就是你认证的时传入的信息）
+        UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
+        //这个username是接下来要去执行查询的条件→查询当前用户在系统中的密码
+        String username = token.getUsername();
+
+        //通过name信息去获得存在于系统或数据库的真实的密码（凭证）信息
+        String passwordFromDb = queryPasswordByUsername(username);
+
+        //第一个参数，是你想要存储在系统中的user信息Admin User Map String→是你接下来通过subject能够获得的用户信息
+        User user = new User(username, passwordFromDb);
+        //第二个参数，是用户正确的密码（系统维护的密码）
+        //第三个参数，是realm的名字
+        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(user,passwordFromDb,this.getName());
+        return authenticationInfo;//若是数据库没有该用户可以返回null
+    }
+        //查询当前用户（已经认证通过的用户）的授权信息
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        //就是SimpleAuthenticationInfo的第一个参数
+        User primaryPrincipal = (User) principalCollection.getPrimaryPrincipal();
+        // user role permission 从数据库获取
+        List<String> permissions = queryPermissionByUser(primaryPrincipal.getUsername());
+
+        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
+        authorizationInfo.addRole("role1");//需要的话也可以添加角色信息，从数据库获取
+        authorizationInfo.addStringPermissions(permissions);//通常用这个，比较方便冲数据库取字符串list的权限信息
+        return authorizationInfo;
+    }
+    //如果从数据库返回的是这些权限
+    private List<String> queryPermissionByUser(String username) {
+        ArrayList<String> perms = new ArrayList<>();
+        perms.add("user:insert");
+        perms.add("user:delete");
+        return perms;
+    }
+}
+```
+
+
 
 #### 3.3.3.2  配置
 
-![img](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Shiro-notes.assets\clip_image023.jpg)
-
- 
+```ini
+# custom.ini自定义realm的配置文件
+customRealm=com.cskaoyan.realm.CustomRealm
+securityManager.realm=$customRealm 
+```
 
 测试代码同上边的入门程序，需要更改ini配置文件路径：
 
-Factory<SecurityManager> factory = **new** IniSecurityManagerFactory("classpath:shiro-realm.ini");
+`Factory<SecurityManager> factory = new IniSecurityManagerFactory("classpath:custom.ini");`
 
- 
+
+
+```
+密码不正确
+org.apache.shiro.authc.IncorrectCredentialsException: Submitted credentials for token [org.apache.shiro.authc.UsernamePasswordToken - songge, rememberMe=false] did not match the expected credentials.
+用户不存在doGetAuthenticationInfo返回Null时
+org.apache.shiro.authc.UnknownAccountException: Realm [com.cskaoyan.realm.CustomRealm@234bef66] was unable to find account data for the submitted AuthenticationToken [org.apache.shiro.authc.UsernamePasswordToken - zhangsan, rememberMe=false].
+```
+
+ 测试：
+
+```java
+@Test
+public void test1(){
+    IniSecurityManagerFactory factory = new IniSecurityManagerFactory("classpath:custom.ini");
+    SecurityManager securityManager = factory.getInstance();
+    SecurityUtils.setSecurityManager(securityManager);
+    Subject subject = SecurityUtils.getSubject();
+
+    subject.login(new UsernamePasswordToken("songge","123456"));
+
+    boolean authenticated = subject.isAuthenticated();
+    System.out.println(authenticated);
+
+    boolean role1 = subject.hasRole("role1");//true
+
+    boolean[] permitted = subject.isPermitted("user:insert", "user:delete", "user:query", "user:update");
+    System.out.println(Arrays.toString(permitted));//true true false false
+}
+```
+
+
 
 ## 3.4   授权 
 
@@ -494,7 +673,7 @@ user:create：表示对用户资源进行create操作
 
 测试代码同上边的入门程序，需要更改ini配置文件路径：
 
-Factory<SecurityManager> factory = **new** IniSecurityManagerFactory("classpath:shiro-realm.ini");
+`Factory<SecurityManager> factory = **new** IniSecurityManagerFactory("classpath:shiro-realm.ini");`
 
  
 
@@ -522,7 +701,11 @@ Factory<SecurityManager> factory = **new** IniSecurityManagerFactory("classpath:
 
  
 
-# 4  项目使用
+
+
+
+
+# 4  项目使用xml
 
 ## 4.1   目标
 
@@ -536,7 +719,14 @@ Factory<SecurityManager> factory = **new** IniSecurityManagerFactory("classpath:
 
 ### 4.2.1        引入shiro的依赖
 
-<!-- shiro权限控制 --> <dependency>     <groupId>org.apache.shiro</groupId>     <artifactId>shiro-core</artifactId>     <version>1.2.3</version> </dependency> <dependency>     <groupId>org.apache.shiro</groupId>     <artifactId>shiro-web</artifactId>     <version>1.2.3</version> </dependency> <dependency>     <groupId>org.apache.shiro</groupId>     <artifactId>shiro-spring</artifactId>     <version>1.2.3</version> </dependency>
+```xml
+<!-- shiro权限控制 包括了shiro-web和shiro-core --> 
+<dependency>     
+    <groupId>org.apache.shiro</groupId>     
+    <artifactId>shiro-spring</artifactId>     
+    <version>1.2.3</version> 
+</dependency>
+```
 
 在web项目里除了引入shiro的核心依赖之外，还有引入shiro对web的支持（包含常用的web组件）以及shiro对spring的支持
 
@@ -548,7 +738,7 @@ Shiro整合web的思路
 
 基于一个Filter，拦截所有的url，然后使用shiro判断权限。
 
-在web.xml中，配置如下的filter进行拦截。filter拦截后将操作权交给spring中配置的filterChain（过虑链儿）
+在web.xml中，配置如下的filter进行拦截。filter拦截后将操作权交给spring中配置的filterChain（过虑链）
 
  
 
@@ -556,7 +746,7 @@ Shiro整合web的思路
 
  
 
-```
+```xml
 <!-- shiro的filter -->
 <!-- shiro过虑器，DelegatingFilterProxy通过代理模式将spring容器中的bean和filter关联起来 -->
 <filter>
@@ -586,7 +776,7 @@ l 配置spring容器中的filter bean实例
 
  
 
-```
+```xml
 l   <!-- web.xml中shiro的filter对应的bean -->
 <!-- Shiro 的Web过滤器 -->
 <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
@@ -612,7 +802,7 @@ shiro提供很多filter。可以构成一个filterChain
 
 l SecurityManager
 
-```
+```xml
 l   <!-- securityManager安全管理器 -->
 <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
    <property name="realm" ref="customRealm"/>
@@ -625,7 +815,7 @@ l 自定义Realm
 
  
 
-```
+```xml
 <!-- realm -->
 <bean id="customRealm" class="xxx.xxx.CustomRealm"></bean>
 ```
@@ -1356,4 +1546,224 @@ RequiresGuest
 
  
 
- 
+#  SpringBoot整合Shiro前后端分离项目
+
+依赖
+
+```xml
+
+```
+
+Shiro组件配置类
+
+ShiroConfig.class
+
+```
+// ShiroFilterFactoryBean
+// 自定义SecurityManager继承DefaultWebSessionManager重写getSessionId方法，从请求头获取sessionId保证前后端分离跨域session的一致性
+// DefaultWebSessionManager (继承重写getSesionId方法，从请求头中获取sessionId保证跨域的session一致性)
+// AuthorizationAttributeSourceAdvisor(声明式权鉴注解组件 需要aspectjweaver依赖)
+// 自定义Authenticator继承ModularRealmAuthenticator重写doAuthenticate方法对多个realms进行分发
+/**
+不在配置类中
+自定义token继承UsernamePasswordToken增加type属性支持区别以分发多个realms
+自定义realm
+**/
+```
+
+```java
+@Configuration
+public class ShiroConfig {
+    /**
+     * 过滤器 ShiroFilterFactoryBean
+     */
+    @Bean
+    public ShiroFilterFactoryBean shiroFilterFactoryBean(DefaultWebSecurityManager securityManager) {
+        ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
+        //这个loginUrl不仅是字面的登录url，而且是认证失败的重定向url,认证失败状态码是302
+        //可以配也可以不配置
+//        shiroFilterFactoryBean.setLoginUrl("/unauthc");//,由于这是前后端分离项目，后端不返回view，这个就暂不配置了
+        //对请求过滤filter，这个filterChainDefinitionMap需要是有序的Map
+        //key为请求url，value为过滤器
+        //anon是匿名处理器
+        LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
+        filterChainDefinitionMap.put("/admin/auth/login", "anon");
+        filterChainDefinitionMap.put("/wx/**", "anon");
+        //图片等静态资源也可以配置到anon匿名处理器不需要认证
+        filterChainDefinitionMap.put("/wx/storage/fetch/**", "anon");//不用阿里云oos的话本地图片请求不需要认证
+//        filterChainDefinitionMap.put("/unauthc", "anon");//loginUrl,前后分离原因不配置
+
+        //可以在这里配置perms的，但是不建议，建议在Handler方法上使用注解声明式权鉴 @RequiresPermissions(value = {"perm1","perm2"},logical = Logical.OR)
+//        filterChainDefinitionMap.put("/need/perm","perms[perm1]");
+
+        filterChainDefinitionMap.put("/**", "authc");//需要认证的请求放在最后
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
+        return shiroFilterFactoryBean;
+    }
+
+    /**
+     * 核心组件DefaultWebSecurityManager
+     */
+    @Bean//多个realm使用list
+    public DefaultWebSecurityManager securityManager(AdminRealm adminRealm,
+                                                     UserRealm userRealm,
+                                                     DefaultWebSessionManager sessionManager,
+                                                     CustomAuthenticator authenticator) {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+//        securityManager.setRealm(adminRealm);
+        List<Realm> realms = new ArrayList<>();
+        realms.add(adminRealm);
+        realms.add(userRealm);
+        securityManager.setRealms(realms);
+        securityManager.setSessionManager(sessionManager);
+        securityManager.setAuthenticator(authenticator);
+        return securityManager;
+    }
+
+    /**
+     * 自己写继承DefaultWebSessionManager重写getSessionId方法，从请求头获取sessionId保证前后端分离跨域session的一致性
+     */
+    @Bean
+    public DefaultWebSessionManager sessionManager() {
+        DefaultWebSessionManager sessionManager = new CustomSessionManager();
+        //可以设置一些属性
+        //删除失效的session
+        sessionManager.setDeleteInvalidSessions(true);
+        //session过期时间
+        sessionManager.setGlobalSessionTimeout(7 * 24 * 60 * 60 * 1000);
+        sessionManager.setSessionValidationSchedulerEnabled(true);
+        return sessionManager;
+    }
+
+    /**
+     * 声明式鉴权通知组件，需要aspectjweaver依赖支持
+     * handler方法加注解如：@RequiresPermissions(value = {"perm1","perm2"},logical = Logical.OR)
+     */
+    @Bean//需要set一个securityManager属性
+    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(DefaultWebSecurityManager securityManager) {
+        AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
+        authorizationAttributeSourceAdvisor.setSecurityManager(securityManager);
+        return authorizationAttributeSourceAdvisor;
+    }
+
+    /**
+     * 自定一定认证器
+     * 可以直接在自定一定认证器上加@Component注解生效，写在这里方便统一查看Shiro配置
+     */
+    @Bean
+    public CustomAuthenticator authenticator(AdminRealm adminRealm, UserRealm userRealm) {
+        CustomAuthenticator authenticator = new CustomAuthenticator();
+        ArrayList<Realm> realms = new ArrayList<>();
+        realms.add(adminRealm);
+        realms.add(userRealm);
+        authenticator.setRealms(realms);
+        return authenticator;
+    }
+}
+
+```
+
+自定义sessionManager
+
+```java
+public class CustomSessionManager extends DefaultWebSessionManager {
+    @Override
+    protected Serializable getSessionId(ServletRequest request, ServletResponse response) {
+        HttpServletRequest req = (HttpServletRequest) request;
+        String sessionId = req.getHeader("X-cskaoyan-mall-Admin-Token");//后台管理前端请求头
+        if (StringUtils.hasText(sessionId)) {
+            return sessionId;
+        }
+
+        sessionId = req.getHeader("X-Litemall-Token");//微信端请求头
+        if (StringUtils.hasText(sessionId)) {
+            return sessionId;
+        }
+
+        return super.getSessionId(request, response);
+    }
+}
+```
+
+自定义认证器(可以在shiro配置类用@Bean注册，也可以直接用@Component注册)
+
+```java
+/**
+ * 自定一定认证器，对多个realm惊醒分发
+ * 重写父类ModularRealmAuthenticator的doAuthenticate方法
+ *
+ * （另一种实现方法：
+ * 如果只写了1个realm也可以直接在realm的doGetAuthenticationInfo中分发，
+ * 同样利用强转为CustomToken获取type的不同，去执行不同的业务逻辑，
+ * 返回不同的AuthenticationInfo）
+ */
+public class CustomAuthenticator extends ModularRealmAuthenticator {
+    @Override
+    protected AuthenticationInfo doAuthenticate(AuthenticationToken authenticationToken) throws AuthenticationException {
+        this.assertRealmsConfigured();
+        Collection<Realm> originRealms = this.getRealms();
+        //对realms进行分发
+        CustomToken token = (CustomToken) authenticationToken;
+        String type = token.getType();
+
+        //AdminRealm -> adminrealm admin/user
+        List<Realm> realms = new ArrayList<>();
+        for (Realm originRealm : originRealms) {
+            if (originRealm.getName().toLowerCase().contains(type)) {
+                realms.add(originRealm);
+            }
+        }
+
+        return realms.size() == 1 ? this.doSingleRealmAuthentication((Realm)realms.iterator().next(), authenticationToken) : this.doMultiRealmAuthentication(realms, authenticationToken);
+    }
+}
+```
+
+自定义token（继承UsernamePasswordToken）
+
+```java
+@Data
+public class CustomToken extends UsernamePasswordToken {
+    String type;
+    public CustomToken(String username, String password, String type) {
+        super(username, password);
+        this.type = type;
+    }
+}
+```
+
+TODO 补全
+
+自定义realm
+
+```java
+@Component
+public class AdminRealm extends AuthorizingRealm {
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+
+        return null;
+    }
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        return null;
+    }
+}
+@Component
+public class UserRealm extends AuthorizingRealm {
+
+
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+        return null;
+    }
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        return null;
+    }
+
+}
+
+```
+
