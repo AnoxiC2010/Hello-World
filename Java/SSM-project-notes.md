@@ -369,7 +369,12 @@ spring:
 
 # shiro权限管理配置
 
-
+```
+用户 角色 权限
+  关系  关系
+可以设计为2个关系表和3个模型表
+这个项目用户和角色的关系维护在用户的一个roleId属性（数组）中维护多对多的关系，所以就少了一张关系表
+```
 
 
 
@@ -570,17 +575,76 @@ HttpSession session = (HttpSession) requestAttributes.resolveReference(RequestAt
 
 
 
-## sms
+## sms短信服务
 
-
+[api示例]([阿里云 OpenAPI 开发者门户 (aliyun.com)](https://next.api.aliyun.com/api/Dysmsapi/2017-05-25/SendSms?spm=5176.12207334.0.0.efd41cbeER7IV5&sdkStyle=dara&params={"PhoneNumbers":"15117910650","SignName":"stone4j","TemplateCode":"SMS_173765187","TemplateParam":"{\"code\":\"123456\"}"}))
 
 aliyun文本短信 签名: stone4j
 
 模板code: SMS_173765187
 
+依赖
+
+```xml
+<dependency>
+  <groupId>com.aliyun</groupId>
+  <artifactId>dysmsapi20170525</artifactId>
+  <version>2.0.4</version>
+</dependency>
+```
+
+发送短信示例
+
+```java
+// This file is auto-generated, don't edit it. Thanks.
+package com.aliyun.sample;
+
+import com.aliyun.tea.*;
+import com.aliyun.dysmsapi20170525.*;
+import com.aliyun.dysmsapi20170525.models.*;
+import com.aliyun.teaopenapi.*;
+import com.aliyun.teaopenapi.models.*;
+
+public class Sample {
+
+    /**
+     * 使用AK&SK初始化账号Client
+     * @param accessKeyId
+     * @param accessKeySecret
+     * @return Client
+     * @throws Exception
+     */
+    public static com.aliyun.dysmsapi20170525.Client createClient(String accessKeyId, String accessKeySecret) throws Exception {
+        Config config = new Config()
+                // 您的AccessKey ID
+                .setAccessKeyId(accessKeyId)
+                // 您的AccessKey Secret
+                .setAccessKeySecret(accessKeySecret);
+        // 访问的域名
+        config.endpoint = "dysmsapi.aliyuncs.com";
+        return new com.aliyun.dysmsapi20170525.Client(config);
+    }
+
+    public static void main(String[] args_) throws Exception {
+        java.util.List<String> args = java.util.Arrays.asList(args_);
+        com.aliyun.dysmsapi20170525.Client client = Sample.createClient("accessKeyId", "accessKeySecret");
+        SendSmsRequest sendSmsRequest = new SendSmsRequest()
+                .setPhoneNumbers("15117910650")
+                .setSignName("stone4j")
+                .setTemplateCode("SMS_173765187")
+                .setTemplateParam("{\"code\":\"123456\"}");
+        // 复制代码运行请自行打印 API 的返回值
+        client.sendSms(sendSmsRequest);
+    }
+}
+
+```
 
 
-## oos 
+
+## oos对象存储
+
+[Java SDK 快速入门](https://help.aliyun.com/document_detail/195870.html?spm=a2c4g.11186623.6.605.22a82345ghRwn0)
 
 概念
 
@@ -592,7 +656,7 @@ accessKeyId
 
 accessKeySecret
 
-[Java SDK 快速入门](https://help.aliyun.com/document_detail/195870.html?spm=a2c4g.11186623.6.605.22a82345ghRwn0)
+
 
 Java8依赖
 
@@ -628,6 +692,161 @@ ossClient.shutdown();
 ```
 
 下载列举等其他功能见官方文档
+
+
+
+## 在spring中整合阿里云服务示例
+
+@ConfigurationProperties打通组件和配置文件之间的联系，在组件中写接口提供服务
+
+这里以旧版本示例
+
+依赖
+
+```xml
+<!--oss-->
+<dependency>
+    <groupId>com.aliyun.oss</groupId>
+    <artifactId>aliyun-sdk-oss</artifactId>
+    <version>3.12.0</version>
+</dependency>
+<!--sms-->
+<dependency>
+    <groupId>com.aliyun</groupId>
+    <artifactId>aliyun-java-sdk-core</artifactId>
+    <version>4.5.16</version>
+</dependency>
+```
+
+application-aliyun.yml配置(在主配置文件中引入即可)
+
+```yaml
+# 整合阿里云服务
+aliyun:
+  accessKeyId: Lxxx5tSHBxx5xxPkxxxrkr4M
+  accessKeySecret: xxGJxx1mxSK0xxgGy5WDxxTMabxxx4
+  oss:
+    bucket: cskaoyan
+    endPoint: oss-cn-beijing.aliyuncs.com
+  sms:
+    signName: stone4j
+    templateCode: SMS_173765187
+
+#litemall:
+#  sms:
+#    enable: true
+#    # 如果是腾讯云短信，则设置active的值tencent
+#    # 如果是阿里云短信，则设置active的值aliyun
+#    active: aliyun
+#    sign: litemall
+#    template:
+#      - name: paySucceed
+#        templateId: 156349
+#      - name: captcha
+#        templateId: 156433
+#      - name: ship
+#        templateId: 158002
+#      - name: refund
+#        templateId: 159447
+```
+
+配置类
+
+```java
+@Data
+@Component
+public class Oss {
+    private String bucket;
+    private String endPoint;
+}
+@Data
+@Component
+public class Sms {
+    private String signName;
+    private String templateCode;
+}
+@Data
+@ConfigurationProperties(prefix = "aliyun")
+@Component
+public class AliyunComponent {
+    private String accessKeyId;
+    private String accessKeySecret;
+    private Oss oss ;
+    private Sms sms ;
+
+
+    public OSSClient getOssClient(){
+        OSSClient ossClient = new OSSClient(oss.getEndPoint(), accessKeyId, accessKeySecret);
+        return ossClient;
+
+    }
+    public PutObjectResult fileUpload(String fileName, File file){
+        OSSClient ossClient = getOssClient();
+        PutObjectResult putObjectResult = ossClient.putObject(oss.getBucket(), fileName, file);
+        return putObjectResult;
+    }
+    public PutObjectResult fileUpload(String fileName, InputStream inputStream){
+        OSSClient ossClient = getOssClient();
+        PutObjectResult putObjectResult = ossClient.putObject(oss.getBucket(), fileName, inputStream);
+        return putObjectResult;
+    }
+
+    /**
+     * 发送短信；aliyun的code格式要求 [a-zA-Z0-9]
+     * @param phoneNumber
+     * @param code
+     * @return null->失败
+     */
+    public CommonResponse sendMsg(String phoneNumber,String code){
+
+        String signName = sms.getSignName();
+        String templateCode = sms.getTemplateCode();
+
+        DefaultProfile profile = DefaultProfile.getProfile("cn-qingdao", accessKeyId, accessKeySecret);
+        IAcsClient client = new DefaultAcsClient(profile);
+
+        CommonRequest request = new CommonRequest();
+        request.setSysMethod(MethodType.POST);
+        request.setSysDomain("dysmsapi.aliyuncs.com");
+        request.setSysVersion("2017-05-25");
+        request.setSysAction("SendSms");
+        request.putQueryParameter("PhoneNumbers", phoneNumber);
+        request.putQueryParameter("SignName", signName);
+        request.putQueryParameter("TemplateCode", templateCode);
+        request.putQueryParameter("TemplateParam", "{\"code\": \""+ code +"\"}");
+        CommonResponse response = null;
+        try {
+            response = client.getCommonResponse(request);
+            System.out.println(response.getData());
+        } catch (ServerException e) {
+            e.printStackTrace();
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+}
+```
+
+使用阿里云组件
+
+```java
+@Service
+public class FileServiceImpl implements FileService{
+    @Autowired
+    private AliyunComponent aliyunComponent;
+    @Override
+    public void fileUpload(String fileName, InputStream in) {
+        PutObjectResult result = aliyunComponent.fileUpload(fileName, in);
+    }
+    @Override
+    public void sendMsg(String mobile, String code) {
+        aliyunComponent.sendMsg(mobile, code);
+    }
+}
+```
+
+
 
 # 疑问咨询老师
 
