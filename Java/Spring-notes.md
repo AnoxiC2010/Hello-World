@@ -7051,21 +7051,38 @@ Cookie、Json请求
 
 
 
-@Validated @Valid  BindingResult 必须放在校验参数后面，中间不能相隔其他参数
+## springboot 版本差异
 
-放在前面，报这个异常，中间有其他参数则校验失败也不会进入Handler方法
+单元测试类的注解配置差异
 
- java.lang.IllegalStateException: An Errors/BindingResult argument is expected to be declared immediately after the model attribute, the @RequestBody or the @RequestPart arguments to which they apply: public com.cskaoyan.bean.vo.BaseRespVo com.cskaoyan.controller.UserController.login(org.springframework.validation.BindingResult,com.cskaoyan.bean.LoginUserBO,javax.servlet.http.HttpSession)
+注意junit的版本、测试类的修饰符有无public、测试类上有无@RunWith(SpringRunner.class)注解的区别
 
+2.5.0 
 
+```java
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+@SpringBootTest
+class WhycczMallProjectApplicationTests {
+	@Test
+	...
+}
+```
 
+ 2.1.6
 
-
-mybatiss index binding 异常
-
- 
-
- 
+```java
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+@SpringBootTest
+@RunWith(SpringRunner.class)
+public class SkillsTest01ApplicationTests {
+    @Test
+    public void testInsert() {
+    }
+}
+```
 
 
 

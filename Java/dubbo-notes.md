@@ -1,5 +1,31 @@
 # dobbo notes
 
+底层原理
+
+TCP连接
+
+provider的服务代理类	代理服务接口的实现类
+
+consumer的服务代理类	建立TCP连接获得数据并返回
+
+```java
+class MyInvoker  implements DemoService{
+    @Override
+    public String sayHello(String name) {
+        // 1. 现在要调用DemoService接口定义的服务功能
+        // 2. 要调用的方法是sayhello方法
+        // 3. 获取到调用参数
+        // 4. 还知道到哪里去和服务提供者建立连接，并发送调用信息
+
+        //  建立连接
+        //  返回的数据
+        return 返回的数据;
+    }
+}
+```
+
+
+
 # dubbo - SpringMVC
 
 新建父子工程
@@ -277,7 +303,7 @@ public interface DemoService {
 import com.springboot.api.DemoService;
 import org.apache.dubbo.config.annotation.Service;
 
-@Service//这个@Service注解不是Spring的，是dubbo的，作用是注册为容器组件和dubbo服务
+@Service//这个@Service注解不是Spring的，是dubbo的，作用是注册为spring容器组件同时为这个服务实现类生成一个服务的代理对象
 public class DemoServiceImpl implements DemoService {
     @Override
     public String sayHello(String name) {
@@ -399,6 +425,17 @@ public class SpringbootConsumerApplication {
 
 # zookeeper
 
-无需安装，直接将文件夹复制到
+1. 无需安装，直接将文件夹复制到本地，在bin目录下，双击zxServer.cmd启动
+2. 注意需要将conf目录下的zoo.sample.cfg配置文件的名字改为zoo.cfg，否则启动不了
+3. 在zoo.cfg这个配置文件中，修改dataDir和logDir为有效目录，
+4. 他们分别配置的是zookeeper的数据文件和日志文件存储目录
+5. 比如：
+6. dataDir=d:\\zookeeper\\data
+7. dataLogDir=d:\\zookeeper\\log
+8. zooInspector也无须安装
+9. 只需要打开命令行，进入zooInspector的build目录，
+10. 执行java -jar zookeeper -dev
+
+
 
 ![image-20210615211912821](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\dubbo-notes.assets\image-20210615211912821.png)
