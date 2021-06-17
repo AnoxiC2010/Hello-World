@@ -1740,16 +1740,32 @@ TODO 补全
 ```java
 @Component
 public class AdminRealm extends AuthorizingRealm {
+    @Autowired
+    AdminService adminService;
+    @Autowired
+    RoleService roleService;
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-
-        return null;
+        UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
+        String username = token.getUsername();
+        Admin admin = adminService.getAdminByUsername(username);
+        if (admin == null) {
+            return null;//返回null的异常是不存在此用户异常，符合逻辑。如果是在下面simpleAuthenticationInfo的credentials设为null，异常名叫“xx”，意义不直观
+        }
+        String credentials = admin.getPassword();
+        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(admin, credentials, this.getName());
+        return simpleAuthenticationInfo;
     }
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        return null;
+        Admin admin = (Admin) principalCollection.getPrimaryPrincipal();
+        Set<String> permissions = roleService.getPermissionOfAdmin(admin);//admin:admin:update格式的
+        SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
+        simpleAuthorizationInfo.setStringPermissions(permissions);
+        return simpleAuthorizationInfo;
     }
 }
+
 @Component
 public class UserRealm extends AuthorizingRealm {
 

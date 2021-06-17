@@ -26,6 +26,26 @@ class MyInvoker  implements DemoService{
 
 
 
+rpc方法调用的参数如果是对象需要实现序列化接口Serializable
+
+
+
+由于dubbo的@Service注解易与spring的注解混淆，spring组件可以使用@Component租界
+
+
+
+有了注册中心，点对点直连并不是没有用处。比如在寻找问题调试时，要确定时服务提供者出了问题，还是注册中心除了问题，可以使用点对点直连来直接连接测试某个服务提供者，定位问题。
+
+
+
+包扫描可以在启动类用dubbo的注解配置，也可以在yml文件配置。
+
+
+
+dubbo用传输层dubbo协议（底层时netty封装的tcp连接），springcloud使用应用层http协议，相对来说dubbo效率高一点
+
+
+
 # dubbo - SpringMVC
 
 新建父子工程
@@ -318,6 +338,7 @@ public class DemoServiceImpl implements DemoService {
 import org.apache.dubbo.config.spring.context.annotation.DubboComponentScan;
 @SpringBootApplication
 @DubboComponentScan(basePackages = "com.cskaoyan.service")//这是dubbo的包扫描注解，不是spring的@ComponentScan
+//包扫描配置也可以直接在application.yml中做
 public class SpringbootProviderApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringbootProviderApplication.class, args);
@@ -340,6 +361,10 @@ dubbo:
 
   registry:
     address: zookeeper://localhost:2181
+  # 除了在启动类使用@DubboComponentScan(basePackages = "com.cskaoyan.service")注解也可以在这里配置包扫描
+  scan:
+    base-package: com.cskaoyan.service
+
 ```
 
 可以多建几个provider工程测试负载均衡, springboot的配置文件的dubbo.protocol.port需要分别指定以防端口冲突。
@@ -363,7 +388,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ThirdService {
-    //random随机   roundrobin轮询  leastactive最少活跃调用数     consistenthash一致性哈希
+    //random随机   roundrobin轮询  leastactive最少活跃调用数     consistenthash一致性哈希（根据参数的不同）
 //dubobo注解，interfaceClass属性可以不设置，默认是声明的接口类型，loadbalance是负载均衡设置
     @Reference(interfaceClass = DemoService.class, loadbalance = "consistenthash")
     DemoService demoService;

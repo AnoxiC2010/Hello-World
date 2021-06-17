@@ -56,7 +56,8 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     username: root
     password: 123456
-    # 配置serverTimezone时区为了tkmybatis的时间正确
+    # 配置serverTimezone时区，否则timybatis可能会报没有设置时区的错误
+    # useOldAliasMetadataBehavior=true是支持别名 好像之前不加也可以支持别名...
     url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&useOldAliasMetadataBehavior=true&serverTimezone=Asia/Shanghai
 ```
 
