@@ -7086,7 +7086,25 @@ public class SkillsTest01ApplicationTests {
 
 
 
- 
+ # Spring 工具
+
+字符串工具类
+
+StringUtils
+
+
+
+Bean转化工具类
+
+BeanUtils
+
+
+
+Md5工具类
+
+DigestUtils
+
+
 
  
 
