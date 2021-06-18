@@ -46,6 +46,14 @@ dubbo用传输层dubbo协议（底层时netty封装的tcp连接），springcloud
 
 
 
+@Reference注解
+
+- check=false 启动不检查服务提供者可用状态（两个服务循环引用时有一个要设置为false）
+- timeout=3000 单位毫秒，超时连接，注解源码写的时默认0，实际源码中没有设置值默认时1秒
+- retry=0 默认是3次，开发调试设置为0，不让重复请求
+
+
+
 # dubbo - SpringMVC
 
 新建父子工程
