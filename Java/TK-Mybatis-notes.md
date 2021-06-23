@@ -2,6 +2,8 @@
 
 [github主页]([abel533/Mapper: Mybatis Common Mapper - Easy to use (github.com)](https://github.com/abel533/Mapper))
 
+[api文档](https://apidoc.gitee.com/free/Mapper/)
+
 依赖
 
 ```xml
