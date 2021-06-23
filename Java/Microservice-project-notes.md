@@ -1,7 +1,15 @@
 # 微服务项目
 
+
+
+https://blog.csdn.net/weixin_43770545/article/details/90486809
+
 ```
 com.mysql.cj.jdbc.Driver
+
+
+com.mysql.jdbc.Driver和mysql-connector-java 5一起用。
+com.mysql.cj.jdbc.Driver和mysql-connector-java 6 一起用。
 ```
 
 
