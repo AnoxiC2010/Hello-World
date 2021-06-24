@@ -56,70 +56,6 @@ redis集群
 
 微服务rpc调用，insert语句执行插入了
 
-## java发送邮件
-
-
-
-sun公司给我们提供了Java发送邮件的解决⽅案，并且提供了jar包
-
-```xml
-<dependency>
-    <groupId>javax.mail</groupId>
-    <artifactId>mail</artifactId>
-</dependency>
-```
-
-
-
-⽽Springboot项⽬则给我们提供了封装了上⾯mail包的接⼝，让我们在Springboot项⽬中能够更⽅便的 实现邮件发送
-
-- 导包
-
-  ```xml
-  <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-mail</artifactId>
-  </dependency>
-  ```
-
-- 配置
-
-  ```properties
-  #邮件服务器
-  spring.mail.host=smtp.163.com
-  #端⼝
-  spring.mail.port=25
-  #发送邮件邮箱⽤户名
-  spring.mail.username=ciggarnot@163.com
-  #发送邮件邮箱密码（这个密码是上⾯的授权码，不是邮箱登录的密码）
-  spring.mail.password=SNTGFTIEAJUMRHCT
-  #设置邮箱认证打开
-  spring.mail.properties.mail.smtp.auth=true
-  ```
-
-  
-
-- 代码编写
-
-  ```java
-  @Autowired
-  private JavaMailSender javaMailSender;
-  @Test
-  public void sendMail(){
-      SimpleMailMessage message = new SimpleMailMessage();
-      message.setFrom("ciggarnot@163.com");
-      message.setTo("291136733@qq.com");
-      message.setSubject("csmall商城激活2");
-      message.setText("http://localhost:8080/user/verify?uid=akjsdnh39udklnw");
-      javaMailSender.send(message);
-  /*
-  javaMailSender.send(MimeMessage mimeMessage)发送有附件的邮件
-  javaMailSender.send(SimpleMailMessage simpleMailMessage)发送简单的邮件对象
-  */
-  }
-  ```
-
-
 
 
 ## 下单
@@ -482,6 +418,152 @@ CREATE TABLE `tb_order_shipping` (
 
 
 
+# ⽤户服务业务分析
+
+## 1.1 表结构设计
+
+⽤户表：
+
+```sql
+CREATE TABLE `tb_member` (
+ `id` bigint(20) NOT NULL AUTO_INCREMENT,
+ `username` varchar(50) NOT NULL COMMENT '⽤户名',
+ `password` varchar(32) NOT NULL COMMENT '密码，加密存储',
+ `phone` varchar(20) DEFAULT NULL COMMENT '注册⼿机号',
+ `email` varchar(50) DEFAULT NULL COMMENT '注册邮箱',
+ `created` datetime NOT NULL,
+ `updated` datetime NOT NULL,
+ `sex` varchar(2) DEFAULT '',
+ `address` varchar(255) DEFAULT NULL,
+ `state` int(1) DEFAULT '0',
+ `file` varchar(255) DEFAULT NULL COMMENT '头像',
+ `description` varchar(500) DEFAULT NULL,
+ `points` int(11) DEFAULT '0' COMMENT '积分',
+ `balance` decimal(10,2) DEFAULT '0.00' COMMENT '余额',
+ `isverified` varchar(26) DEFAULT 'N',
+ PRIMARY KEY (`id`),
+ UNIQUE KEY `username` (`username`) USING BTREE,
+ UNIQUE KEY `phone` (`phone`) USING BTREE,
+ UNIQUE KEY `email` (`email`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8 COMMENT='⽤户表';
+```
+
+⽤户认证表：
+
+```sql
+CREATE TABLE `tb_user_verify` (
+ `id` bigint(20) NOT NULL AUTO_INCREMENT,
+ `username` varchar(56) DEFAULT NULL,
+ `register_date` datetime DEFAULT NULL,
+ `uuid` varchar(56) DEFAULT NULL,
+ `is_verify` varchar(10) DEFAULT NULL COMMENT '是否验证Y已验证，N未验证',
+ `is_expire` varchar(255) DEFAULT NULL COMMENT '是否过期Y已过期，N未过期',
+ PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+```
+
+## 1.2 业务分析
+
+- ⽤户注册接⼝
+  1. 验证传过来的验证码
+  2. 向⽤户表中插⼊⼀条记录
+  3. 向⽤户验证表中插⼊⼀条记录
+  4. 发送⽤户激活邮件
+- ⽤户登录接⼝
+   1. 验证验证码
+   2. 验证⽤户名以及密码
+   3. 产⽣⼀个合法的JWT
+
+1.3 发送邮件
+
+
+
+# java发送邮件
+
+简介
+要实现邮件发送与接收功能，必须要有专⻔的邮件服务器。这些邮件服务器类似于现实⽣活中的邮局，它主要负责接收⽤户投递过来的邮件，并把邮件投递到邮件接收者的电⼦邮箱中。
+
+SMTP服务器地址：⼀般是 smtp.xxx.com，⽐如163邮箱是smtp.163.com，qq邮箱是smtp.qq.com。
+
+
+
+流程图：
+
+![image-20210624090811921](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210624090811921.png)
+
+
+
+sun公司给我们提供了Java发送邮件的解决⽅案，并且提供了jar包
+
+```xml
+<dependency>
+    <groupId>javax.mail</groupId>
+    <artifactId>mail</artifactId>
+</dependency>
+```
+
+注意事项
+
+这⾥以163邮箱为例，qq邮箱也是⼀样的。需要把邮箱的smtp服务打开
+
+![image-20210624090902791](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210624090902791.png)
+
+管理授权码，也就是发送的时候需要⽤到的密码
+
+![image-20210624090927445](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210624090927445.png)
+
+
+
+⽽Springboot项⽬则给我们提供了封装了上⾯mail包的接⼝，让我们在Springboot项⽬中能够更⽅便的 实现邮件发送
+
+- 导包
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+  </dependency>
+  ```
+
+- 配置
+
+  ```properties
+  #邮件服务器
+  spring.mail.host=smtp.163.com
+  #端⼝
+  spring.mail.port=25
+  #发送邮件邮箱⽤户名
+  spring.mail.username=ciggarnot@163.com
+  #发送邮件邮箱密码（这个密码是上⾯的授权码，不是邮箱登录的密码）
+  spring.mail.password=SNTGFTIEAJUMRHCT
+  #设置邮箱认证打开
+  spring.mail.properties.mail.smtp.auth=true
+  ```
+
+  
+
+- 代码编写
+
+  ```java
+  @Autowired
+  private JavaMailSender javaMailSender;
+  @Test
+  public void sendMail(){
+      SimpleMailMessage message = new SimpleMailMessage();
+      message.setFrom("ciggarnot@163.com");
+      message.setTo("291136733@qq.com");
+      message.setSubject("商城激活");
+      message.setText("http://localhost:8080/user/verify?uid=akjsdnh39udklnw");
+      javaMailSender.send(message);
+  /*
+  javaMailSender.send(MimeMessage mimeMessage)发送有附件的邮件
+  javaMailSender.send(SimpleMailMessage simpleMailMessage)发送简单的邮件对象
+  */
+  }
+  ```
+
+当然还有其他的邮件发送工具，比如Hutools工具包也提供方便的发送邮件功能
+
 
 
 # 秒杀业务
@@ -644,21 +726,13 @@ timestamp Long 时间戳
 
 
 
+# 分布式事务
 
 
 
 
-# 其他
 
 
-
-spring配置注入
-
-或spi动态发现
-
-
-
-核心 Handler方法的添加和执行
 
 # NIO
 
@@ -759,3 +833,44 @@ mall-parent、mall-commons中的、各个service模块层的api
 
 注释掉之后正常启动。
 
+
+
+
+
+# 其他
+
+
+
+spring配置注入
+
+或spi动态发现
+
+
+
+核心 Handler方法的添加和执行
+
+
+
+事务失效的几种情况
+
+https://zhuanlan.zhihu.com/p/145669970
+
+
+
+接口的幂等性
+
+[(7 封私信 / 35 条消息) 分布式高并发系统如何保证对外接口的幂等性？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/27744795/answer/1804031019)
+
+
+
+
+
+@Service dubbo的这个注解标记的类，已经注入spring容器了，如果不是rpc调用的话，在本地（本module）除了使用@Reference注解还可以直接使用@Autowired来注入使用
+
+
+
+项目编码风格造成的事务问题：
+
+本项目的代码风格极为模板化，在service层try...catch了所有异常，异常信息被包裹在了return的模板响应类中。导致了使用springboot的事务极为不便，@Transactional注解是无效的。
+
+如果需要事务环境，要么硬编码回滚事务，要么把事务关联的几个数据库执行语句抽取在一个public方法中标记@Transactional注解然后通过ApplicationContextAware接口获取applicationContex，从applicationContex中获取本类的spring容器代理对象引用并使用，直接在本类中调用是无效的。
