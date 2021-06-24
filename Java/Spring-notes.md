@@ -7084,6 +7084,30 @@ public class SkillsTest01ApplicationTests {
 }
 ```
 
+# try catch让事务@Transactional注解失效，解决办法
+
+[try catch让事务@Transactional注解失效，解决办法_有趣的灵魂_不世俗的心的博客-CSDN博客](https://blog.csdn.net/weixin_42324471/article/details/99969418)
+
+
+
+## Spring硬编码开启回滚事务
+
+```java
+@Override
+@Transactional
+public Json addOrder(TOrderAddReq tOrderAddReq) {
+    try{
+        //增删改方法
+    } catch (Exception e) {
+        // 手动硬编码开启spring事务管理
+        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+        e.printStackTrace();}
+    //        }
+    return json;
+}
+//上述方法执行后我们可以看到事务最后执行了，但实际上 事务 执行只是因为手动硬编码开启spring事务管理起了作用 而方法上的注解并没有起作用
+```
+
 
 
  # Spring 工具
