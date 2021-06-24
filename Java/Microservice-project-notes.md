@@ -44,6 +44,18 @@ redis集群
 
 数据库分表
 
+
+
+## 接口的幂等性
+
+分布式项目接口的幂等性设计
+
+
+
+遇到问题：
+
+微服务rpc调用，insert语句执行插入了
+
 ## java发送邮件
 
 
@@ -467,6 +479,172 @@ CREATE TABLE `tb_order_shipping` (
   PRIMARY KEY (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
+
+
+
+
+
+# 秒杀业务
+
+## 1 表结构分析
+
+秒杀场次表
+
+```sql
+CREATE TABLE `tb_promo_session` (
+ `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+ `session_id` int(4) NOT NULL COMMENT '场次 id 1:上午⼗点场 2:下午四点场',
+ `start_time` datetime NOT NULL COMMENT '开始时间',
+ `end_time` datetime NOT NULL COMMENT '结束时间',
+ `yyyymmdd` varchar(255) NOT NULL COMMENT '场次⽇期',
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+```
+
+场次商品关联表
+
+```sql
+CREATE TABLE `tb_promo_item` (
+ `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+ `ps_id` int(11) NOT NULL COMMENT '秒杀场次id',
+ `item_id` int(11) NOT NULL COMMENT '商品id',
+ `seckill_price` decimal(10,2) NOT NULL COMMENT '商品秒杀价格',
+ `item_stock` int(11) NOT NULL COMMENT '商品秒杀库存',
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+```
+
+
+
+## 2 接⼝⽂档
+
+### 2.1 获取秒杀商品列表接⼝
+
+⼊参 类型 含义
+
+```
+sessionId Integer 场次id 1:上午10点场 2:下午4点场
+```
+
+请求路径：/shopping/seckilllist
+是否需要携带Token：否
+请求类型：get
+请求参数示例：
+⽆
+
+出参 类型 含义
+
+```
+success boolean 成功标记
+message String 具体信息
+code Integer 状态码
+result String(JSON) 具体数据
+timestamp Long 时间戳
+```
+
+
+
+返回参数示例：
+
+```json
+{ "success":true, "message":"success", "code":200, "result":{ "code":"000000", "msg":"成功",
+"sessionId":1, "psId":1, "productList":[ { "id":100057401, "inventory":10, "price":149,
+"seckillPrice":49, "picUrl":"https://resource.smartisan.com/resource/005c65324724692f7c9b
+a2fc7738db13.png", "productName":"Smartisan T恤 迪特拉姆斯" }, { "id":100052801,
+"inventory":7, "price":149, "seckillPrice":199, "picUrl":"https://resource.smartisan.com/reso
+urce/6e96ccea3bd56bdd2243eb20330cec30.jpg", "productName":"坚果砖式蓝⽛⼩⾳箱" } ] },
+"timestamp":1588535951303 }
+```
+
+
+
+### 2.2 获取秒杀商品详情接⼝
+
+⼊参 类型 含义
+
+```
+psId Long 秒杀场次主键id
+productId Long 商品id
+```
+
+请求路径：/shopping/promoProductDetail
+是否需要携带Token：是
+请求类型：post
+请求参数示例：
+{"productId":100057401,"psId":2}
+
+出参 类型 含义
+
+```
+success boolean 成功标记
+message String 具体信息
+code Integer 状态码
+result String(JSON) 具体数据
+timestamp Long 时间戳
+```
+
+
+
+返回参数示例：
+
+```json
+{ "success":true, "message":"success", "code":200, "result":{ "code":"000000", "msg":"成功",
+"promoProductDetailDTO":{ "productId":100057401, "salePrice":149,
+"productName":"Smartisan T恤 迪特拉姆斯", "subTitle":"", "limitNum":100,
+"productImageBig":"https://resource.smartisan.com/resource/005c65324724692f7c9ba2fc7
+738db13.png", "detail":"xxx", "productImageSmall":[ "https://resource.smartisan.com/reso
+urce/005c65324724692f7c9ba2fc7738db13.png", "https://resource.smartisan.com/resource/
+5068afef4f8866fae065d8c0d450e244.png", "https://resource.smartisan.com/resource/a8dfe
+8f52dfb15c17e2e5c504c7ae2c6.png", "https://resource.smartisan.com/resource/d6a6c06e5
+b51f0c18d8bfc45318163ea.png", "https://resource.smartisan.com/resource/46724a81b037d
+1eca31d665c223b77a1.png" ], "promoPrice":49 } }, "timestamp":1592288092856 }
+```
+
+
+
+### 2.3 秒杀下单接⼝(⽣成订单、扣减库存、⽣成商品的邮寄信息)
+
+⼊参 类型 含义
+
+```
+psId Long 秒杀场次主键id
+productId Long 商品id
+addressId Long 地址id
+tel String ⼿机号码
+streetName String 地址
+userName String ⽤户名
+```
+
+请求路径：/shopping/seckill
+是否需要携带Token：是
+请求类型：post
+请求参数示例：
+⽆
+
+出参 类型 含义
+
+```
+success boolean 成功标记
+message String 具体信息
+code Integer 状态码
+result String(JSON) 具体数据
+timestamp Long 时间戳
+```
+
+返回参数示例：
+
+```json
+{ "success":true, "message":"success", "code":200, "result":{ null },
+"timestamp":1588535951303 }
+```
+
+### 3 代码编写
+
+...
+
+
+
+
 
 
 
