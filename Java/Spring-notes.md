@@ -7108,7 +7108,28 @@ public Json addOrder(TOrderAddReq tOrderAddReq) {
 //上述方法执行后我们可以看到事务最后执行了，但实际上 事务 执行只是因为手动硬编码开启spring事务管理起了作用 而方法上的注解并没有起作用
 ```
 
+接下来再看一个例子eg：
 
+```java
+@Override
+@Transactional
+public Json addOrder(TOrderAddReq tOrderAddReq) {
+    try{
+        //增删改方法
+    } catch (Exception e) {
+
+        throw new RuntimeException();
+    }
+    //        }
+    return json;
+}
+```
+
+解释:
+
+spring的事务边界是在调用业务方法之前开始的，业务方法执行完毕之后来执行commit or rollback(spring默认取决于是否抛出runtime异常).
+如果抛出runtime exception 并在你的业务方法中没有catch到的话，事务会回滚。
+一般不需要在业务方法中catch异常，如果非要catch，在做完你想做的工作后（比如关闭文件等）一定要抛出runtime exception，否则spring会将你的操作commit,这样就会产生脏数据.所以你的catch代码是画蛇添足。
 
  # Spring 工具
 
