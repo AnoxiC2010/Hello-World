@@ -728,6 +728,222 @@ timestamp Long 时间戳
 
 # 分布式事务
 
+## 1 知识回顾
+
+### 1.1 ⽬前秒杀模型
+
+![image-20210625091357014](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625091357014.png)
+
+### 1.2 存在的问题
+
+问题：假如扣减秒杀库存成功，⽽⽣成订单失败了，那么扣减秒杀库存能回滚吗？
+如果不能，原因是什么
+改如何改进呢？
+
+
+
+## 2 传统事务回顾
+
+### 2.1 事务定义
+
+事务定义：
+是数据库操作的最⼩⼯作单元，是作为单个逻辑⼯作单元执⾏的⼀系列操作；这些操作作为⼀个整体⼀起向系统提交，要么都执⾏、要么都不执⾏
+
+
+
+### 2.2 传统事务知识点
+
+#### 2.2.1 四个特性（ACID）
+
+- 原⼦性：事务是数据库的逻辑⼯作单位，事务中包含的各操作要么都做，要么都不做
+- ⼀致性：事务执⾏的结果必须是使数据库从⼀个⼀致性状态变到另⼀个⼀致性状态。因此当数据库只包含成功事务提交的结果时，就说数据库处于⼀致性状态。如果数据库系统运⾏中发⽣故障，有些事务尚未完成就被迫中断，这些未完成事务对数据库所做的修改有⼀部分已写⼊物理数据库，这时数据库就处于⼀种不正确的状态，或者说是 不⼀致的状态。
+- 隔离性：⼀个事务的执⾏不能其它事务⼲扰。即⼀个事务内部的操作及使⽤的数据对其它并发事务是隔离的，并发执⾏的各个事务之间不能互相⼲扰。
+- 持久性：⼀个事务⼀旦提交，它对数据库中的数据的改变就应该是永久性的。接下来的其它操作或故障不应该对其执⾏结果有任何影响。
+
+
+
+#### 2.2.2 事务隔离级别
+
+- 读未提交 (Read Uncommitted)：允许脏读，也就是可能读取到其他会话中未提交事务修改的数据
+- 读已提交(Read Committed)：只能读取到已经提交的数据。Oracle等多数数据库默认都是该级别(不重复读)
+- 可重复读(Repeated Read)：在同⼀个事务内的查询都是事务开始时刻⼀致的，InnoDB默认级别。在SQL标准中，该隔离级别消除了不可重复读，但是还存在幻象读，但是innoDB解决了幻读
+- 序列化：(Serializable)：完全串⾏化的读，每次读都需要获得表级共享锁，读写相互都会阻塞
+
+
+
+#### 2.2.3 事务的传播⾏为
+
+Spring ⽀持 7 种事务传播⾏为：
+org.springframework.transaction.annotation. Propagation
+
+![image-20210625091733877](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625091733877.png)
+
+Propagation.REQUIRED 是常⽤的事务传播⾏为，如果当前没有事务，就新建⼀个事务，如果已经存
+在⼀个事务中，加⼊到这个事务中。其它传播⾏为⼤家可另查阅。
+
+
+
+#### 2.2.4 传统事务引⽤场景举例
+
+![image-20210625091847813](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625091847813.png)
+
+![image-20210625091908377](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625091908377.png)
+
+传统事务控制基础：必须得保证是同⼀个连接，通过jdbc操作数据源的话保证同⼀个connection 对象
+
+
+
+### 2.3 传统事务问题 
+
+在分布式架构下，随着业务量的扩⼤，我们对业务进⾏拆分，数据库也会相应的进⾏分库分⽚，因为有 着⽹络的不确定性，那么我们分布式环境下应该如何保证事务的ACID？
+
+![image-20210625092008683](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625092008683.png)
+
+当单个数据库的性能产⽣瓶颈的时候，我们需要对数据库分库或者是分区，那么这个时候数据库就处于不同的服务器上了，因此基于单个数据库所控制的传统型事务已经不能在适应这种情况了，故我们需要使⽤分布式事务来管理这种情况
+
+
+
+## 3 分布式事务
+
+### 3.1 理论基础-CAP理论
+
+#### 3.1.1 概念
+
+1998年，加州⼤学的计算机科学家 Eric Brewer 提出，分布式系统有三个指标。
+
+- ⼀致性：Consistency
+  集群中各个结点的数据总是⼀致的，因此你可以向任意结点读写数据，并总是能得到相同的数据
+- 可⽤性：Availability
+  可⽤性表示你总是能够访问集群（读/写），即使集群中的某个结点宕机了
+- 分区容忍性：Partition toleranc
+  容忍集群持续运⾏，即使他们中存在分区（两个分区中的结点都是好的，只是分区之间不能通信)
+
+![image-20210625092201961](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625092201961.png)
+
+
+
+结论：分布式环境下，CAP不能同时成⽴
+
+
+
+#### 3.1.2 模型解释
+
+![image-20210625092255763](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625092255763.png)
+
+1. 如上图所示，假如DB1和DB2都能够正常被访问，只是他们之间不能够互相通信，也就是他们之间不能够同步数据，这个时候我们容忍集群继续运⾏，那么我们说服务具有分区容忍性
+
+2. 那么现在在分区容忍性的前提之下：（DB1和DB2不能通⾏，服务继续运⾏）
+
+   现在向DB1中发送⼀条X=2的更新请求，Datebase1把X值更新为2，但是需要去同步到Database2，由于DB1和DB2不能够通⾏，所以同步会失败
+   A, 假如该条请求返回更新成功，那么会导致DB1和DB2数据不⼀致的情况出现，违背了⼀致性
+   B, 假如该条请求返回更新失败，那么我们认为DB1不可⽤了，违背了可⽤性
+
+3. 分布式系统在什么时候存在不满⾜分区容忍性的情况呢？
+容忍集群持续运⾏，即使他们中存在分区 (两个分区中的结点都是好的，只是分区之间不能通信)即P不存在，意思就是集群不能容忍分区的出现，也就是不能容忍两个节点之间不能通信的情况，⽽分布式环境下两个节点不能通信的情况是不存在的，因为节点之间的通信都是通过⽹络传输，⽹络是不“靠谱”的。
+
+
+
+### 3.2 解决⽅案探索
+
+#### 3.2.1 刚性事务（强⼀致性）
+
+定义：遵循ACID原则，强⼀致性。
+代表：⼆阶段提交（2PC）
+⼆阶段提交协议是协调所有分布式原⼦事务参与者，并决定提交或取消（回滚）的分布式算法。
+
+![image-20210625092553504](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625092553504.png)
+
+引⼊了事务管理器
+1. 预备阶段
+在请求阶段，协调者将通知事务参与者准备提交或取消事务，然后进⼊表决过程。 在表决过程中，参与者将告知协调者⾃⼰的决策：同意（事务参与者本地作业执⾏成功）或取消（本地作业执⾏故障）。
+
+2. 提交阶段
+在该阶段，协调者将基于第⼀个阶段的投票结果进⾏决策：提交或取消。当且仅当所有的参与者同意提交事务协调者才通知所有的参与者提交事务，否则协调者将通知所有的参与者取消事务。参与者在接收到协调者发来的消息后将执⾏响应的操作。
+
+存在的问题：
+同步阻塞问题：在执⾏的过程中，所有参与的节点都是事务型阻塞的，当参与者占有公共资源时，其他第三⽅节点访问公共资源不得不处于阻塞状态
+不能解决数据不⼀致的问题
+
+
+
+#### 3.2.2 柔性事务（最终⼀致性）
+
+**定义**
+遵循BASE理论，最终⼀致性；与刚性事务不同，柔性事务允许⼀定时间内，不同节点的数据不⼀致，但
+要求最终⼀致。
+
+##### **Base理论**
+
+- Basically Avaiable，基本可⽤
+- Soft state：软状态
+- Eventually consistent：最终⼀致性
+  既然⽆法做到强⼀致性，但每个应⽤都可以根据⾃身的业务特点，采⽤适当的⽅式来使系统达到最终⼀致性。
+
+##### **TCC事务**
+
+全称：Try-Confirm-Cancel（可以理解为sql中的Lock、Commit、Rollback）
+TCC是服务化的⼆阶段编程模型：
+其 Try、Confirm、Cancel 3 个⽅法均由业务编码实现：Try 操作作为⼀阶段，负责资源的检查和预留。
+Confirm 操作作为⼆阶段提交操作，执⾏真正的业务。Cancel 是预留资源的取消。
+
+**事务流程**
+
+![image-20210625095818498](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625095818498.png)
+
+![image-20210625095836729](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625095836729.png)
+
+- Try阶段：完成所有的业务检查，预留资源
+- Confirm阶段：更改状态操作
+- Cancel阶段：当Try阶段存在服务执⾏失败时，则进⼊Cancel阶段
+
+![image-20210625095905497](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625095905497.png)
+
+
+
+缺点：TCC的Try、Confirm、Cancel操作功能按照具体业务来实现，业务耦合度⾼，开发成本⾼
+
+##### 本地消息表
+
+本地消息表这个⽅案最初是ebay提出的分布式事务完整⽅案
+
+![image-20210625100033142](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625100033142.png)
+
+![image-20210625100045981](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625100045981.png)
+
+##### MQ事务消息
+
+![image-20210625100109382](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Microservice-project-notes.assets\image-20210625100109382.png)
+
+1. 发送事务型消息，该消息暂时不可被消费
+2. 消息队列返回发送消息成功状态
+3. 本地事务收到消息发送成功状态，然后开始执⾏本地事务
+  - 假如本地事务执⾏成功，MQ消息发送⽅则会告诉MQServer表示这个消息可以被消费了，MQ会投递这个消息到MQ订阅⽅
+  - 假如本地事务执⾏失败，MQ消息发送⽅则会告诉MQServer需要丢弃之前发送的消息
+4. 假如MQServer⼀直没有收到MQ发送⽅的消息确认通知，会回查本地事务，查看本地事务是否执⾏成功，假如本地事务执⾏成功，那么会发送消息，假如本地事务执⾏失败，那么会丢弃事务，假如本地事务还在初始态，那么会过⼀会再来询问
+5. 消息在MQ订阅⽅的消息消费成功由MQ来保证
+
+
+
+**如何保证？（重要）**
+
+- MQ假如投递消息到MQ订阅⽅失败了，或者MQ订阅⽅消费消息失败了，那么MQ会把该消息丢⼊重试队列中，会重试发送该消息，默认16次，直到消息被消费成功为⽌
+- 假如在16次之后该消息还没有被消费成功，那么MQ会再次把该消息丢⼊MQ死信队列中，对于死信队列的消息，我们需要⼿动去⼲预，让他消费成功（例如从后台管理系统⼿动（或者是定时任务）把死信队列中的消息拿出来，然后⼿动去执⾏操作，执⾏完成之后把消息从死信队列中删除掉）
+
+
+
+#### 3.3.3 其他解决⽅案
+
+**阿⾥GTS**
+成熟的⽅案，⼀站式解决，需要付费
+参考链接：https://helpcdn.aliyun.com/product/48444.html
+
+**基于GTS的免费社区版本，SEATA**
+参考链接：https://github.com/seata/seata
+
+
+
+## 4 消息型事务代码实现
+
 
 
 
@@ -744,7 +960,7 @@ timestamp Long 时间戳
 
 
 
-密码散列
+## 密码散列
 
 通知+注解 比 在各方法体中分别使用散列工具类风格和功能更好。
 
@@ -770,6 +986,10 @@ Md5有各种静态工具类，但是在每个方法分别使用工具类，不�
 ```
 
 
+
+## 热点商品信息是用redis
+
+## 秒杀延迟mq返还秒杀库存
 
 # BUG
 
@@ -835,6 +1055,50 @@ mall-parent、mall-commons中的、各个service模块层的api
 
 
 
+## 网关层不能debug启动，只能run
+
+断点问题，取消断点
+
+
+
+
+
+## org.apache.rocketmq.client.exception.MQClientException: No name server address, please set it.
+
+神奇的bug
+
+代码里setNamesrvAddr("127.0.0.1:9876")是写死的
+
+订单模块和秒杀模块的producer都没有问题
+
+用户模块报了这个错误
+
+```java
+@Test
+    public void sendMail() throws MQClientException, RemotingException, InterruptedException, MQBrokerException {
+
+        //producer.sendEmail("1234", "617817565@qq.com", "zs");
+
+        DefaultMQProducer producer = new DefaultMQProducer("test_send_register");
+
+        producer.setNamesrvAddr("127.0.0.1:9876");
+        producer.start();
+
+//        try {
+//            System.in.read();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        Message test_register = new Message("test_register", "aliang".getBytes());
+
+        SendResult send = producer.send(test_register);
+        System.out.println(send);
+    }
+```
+
+在springboot的单元测试中也报了这个错误。
+
+邪门的是把这个测试方法改为main方法执行就能成功。
 
 
 # 其他
