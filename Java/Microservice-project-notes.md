@@ -946,7 +946,11 @@ Confirm 操作作为⼆阶段提交操作，执⾏真正的业务。Cancel 是�
 
 
 
+# 限流
 
+Guava工具包，
+
+dubbo底层使用curator客户端和zookeeper进行通信，在curator的依赖中已经引入了guava的依赖，不需要重复导入
 
 
 
@@ -1138,3 +1142,10 @@ https://zhuanlan.zhihu.com/p/145669970
 本项目的代码风格极为模板化，在service层try...catch了所有异常，异常信息被包裹在了return的模板响应类中。导致了使用springboot的事务极为不便，@Transactional注解是无效的。
 
 如果需要事务环境，要么硬编码回滚事务，要么把事务关联的几个数据库执行语句抽取在一个public方法中标记@Transactional注解然后通过ApplicationContextAware接口获取applicationContex，从applicationContex中获取本类的spring容器代理对象引用并使用，直接在本类中调用是无效的。
+
+
+
+# 关于这个微服务项目的一些说道
+
+
+
