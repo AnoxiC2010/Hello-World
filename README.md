@@ -1,4 +1,4 @@
 # Hello-World
-The initial repository and the notes of my programming learning.
+The initial repository and the notes of my programming practicing.
 
-纪念仓库，仅作个人备忘。
+编程笔记，个人备忘。
