@@ -291,7 +291,7 @@ ROCKETMQ_HOME
 启动
 
 1. ⾸先启动注册中⼼nameserver ，默认启动在9876端⼝，打开cmd命令窗⼝，进⼊bin⽬录，执⾏
-  命令：
+    命令：
 
   ```cmd
   start mqnamesrv.cmd
@@ -308,7 +308,7 @@ ROCKETMQ_HOME
   ![image-20210622084148534](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\RocketMQ-notes.assets\image-20210622084148534.png)
 
 2. 启动RocketMQ服务，也就是broker
-  进⼊bin⽬录，执⾏命令：
+    进⼊bin⽬录，执⾏命令：
 
   Windows
 
@@ -542,3 +542,21 @@ sh ./mqadmin updateTopic -n localhost:9876 -b localhost:10911 -t topicName
 ```
 
 然后重新启动⼀下程序即可。
+
+
+
+# 运维图形界面
+
+
+
+# 问题
+
+## group name 限制
+
+org.apache.rocketmq.client.exception.MQClientException: the specified group[promo:order:consumer] contains illegal characters, allowing only ^[%|a-zA-Z0-9_-]+$
+
+## topic name 限制
+
+org.apache.rocketmq.client.exception.MQClientException: The specified topic[promo:order:create] contains illegal characters, allowing only ^[%|a-zA-Z0-9_-]+$
+For more information, please visit the url, http://rocketmq.apache.org/docs/faq/
+
