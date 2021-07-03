@@ -1862,3 +1862,14 @@ show index from tableName;
 
 ```
 
+
+
+# 更多
+
+mysql获取随机数据的方法
+
+[mysql获取随机数据的方法_qianfeng_dashuju的博客-CSDN博客_mysql获取随机数据](https://blog.csdn.net/qianfeng_dashuju/article/details/88422055)
+
+`order by rand()`
+
+数据多了极慢，随机性非常好，适合非常小数据量的情况。
