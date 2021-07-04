@@ -12228,6 +12228,10 @@ public class MyStackLinked<T> {
      
 4. 编译器利用栈实现表达式求值
 
+   [一天一道笔试题之中缀、后缀转换_Mrhuang的博客-CSDN博客](https://blog.csdn.net/Mrhuangjiaoshou/article/details/79941136)
+
+   [中缀表达式转后缀表达式(Java代码实现) - 听风1108 - 博客园 (cnblogs.com)](https://www.cnblogs.com/menglong1108/p/11619896.html)
+
    ```
    1, 遇到操作数--> 输出
    2, 遇到右括号 
