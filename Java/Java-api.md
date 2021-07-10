@@ -145,3 +145,19 @@ public class Main {
 
 # AtomicInteger
 
+
+
+# String
+
+public static String join(CharSequence delimiter,
+            Iterable<? extends CharSequence> elements)
+
+```java
+public static void main(String[] args) {
+    List<String> a = new ArrayList<>();
+    a.add("hello");
+    a.add("world");
+    String join = String.join(" ", a);
+    System.out.println(join);
+}
+```
