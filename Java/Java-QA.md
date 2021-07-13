@@ -24,7 +24,39 @@ put方法源码
 
 [(2条消息) Java线程池七个参数详解_IT小跟班-CSDN博客_线程池的七个参数](https://blog.csdn.net/ye17186/article/details/89467919)
 
+## ReentrantLock
 
+[ReentrantLock(重入锁)功能详解和应用演示 - takumiCX - 博客园 (cnblogs.com)](https://www.cnblogs.com/takumicx/p/9338983.html)
+
+ReentrantLock是可重入的独占锁。比起synchronized功能更加丰富，支持公平锁实现，支持中断响应以及限时等待等等。可以配合一个或多个Condition条件方便的实现等待通知机制。
+
+
+
+# 设计模式
+
+## 单例
+
+双重校验锁实现单例模式
+
+```java
+public class Singleton {
+    private volatile static Singleton uniqueInstance;
+    private Singleton() {
+    }
+    public static Singleton getUniqueInstance() {
+        //先判断对象是否已经实例过，没有实例化过才进⼊加锁代码
+        if (uniqueInstance == null) {
+            //类对象加锁
+            synchronized (Singleton.class) {
+                if (uniqueInstance == null) {
+                    uniqueInstance = new Singleton();
+                }
+            }
+        }
+        return uniqueInstance;
+    }
+}
+```
 
 
 
@@ -41,3 +73,4 @@ https://blog.csdn.net/m0_38109046/article/details/89449305
 循环依赖
 
 https://www.zhihu.com/question/438247718/answer/1730527725
+
