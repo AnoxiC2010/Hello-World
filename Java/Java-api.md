@@ -161,3 +161,20 @@ public static void main(String[] args) {
     System.out.println(join);
 }
 ```
+
+
+
+# Thread
+
+Thread.activeCount()
+
+等待上面几个线程执行完在继续主线程。
+
+刷题的时候用到
+
+```java
+while (Thread.activeCount() > 2) {
+    Thread.yield();
+}
+```
+
