@@ -100,13 +100,37 @@ public class Singleton {
 }
 ```
 
+# IO
 
+nio	bio	多路复用器	epoll	c10k→资源&性能
 
-# NIO
+int 0x80 中断指令
+
+linux命令 `strace`、`jps`、`cd /proc/`
+
+`strace`命令追踪字节码文件执行过程中对内核的调用
+
+文件描述符
+
+socket()是2类系统调用
+
+java中net Thread调用了内核的clone，产生了轻量级的进程，克隆的过程中有些文件和内存、堆是共享的
+
+bio模型
+
+![image-20210717233904479](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-QA.assets\image-20210717233904479.png)
+
+fcntl系统调用设置非阻塞
+
+## NIO
 
 Java面试常考的 BIO，NIO，AIO 总结
 
 https://blog.csdn.net/m0_38109046/article/details/89449305
+
+
+
+epoll
 
 
 
@@ -496,3 +520,43 @@ jmeter聚合报告中，Throughput是用来衡量请求的吞吐量，也就是t
 QPS是Query Per Second，是数据库中的概念，每秒执行条数（查询），被引申到压测中来了，但是不包括插入、更新、删除操作，所以不建议用qps来描述系统整体的性能；
 
 建议用tps，这个t，你可以随意的定义，可以是一个接口，也可以是一个业务流程等等。
+
+
+
+# 项目
+
+## 单点登录
+
+这个不够好
+
+![image-20210717163811072](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-QA.assets\image-20210717163811072.png)
+
+
+
+我自己想的：
+
+基于JWT
+
+网关登录API→用户模块核对数据库用户信息→一致则登录成功→把username和id放到JWT的Payloader中返回给网关→网关把JWT以名为access_token的cookie发给客户端
+
+
+
+access_token的过期和续期策略
+
+1.不使用redis和数据库，只用JWT。登录本来只放了username和id，在Payloader中增加两个字段loginTime和expireTime。
+
+2.请求经过拦截器会取出{username, id, loginTime, expireTime}, 到期时间= 登录时间+有效期（validPeriod）
+
+2.1如果 currentTime- expireTime > 0，说明超时没有活动（比如半小时都没点击过）JWT过期，拒绝访问需要登陆的资源 + 把名为access_token的cookie的MaxAge设为0让客户端删除cookie。
+
+2.2如果expireTime  - currentTime <= timeout(超时无活动时间比如30分钟)，说明用户在临界的30分钟内点击了，则重新发放JWT（还是以cookie形式），这个JWT里的信息loginTime不变，expireTime = currentTime + validPeriod，相当于用户在超时JWT的token失效边缘点了下鼠标就算重新登录, 时间会正好延长一个我们设定的 有效期validPeriod
+
+
+
+这样即使在临界时间（比如30分钟内）即使最后一秒用户点击了网页，有效期会延长一个新的周期。而且只依靠JWT本身，逻辑上只加了一个当前时间和expireTime的算数运算，效率很高。比如有效期validPeriod有n小时，更新JWT token的间隔为 （n小时-30分钟）-n小时，频率很低。30分钟或我们设定的多少分钟没动过鼠标点击就让他失效即可
+
+
+
+这种方式还避免了用户用多个客户端登录的问题，如果放一份登录信息登录时间等放在redis里，那么多个客户端登录会导致信息覆盖。
+
+而且不用查询redis
