@@ -54,6 +54,8 @@ put方法源码
 
 ②AbortPolicy
 
+（默认拒绝策略）
+
 该策略下，直接丢弃任务，并抛出RejectedExecutionException异常。
 
 ③DiscardPolicy
@@ -68,7 +70,9 @@ put方法源码
 
 ## 锁
 
+synchronized和java.util.concurrent.locks.Lock的异同？ 　
 
+　　
 
 ## ReentrantLock
 
