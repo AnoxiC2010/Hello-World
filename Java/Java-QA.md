@@ -82,6 +82,18 @@ ReentrantLock是可重入的独占锁。比起synchronized功能更加丰富，�
 
 
 
+## synchronized以及四种锁状态的升级
+
+https://blog.csdn.net/XinTeng2012/article/details/106538320
+
+
+
+[(2条消息) java 重量级锁_轻量级锁和重量级锁的区别分别有哪些？java锁机制教程_moodlab的博客-CSDN博客](https://blog.csdn.net/weixin_32461163/article/details/114231844)
+
+![image-20210722120816529](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-QA.assets\image-20210722120816529.png)
+
+
+
 # 设计模式
 
 ## 单例
@@ -122,7 +134,7 @@ linux命令 `strace`、`jps`、`cd /proc/`
 
 socket()是2类系统调用
 
-java中net Thread调用了内核的clone，产生了轻量级的进程，克隆的过程中有些文件和内存、堆是共享的
+java中new Thread调用了内核的clone，产生了轻量级的进程，克隆的过程中有些文件和内存、堆是共享的
 
 bio模型
 
@@ -141,6 +153,8 @@ fcntl系统调用设置非阻塞
 ![image-20210718162912131](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-QA.assets\image-20210718162912131.png)
 
 ![image-20210718162513026](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-QA.assets\image-20210718162513026.png)
+
+![image-20210722151921325](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Java-QA.assets\image-20210722151921325.png)
 
 从上面，尤其是看代码，能发现nio其实也是同步的，one by one， 遍历
 
@@ -259,6 +273,68 @@ ABA问题带来的危害：
 分库：使用中间件 mycat sharing-jdbc
 
 分表：单表业务量过大，可以采用按业务分表或者是按时间分表等手段来切分
+
+
+
+## SQL优化
+
+1、查询SQL尽量不要使用select *，而是select具体字段。
+
+2、如果知道查询结果只有一条或者只要最大/最小一条记录，建议用limit 1
+
+3、应尽量避免在where子句中使用or来连接条件
+
+4、优化limit分页
+
+5、优化你的like语句
+
+6、使用where条件限定要查询的数据，避免返回多余的行
+
+7、尽量避免在索引列上使用mysql的内置函数
+
+8、应尽量避免在 where 子句中对字段进行表达式操作，这将导致系统放弃使用索引而进行全表扫
+
+9、Inner join 、left join、right join，优先使用Inner join，如果是left join，左边表结果尽量小
+
+10、应尽量避免在 where 子句中使用!=或<>操作符，否则将引擎放弃使用索引而进行全表扫描。
+
+11、使用联合索引时，注意索引列的顺序，一般遵循最左匹配原则。
+
+12、对查询进行优化，应考虑在 where 及 order by 涉及的列上建立索引，尽量避免全表扫描。
+
+13、如果插入数据过多，考虑批量插入。
+
+14、在适当的时候，使用覆盖索引。
+
+15、慎用distinct关键字
+
+16、删除冗余和重复索引
+
+17、如果数据量较大，优化你的修改/删除语句。
+
+18、where子句中考虑使用默认值代替null。
+
+19、不要有超过5个以上的表连接
+
+20、exist & in的合理利用
+
+21、尽量用 union all 替换 union
+
+23、尽量使用数字型字段，若只含数值信息的字段尽量不要设计为字符型
+
+24、索引不适合建在有大量重复数据的字段上，如性别这类型数据库字段。
+
+25、尽量避免向客户端返回过多数据量。
+
+27、尽可能使用varchar/nvarchar 代替 char/nchar。
+
+28、为了提高group by 语句的效率，可以在执行到该语句前，把不需要的记录过滤掉。
+
+29、如何字段类型是字符串，where时一定用引号括起来，否则索引失效
+
+30、使用explain 分析你SQL的计划
+
+
 
 
 
@@ -647,11 +723,11 @@ access_token的过期和续期策略
 
 ### 限流
 
+redis缓存空库存标记，拦截无效的数据库压力。
+
 使用令牌桶算法，通过限制令牌的生成速率，进行限流。
 
 线程池，队列泄洪。
-
-redis缓存空库存标记，拦截无效的数据库压力。
 
 ### 防刷
 
