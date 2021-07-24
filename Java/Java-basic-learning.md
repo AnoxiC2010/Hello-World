@@ -8357,10 +8357,9 @@ Core Java中有这样一句话：”没有任何语言方面的需求要求一�
                  while(!Thread.currentThread().isInterrupted()&& more work to do){    
                         // do more work;    
                  }    
-            }catch(InterruptedException e){    
+            } catch (InterruptedException e){    
                         // thread was interrupted during sleep or wait    
-            }    
-            finally{    
+            } finally {    
                        // cleanup, if required    
             }    
     } 
