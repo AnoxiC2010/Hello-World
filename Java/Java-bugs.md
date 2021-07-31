@@ -155,6 +155,28 @@ public BaseRespVo login(@Valid LoginUserBO bo, BindingResult bindingResult, Http
 
 
 
+## error : testWhileIdle is true, validationQuery not set
+
+Spring Boot使用 druid数据源
+
+[Error: testWhileIdle is true, validationQuery not set 使用Druid连接池报错处理 - 今天有你便安好 - 博客园 (cnblogs.com)](https://www.cnblogs.com/miniSimple/p/13259612.html)
+
+在application.yml/application.properties 中添加 这两行配置：
+
+```yaml
+spring
+  datasource:
+    ...
+    druid:
+      test-while-idle: true
+      validation-query: select 1
+```
+
+配置解释:
+validationQuery = "SELECT 1"  验证连接是否可用，使用的SQL语句
+
+testWhileIdle = "true"      指明连接是否被空闲连接回收器(如果有)进行检验.如果检测失败,则连接将被从池中去除.
+
 # Java的诡异运行结果
 
 当代码运行结果和自我预测的结果不一致时，一定是我的认知浅薄。
