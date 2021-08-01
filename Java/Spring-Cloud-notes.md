@@ -1,4 +1,4 @@
-# Spring Cloud notes
+Spring Cloud notes
 
 使用版本
 
@@ -915,11 +915,257 @@ EurekaClient端cloud-consumer-order80
 
 ### bug
 
+yml文件缩进和空格不正确的小bug注意
+
+### Eureka自我保护
+
 ![image-20210801165750705](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801165750705.png)
 
 说是Eureka的自我保护机制，
 
 启动payment服务入驻时我没由遇到这个问题，再启动order模块入驻时遇到了
+
+
+
+## 集群Eureka构建步骤
+
+### Eureka集群原理说明
+
+<img src="C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801173401545.png" alt="image-20210801173401545"  />
+
+![image-20210801173857482](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801173857482.png)
+
+原理：互相注册，相互守望，对外暴漏出一个整体，多个同理
+
+![image-20210801174313166](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801174313166.png)
+
+### EurekaServer集群环境构建步骤
+
+- 参考cloud-eureka-server7001
+
+- 新建cloud-eureka-server7002
+
+- 改POM
+
+- 修改映射配置
+
+  win10修改C:\Windows\System32\drivers\etc下的hosts文件
+
+  添加映射配置
+
+  ```
+  127.0.0.1   eureka7001.com
+  127.0.0.1   eureka7002.com
+  ```
+
+  因为需要再yml给eureka的server配置不同的hostname但是测试环境只有一台物理机笔记本电脑，以此模拟多台机器
+
+- 写YML(以前单机)
+
+  ```yaml
+  server:
+    port: 7001
+  
+  eureka:
+    instance:
+      # eureka服务端的实例名称
+      hostname: eureka7001.com
+    client:
+      # false表示不向注册中心注册自己
+      register-with-eureka: false
+      # false表示自己端就是注册中心，我的职责就是维护服务实例
+      fetch-registry: false
+      service-url:
+        # 设置与Eureka Server交互的地址查询服务和注册服务都需要依赖这个地址
+        defaultZone: http://eureka7002.com:7002/eureka/
+  ```
+
+  ```yaml
+  server:
+    port: 7002
+  
+  eureka:
+    instance:
+      # eureka服务端的实例名称
+      hostname: eureka7002.com
+    client:
+      # false表示不向注册中心注册自己
+      register-with-eureka: false
+      # false表示自己端就是注册中心，我的职责就是维护服务实例
+      fetch-registry: false
+      service-url:
+        # 设置与Eureka Server交互的地址查询服务和注册服务都需要依赖这个地址
+        defaultZone: http://eureka7001:7001/eureka/
+  ```
+
+  
+
+- 主启动
+
+  ```java
+  @SpringBootApplication
+  @EnableEurekaServer
+  public class EurekaMain7002 {
+      public static void main(String[] args) {
+          SpringApplication.run(EurekaMain7002.class, args);
+      }
+  }
+  ```
+
+- 测试
+
+  ![image-20210801204344512](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801204344512.png)
+
+  ![image-20210801204426415](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801204426415.png)
+
+  集群搭建成功，用配置的hostname和端口访问呢，也可以用localhost和端口访问，发现互相指向
+
+### 将支付服务801微服务发布到上面2台Eureka集群配置中
+
+- YML
+
+  修改
+
+  ```yaml
+  eureka:
+    client:
+      register-with-eureka: true
+      fetch-registry: true
+      service-url:
+  #      defaultZone: http://localhost:7001/eureka  # 单机版
+        defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka # 集群版
+  ```
+
+### 将订单服务80微服务发布到上面2台Eureka集群配置中
+
+- YML
+
+  同上
+
+### 测试01
+
+- 先启动EurekaServer，7001/7002服务
+- 再启动服务提供者provider， 8001
+- 在启动消费者， 80
+- http://localhost/consumer/payment/get/31
+
+![image-20210801210813082](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801210813082.png)
+
+eureka7001.com:7001同理。只是controller层url写死的还测不出集群效果
+
+
+
+## 支付服务提供者8001集群环境构建
+
+- 参考cloud-provider-payment8001
+
+- 新建cloud-provider-payment8002
+
+- 改POM
+
+  copy
+
+- 写YML
+
+  只改端口号
+
+- 主启动
+
+  copy 改类名
+
+- 业务类
+
+  copy
+
+- 修改8001/8002的Controller
+
+  ```java
+  @Slf4j
+  @RestController
+  public class PayentController {
+      @Resource
+      private PaymentService paymentService;
+      @Value("${server.port}")//添加端口打印，用于测试
+      private String serverPort;
+  
+      @PostMapping("payment/create")
+      public CommenResult<Payment> create(@RequestBody Payment payment) {
+          int affectedRows = paymentService.create(payment);
+          log.info("******插入支付数据：{}, 端口:{}", payment, serverPort);
+          if (affectedRows > 0) {
+              return new CommenResult<Payment>(200, "插入数据库成功,serverPort=" + serverPort);
+          }
+          return new CommenResult(444, "插入数据库失败,serverPort=" + serverPort);
+      }
+      @GetMapping("payment/get/{id}")
+      public CommenResult getPaymentById(@PathVariable("id") Long id) {
+          Payment payment = paymentService.getPaymentById(id);
+          log.info("******查询支付记录 id={}, 端口：{}", id, serverPort);
+          if (payment != null) {
+              return new CommenResult<Payment>(200, "查询成功,serverPort=" + serverPort, payment);
+          }
+          return new CommenResult(444, "查询失败，不存在该记录，id=" + id + ", serverPort=" + serverPort, null);
+      }
+  }
+  ```
+
+配置好集群之后, eureka7002.com:7002同
+
+![image-20210801214418120](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801214418120.png)
+
+### 负载均衡
+
+以上由于再order服务里把调用服务的url写死了，所以测试指挥访问8001端口的payment服务
+
+- 订单服务访问地址不能写死
+
+  修改order模块controller
+
+  ```java
+  @Slf4j
+  @RestController
+  public class OrderController {
+  //    private static final String PAYMENT_URL = "http://localhost:8001";
+      //通过再eureka上注册过的微服务名称调用
+      private static final String PAYMENT_URL = "http://CLOUD-PAYMENT-SERVICE";
+  
+      @Resource
+      private RestTemplate restTemplate;
+      ...
+  }
+  ```
+
+  修改完调用服务报错：Caused by: java.net.UnknownHostException: CLOUD-PAYMENT-SERVICE
+
+  原因：没有加@LoadBalance注解的RestTemplate只能通过ip+端口调用，通过服务名称调用需要添加@LoadBanlance注解即使只有一个服务
+
+- 使用@LoadBalanced注解赋予RestTemplate负载均衡的能力
+
+  ```java
+  @Configuration
+  public class ApplicationContextConfig {
+  
+      @Bean
+      @LoadBalanced//赋予RestTemplate负载均衡的能力，默认轮询
+      public RestTemplate getRestTemplate() {
+          return new RestTemplate();
+      }
+  }
+  ```
+
+  这样RestTemplate才能通过服务名远程调用
+
+- ApplicationContextBean
+
+  ribbon的负载均衡功能
+
+### 测试02
+
+- 先启动EurekaServer， 7001/7002服务
+- 在启动服务提供者provider, 8001/8002服务
+- http://localhost/consumet/payment/get/1
+- 结果 → 负载均衡效果达到，8001/8002端口的服务交替被调用
+- Ribbon和Eureka整合后Consumer可以直接掉用服务而不用再关心地址和端口号，且该服务还有负载均衡功能
 
 # 热部署Devtools
 
