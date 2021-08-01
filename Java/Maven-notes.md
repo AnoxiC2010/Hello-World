@@ -783,5 +783,30 @@ cmd 创建maven项目生成的pom.xml
 
 
 
+# maven标签
+
+## dependencyManagement
+
+Maven使用dependencyManagement元素来提供了一种管理依赖版本号的方式。
+
+通常会在一个组织或者项目的最顶层的父POM中看到dependencyManagement元素。
+
+使用pom.xml中的dependencyManagement元素能让所有在子项目中引用一个依赖而不用显示的列出版本号。
+
+Maven会沿着父子层次向上走，知道找到一个拥有dependencyManagenent元素的项目，然后它就会使用这个dependencyManagement元素中指定的版本号。
 
 
+
+dependencyManagement里只是声明依赖，并不实现引入，因此子项目需要显示的声明需要用的依赖。
+
+如果不在子项目中声明依赖，是不会从父项目中继承下来的；只有再子项目中写了该依赖项，并且没有指定具体版本才会从父项目中继承该项，并且version和scope都读取自父pom;
+
+如果子项目中指定了版本号，那么会使用子项目中指定的jar版本。
+
+
+
+## maven跳过单元测试
+
+idea右侧maven插件，勾选Toggle ‘Skip Tests‘ Mode 蓝色小闪电
+
+ 
