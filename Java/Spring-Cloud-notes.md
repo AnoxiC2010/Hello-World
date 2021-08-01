@@ -1055,7 +1055,7 @@ eureka7001.com:7001同理。只是controller层url写死的还测不出集群效
 
 
 
-## 支付服务提供者8001集群环境构建
+### 支付服务提供者8001集群环境构建
 
 - 参考cloud-provider-payment8001
 
@@ -1166,6 +1166,150 @@ eureka7001.com:7001同理。只是controller层url写死的还测不出集群效
 - http://localhost/consumet/payment/get/1
 - 结果 → 负载均衡效果达到，8001/8002端口的服务交替被调用
 - Ribbon和Eureka整合后Consumer可以直接掉用服务而不用再关心地址和端口号，且该服务还有负载均衡功能
+
+## actuator微服务信息完善
+
+### 主机名称：服务名称修改
+
+#### 当前问题
+
+![image-20210801224653200](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801224653200.png)
+
+含有主机名称
+
+鼠标放在UP绿字链接上左下角没有显示ip
+
+#### 修改cloud-provider-payment8001
+
+YML
+
+- 修改部分
+
+  添加
+
+  ```yaml
+  eureka:
+      instance:
+      # 访问路径显示实例id
+      instance-id: payment8001
+      # 访问路径可以显示IP地址
+      prefer-ip-address: true
+  ```
+
+  
+
+- 完整
+
+  ```yaml
+  eureka:
+    client:
+      # 表示是否将自己注册进EurekaServer默认为true
+      register-with-eureka: true
+      # 是否从EurekaServer抓取已有的注册信息，默认为true。单节点无所谓，集群必须设置为true才能配合ribbon使用负载均衡
+      fetch-registry: true
+      service-url:
+  #      defaultZone: http://localhost:7001/eureka  # 单机版
+        defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka # 集群版
+    instance:
+      # 访问路径显示实例id
+      instance-id: payment8001
+      # 访问路径可以显示IP地址
+      prefer-ip-address: true
+  ```
+
+  
+
+#### 修改之后
+
+![image-20210801230919307](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801230919307.png)
+
+8001/8002修改后不含有主机名
+
+显示YML中配置的实例id，鼠标指向实例链接左下角会显示ip+端口号
+
+健康检查：
+
+![image-20210801230206727](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801230206727.png)
+
+### 访问信息有IP信息提示
+
+如上
+
+通过POM如下和YML如上
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+完成主机名服务名称的修改和访问信息有ip地址的提示
+
+## 服务发现Discovery
+
+- 对于注册进eureka里面的微服务，可以通过服务发现来获得该服务的信息
+
+- 修改cloud-provider-payment8001的Controller
+
+  ```java
+  @Slf4j
+  @RestController
+  public class PayentController {
+      @Resource
+      private PaymentService paymentService;
+      @Value("${server.port}")//添加端口打印，用于测试
+      private String serverPort;
+      @Resource
+      private DiscoveryClient discoveryClient;
+  	...
+      @GetMapping("payment/discovery")
+      public Object discovery() {
+          List<String> services = discoveryClient.getServices();
+          for (String service : services) {
+              log.info("*****service : " + service);
+          }
+          List<ServiceInstance> instances = discoveryClient.getInstances("CLOUD-PAYMENT-SERVICE");
+          for (ServiceInstance instance : instances) {
+              log.info(instance.getServiceId() + "\t" + instance.getHost() + "\t" + instance.getPort() + "\t" + instance.getUri());
+          }
+          return discoveryClient;
+      }
+  }
+  ```
+
+  
+
+- 8001主启动类
+
+  添加@EnableDiscoveryClient
+
+  ```java
+  @SpringBootApplication
+  @EnableEurekaClient//只是eureka
+  @EnableDiscoveryClient//不只是eureka可以用
+  public class PaymentMain8001 {
+      public static void main(String[] args) {
+          SpringApplication.run(PaymentMain8001.class, args);
+      }
+  }
+  ```
+
+- 自测
+
+  先启动EurekaServer
+
+  在启动8001主启动类
+
+  http://localhost:8001/payment/discovery
+
+  ![image-20210801234537075](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801234537075.png)
+
+  ![image-20210801234603168](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801234603168.png)
 
 # 热部署Devtools
 
