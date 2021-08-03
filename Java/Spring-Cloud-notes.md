@@ -636,7 +636,9 @@ maven跳过单元测试
 
 # Eureka服务注册与发现
 
-虽然Eureka已经不更新了，但是很多Spring Cloud老项目还在使用
+虽然Eureka已经停更，但是很多Spring Cloud老项目还在使用
+
+[Home · Netflix/eureka Wiki (github.com)](https://github.com/Netflix/eureka/wiki)
 
 ![image-20210801144809422](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801144809422.png)
 
@@ -976,6 +978,7 @@ yml文件缩进和空格不正确的小bug注意
       # false表示自己端就是注册中心，我的职责就是维护服务实例
       fetch-registry: false
       service-url:
+        # defaultZone: http://eureka7001.com:7001/eureka/ # 单机时就是自己
         # 设置与Eureka Server交互的地址查询服务和注册服务都需要依赖这个地址
         defaultZone: http://eureka7002.com:7002/eureka/
   ```
@@ -994,6 +997,7 @@ yml文件缩进和空格不正确的小bug注意
       # false表示自己端就是注册中心，我的职责就是维护服务实例
       fetch-registry: false
       service-url:
+        # defaultZone: http://eureka7002.com:7002/eureka/ # 单机时就是自己
         # 设置与Eureka Server交互的地址查询服务和注册服务都需要依赖这个地址
         defaultZone: http://eureka7001:7001/eureka/
   ```
@@ -1310,6 +1314,216 @@ YML
   ![image-20210801234537075](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801234537075.png)
 
   ![image-20210801234603168](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801234603168.png)
+
+
+
+## Eureka自我保护
+
+![image-20210801235114882](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801235114882.png)
+
+- 故障现象
+
+- 导致原因
+
+  - 一句话：某时刻某一个微服务不可用了，Eureka不会立刻清理，依旧会对改为服务的信息进行保存
+
+  - 属于CAP里面的AP分支
+
+    ![image-20210801235806765](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801235806765.png)
+
+    ![image-20210802000003747](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802000003747.png)
+
+    ![image-20210802000153035](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802000153035.png)
+
+    
+
+- 怎么禁止自我保护
+
+  - 注册中心eurekaServer端7001
+
+    出厂默认，自我保护机制时开启的 → eureka.server.enable-self-preservation = true
+
+    使用eureka.server.enable-self-preservation = false可以禁用自我保护模式
+
+    ```yaml
+    eureka:
+      server:
+        # 关闭自我保护机制，保证不可用服务被及时剔除
+        enable-self-preservation: false
+        # 修改默认清理无效节点时间间隔60s → 2s， 测试关闭自我保护效果
+        eviction-interval-timer-in-ms: 2000
+    ```
+
+    关闭效果
+
+    在eurekaServer端7001处设置关闭自我保护机制
+
+    ![image-20210802110856064](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802110856064.png)
+
+  - 生产者客户端eurekaClient端8001
+
+    默认
+
+    ```
+    eureka.instance.lease-renewal-interval-in-seconds=30 # 单位秒，默认30秒
+    eureka.instance.lease-expiration-duration-in-seconds=90 # 单位秒，默认90秒
+    ```
+
+    配置
+
+    ```yaml
+    eureka:
+      instance:
+        # Eureka客户端向服务端发送心跳的时间间隔，单位为秒（默认30秒）
+        lease-renewal-interval-in-seconds: 1
+        # Eureka服务端在收到最后一次心跳后等待时间上线，单位为秒（默认时90秒），超时将剔除服务
+        lease-expiration-duration-in-seconds: 2
+    ```
+
+    测试
+
+    7001和8001都配置完成
+
+    先启动7001在启动8001
+
+    先关闭8001 → 马上被删除了
+
+
+
+# Spring Cloud整合Zookeeper代替Eureka
+
+## 注册中心Zookeeper
+
+​	zookeeper是一个分布式协调工具，可以实现注册中心功能
+
+​	关闭Linux服务器防火墙后启动zookeeper服务器
+
+​	zookeeper服务器取代Eureka服务器，zk作为服务注册中心
+
+![image-20210802120627570](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802120627570.png)
+
+```
+cd /myzookeeper/zookeeper-3.4.9/bin
+systemctl stop firewalld → 关闭防火墙
+systemctl status firewalld
+ifconfig → 查看zookeeper的ip
+ping一下win的ip，保证win和linux户型ping通
+```
+
+
+
+## 服务提供者
+
+- 新建cloud-provider-payment8004
+
+  ![image-20210802161815184](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802161815184.png)
+
+- POM
+
+  ```xml
+  <parent>
+      <artifactId>cloud2020</artifactId>
+      <groupId>com.huawei.springcloud</groupId>
+      <version>1.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  
+  <artifactId>cloud-provider-payment8004</artifactId>
+  
+  <dependencies>
+      <!--SpringBoot整合web组件-->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-web</artifactId>
+      </dependency>
+      <!--引入自定义的api通用包，可以使用Payment支付Entity和CommonResult通用返回封装类-->
+      <dependency>
+          <groupId>com.huawei.springcloud</groupId>
+          <artifactId>cloud-api-commons</artifactId>
+          <version>${project.version}</version>
+      </dependency>
+      <!--SpringBoot整合zookeeper客户端-->
+      <dependency>
+          <groupId>org.springframework.cloud</groupId>
+          <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+      </dependency>
+      <!--开启热部署-->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-devtools</artifactId>
+          <scope>runtime</scope>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-test</artifactId>
+          <scope>test</scope>
+      </dependency>
+  </dependencies>
+  ```
+
+- YML
+
+  ```yaml
+  # 8004表示注册到zookeeper服务器的支付服务提供者端口号
+  server:
+    port: 8004
+  
+  spring:
+    application:
+      # 服务别名----注册zookeeper到注册中心名称
+      name: cloud-provider-payment
+    cloud:
+      zookeeper:
+        # 1个zookeeper机器的ip+端口号
+        connect-string: 192.168.88.130:2181
+  ```
+
+- 主启动类
+
+  ```java
+  //不是Eureka了，不需要要@EnableEurekaClient或server的注解了
+  @SpringBootApplication
+  @EnableDiscoveryClient//该注解用于向使用consul或这zookeeper作为注册中心时注册服务
+  public class PaymentMain8004 {
+      public static void main(String[] args) {
+          SpringApplication.run(PaymentMain8004.class, args);
+      }
+  }
+  ```
+
+- Controller
+
+  ```java
+  @RestController
+  @Slf4j
+  public class PaymentController {
+      @Value("${server.port}")
+      private String serverPort;
+  
+      @RequestMapping(value = "payment/zk")
+      public String paymentZk() {
+          //返回端口号和流水号
+          return "SpringCloud with zookeeper:" + serverPort + "\t" + UUID.randomUUID().toString();
+      }
+  }
+  ```
+
+- 启动8004注册进zookeeper
+
+- 验证测试
+
+- 验证测试2
+
+- 思考
+
+
+## 服务消费者
 
 # 热部署Devtools
 
