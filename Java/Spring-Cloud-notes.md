@@ -1565,9 +1565,24 @@ ping一下win的ip，保证win和linux户型ping通
   </dependency>
   ```
 
-  zookeeper依赖版本和服务器安装版本冲突解决额，slf4j又依赖冲突，排除掉zookeeper中的slf4j即可，这个不要紧
+  zookeeper依赖版本和服务器安装版本冲突解决额，slf4j又依赖冲突，排除掉zookeeper中的slf4j即可，关注zk这个不要紧
 
   ![image-20210803223718506](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803223718506.png)
+
+  ```xml
+  <!--添加zookeeper3.4.9版本-->
+  <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>3.4.9</version>
+      <exclusions>
+          <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+      </exclusions>
+  </dependency>
+  ```
 
 - 验证测试
 
@@ -1603,7 +1618,46 @@ ping一下win的ip，保证win和linux户型ping通
 
   停止8004服务后，发现节点不会马上清除，一段时间后被清除，说明zookeeper服务节点是临时的
 
+  ![image-20210803230641841](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803230641841.png)
+
+  8004服务重新启动，发现zookeeper注册的服务流水号变了
+
+  说明Zookeeper比Eureka在一致性方面更加干脆
+
 ## 服务消费者
+
+- 新建cloud-consumerzk-order80
+
+  ![image-20210803231749763](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803231749763.png)
+
+- POM
+
+  和服务提供者cloud-provider-payment8004一样
+
+- YML
+
+  ```yaml
+  # 8004表示注册到zookeeper服务器的支付服务提供者端口号
+  server:
+    port: 8004
+  
+  spring:
+    application:
+      # 服务别名----注册zookeeper到注册中心名称
+      name: cloud-cousumer-order
+    cloud:
+      zookeeper:
+        # 注册到zookeeper地址
+        connect-string: 192.168.88.130:2181
+  ```
+
+- 主启动
+
+- 业务类
+
+- 验证测试
+
+- 访问测试地址
 
 # 热部署Devtools
 
