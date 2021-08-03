@@ -1410,7 +1410,9 @@ ifconfig → 查看zookeeper的ip
 ping一下win的ip，保证win和linux户型ping通
 ```
 
+注意不关闭防火墙连接不上，CentOS8下测试，zookeeper安装版本为3.4.9
 
+![image-20210803223247845](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803223247845.png)
 
 ## 服务提供者
 
@@ -1516,12 +1518,90 @@ ping一下win的ip，保证win和linux户型ping通
 
 - 启动8004注册进zookeeper
 
+  启动zookeeper服务端和客户端
+
+  ![image-20210802172826410](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802172826410.png)
+
+  ![image-20210802172913560](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802172913560.png)
+
+  ![image-20210803220717722](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803220717722.png)
+
+  ![image-20210803220832025](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803220832025.png)
+
+  发现只有一个zookeeper根节点，且zookeeper根节点只有一个原始的quota节点
+
+  启动8004，失败，问题：
+
+  jar包冲突
+
+  原因：centOS服务器运行的是3.4.9版本，依赖中的是3.5.3beta版本
+
+  ![image-20210803222222870](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803222222870.png)
+
+  ![image-20210802173347030](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802173347030.png)
+
+  ![image-20210802173508934](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210802173508934.png)
+
+  排除冲突的jar包版本，引入和zookeeper服务器匹配的jar包版本
+
+  ```xml
+  <!--SpringBoot整合zookeeper客户端-->
+  <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+      <!--先排除自带的zookeeper3.5.3-->
+      <exclusions>
+      	<exclusion>
+          	<groupId>org.apache.zookeeper</groupId>
+              <artifactId>zookeeper</artifactId>
+          </exclusion>
+      </exclusions>
+  </dependency>
+  <!--添加zookeeper3.4.9版本-->
+  <dependency>
+  	<groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>3.4.9</version>
+  </dependency>
+  ```
+
+  zookeeper依赖版本和服务器安装版本冲突解决额，slf4j又依赖冲突，排除掉zookeeper中的slf4j即可，这个不要紧
+
+  ![image-20210803223718506](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803223718506.png)
+
 - 验证测试
+
+  启动zookeeper，进入zookeeper安装处bin目录
+
+  执行`./zkServer.sh start`启动服务端，执行`./zkCli.sh`启动客户端
+
+  
+
+  ![image-20210803171220826](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803171220826.png)
+
+  说明支付模块成功入驻进zookeeper
+
+  ![image-20210803171445941](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803171445941.png)
+
+  http://localhost:8004/payment/zk
+
+  ![image-20210803225237651](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803225237651.png)
+
+  这个接口的返回其实和zookeeper没关系
 
 - 验证测试2
 
+  获得json串用json工具查看服务注册在zookeeper的基本信息
+
+  ![image-20210803225135348](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803225135348.png)
+
 - 思考
 
+  服务节点是临时节点还是持久节点？
+
+  ![image-20210803230130286](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210803230130286.png)
+
+  停止8004服务后，发现节点不会马上清除，一段时间后被清除，说明zookeeper服务节点是临时的
 
 ## 服务消费者
 
