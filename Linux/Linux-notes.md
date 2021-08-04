@@ -409,6 +409,31 @@ sudo userdel [⽤户名]
 
 
 
+将用户添加到wheel组
+
+为了将您的用户添加到该组，可以使用usermod或gpasswd命令。
+
+`$ sudo usermod -aG wheel <user>` (CentOS8测试无效什么鬼)
+
+另外，这是使用gpasswd命令的语法。
+
+```
+[root@localhost opt]# sudo gpasswd -a anoxic2010 wheel
+Adding user anoxic2010 to group wheel
+(CentOS8测试有效)
+```
+
+使用groups命令确保用户属于wheel组。
+
+```
+su[anoxic2010@localhost opt]$ su anoxic2010
+Password: 
+[anoxic2010@localhost opt]$ groups
+anoxic2010 wheel
+```
+
+
+
 #### 3.5 权限管理
 
 ##### 3.5.1 ⽂件权限
