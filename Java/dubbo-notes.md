@@ -458,17 +458,31 @@ public class SpringbootConsumerApplication {
 
 # zookeeper
 
-1. 无需安装，直接将文件夹复制到本地，在bin目录下，双击zxServer.cmd启动
-2. 注意需要将conf目录下的zoo.sample.cfg配置文件的名字改为zoo.cfg，否则启动不了
-3. 在zoo.cfg这个配置文件中，修改dataDir和logDir为有效目录，
-4. 他们分别配置的是zookeeper的数据文件和日志文件存储目录
-5. 比如：
-6. dataDir=d:\\zookeeper\\data
-7. dataLogDir=d:\\zookeeper\\log
-8. zooInspector也无须安装
-9. 只需要打开命令行，进入zooInspector的build目录，
-10. 执行java -jar zookeeper -dev
+无需安装，直接将文件夹复制到本地，在bin目录下，双击zkServer.cmd启动
+
+注意需要将conf目录下的zoo.sample.cfg配置文件的名字改为zoo.cfg，否则启动不了
 
 
 
-![image-20210615211912821](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\dubbo-notes.assets\image-20210615211912821.png)
+在zoo.cfg这个配置文件中，修改dataDir和logDir为有效目录，
+
+他们分别配置的是zookeeper的数据文件和日志文件存储目录
+
+比如：
+
+`dataDir=d:\\zookeeper\\data`
+
+`dataLogDir=d:\\zookeeper\\log`
+
+
+
+zooInspector也无须安装
+
+只需要打开命令行，进入zooInspector的build目录，
+
+执行java -jar zookeeper-dev-ZooInspector.jar命令或者双击这个jar包也可以运行
+
+
+
+
+
