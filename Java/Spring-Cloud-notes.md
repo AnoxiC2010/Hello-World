@@ -909,7 +909,7 @@ EurekaClient端cloud-consumer-order80
 
     ![image-20210801165836557](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801165836557.png)
 
-  - http://localhost/consumer/payment/get31
+  - http://localhost/consumer/payment/get/1
 
     ![image-20210801165958550](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210801165958550.png)
 
@@ -1024,7 +1024,7 @@ yml文件缩进和空格不正确的小bug注意
 
   集群搭建成功，用配置的hostname和端口访问呢，也可以用localhost和端口访问，发现互相指向
 
-### 将支付服务801微服务发布到上面2台Eureka集群配置中
+### 将支付服务8001微服务发布到上面2台Eureka集群配置中
 
 - YML
 
@@ -1483,7 +1483,7 @@ ping一下win的ip，保证win和linux户型ping通
     cloud:
       zookeeper:
         # 1个zookeeper机器的ip+端口号
-        connect-string: 192.168.88.130:2181
+        connect-string: 192.168.88.130:2181 # zookeeper集群配置在这里加逗号继续接...?
   ```
 
 - 主启动类
@@ -1637,9 +1637,9 @@ ping一下win的ip，保证win和linux户型ping通
 - YML
 
   ```yaml
-  # 8004表示注册到zookeeper服务器的支付服务提供者端口号
+  # 80表示注册到zookeeper服务器的支付服务提供者端口号
   server:
-    port: 8004
+    port: 80
   
   spring:
     application:
@@ -1653,11 +1653,112 @@ ping一下win的ip，保证win和linux户型ping通
 
 - 主启动
 
+  ```java
+  @SpringBootApplication
+  @EnableDiscoveryClient
+  public class OrderZKMain80 {
+      public static void main(String[] args) {
+          SpringApplication.run(OrderZKMain80.class, args);
+      }
+  }
+  ```
+
 - 业务类
+
+  - 配置Bean
+
+    ```java
+    @Configuration
+    public class ApplicationContexConfig {
+    	//未使用ribbon之前用restTemplate调用
+        @Bean
+        @LoadBalanced
+        public RestTemplate getRestTemplate() {
+            return new RestTemplate();
+        }
+    }
+    ```
+
+  - Controller
+
+    ```java
+    @RestController
+    @Slf4j
+    public class OrderZKController {
+    
+        public static final String INVOKE_URL = "http://cloud-provider-payment";
+    
+        @Resource
+        private RestTemplate restTemplate;
+    	@GetMapping("/consumer/payment/zk")
+        public String paymentInfo() {
+            String result = restTemplate.getForObject(INVOKE_URL + "/payment/zk", String.class);
+            return result;
+        }
+    }
+    ```
 
 - 验证测试
 
+  启动服务提供者8004和服务消费者zk80
+
+  ![image-20210807114747718](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210807114747718.png)
+
 - 访问测试地址
+
+  http://localhost/consumer/payment/zk
+
+  ![image-20210807120514232](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210807120514232.png)
+
+  
+
+# Consul服务注册与发现
+
+## Consul简介
+
+- 是什么
+
+  [Consul by HashiCorp](https://www.consul.io/)
+
+  ![image-20210807141737580](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210807141737580.png)
+
+- 作用
+
+  服务发现 → 提供HTTP和DNS两种发现方式	
+
+  健康检查 → 支持多种方式，HTTP、TCP、Docker、Shell脚本定制化
+
+  KV存储 → Key、Value的存储方式
+
+  多数据中心 → Consul支持多数据中心
+
+  可视化Web界面
+
+- 下载
+
+  [Downloads | Consul by HashiCorp](https://www.consul.io/downloads)
+
+- 使用
+
+  [Spring Cloud Consul 中文文档 参考手册 中文版](https://www.springcloud.cc/spring-cloud-consul.html)
+
+
+
+## 安装并运行Consul
+
+官网安装说明
+
+下载完成后只有一个consul.exe文件，硬盘路径下双击运行，查看版本号信息
+
+使用开发模式启动
+
+## 服务提供者
+
+## 服务消费者
+
+## 三个注册中心异同点
+
+
 
 # 热部署Devtools
 
