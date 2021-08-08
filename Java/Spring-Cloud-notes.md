@@ -1746,15 +1746,231 @@ ping一下win的ip，保证win和linux户型ping通
 
 ## 安装并运行Consul
 
-官网安装说明
+- 官网安装说明
 
-下载完成后只有一个consul.exe文件，硬盘路径下双击运行，查看版本号信息
+  [Install Consul | Consul - HashiCorp Learn](https://learn.hashicorp.com/tutorials/consul/get-started-install?in=consul/getting-started)
 
-使用开发模式启动
+  win10可直接下载exe文件使用
+
+- 下载完成后只有一个consul.exe文件，需在consul.exe文件夹打开cmd命令行使用，双击只会闪退一下没作用
+
+  执行`consul --version`查看版本号
+
+- 使用开发模式启动
+
+  `consul agent -dev`
+
+  ![image-20210808120531076](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808120531076.png)
+
+  通过以下地址可以访问Consul的首页：http://localhost:8500
+
+  结果页面
+
+  ![image-20210808120345389](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808120345389.png)
 
 ## 服务提供者
 
+- 新建module支付服务provider8006
+
+  cloud-providerconsul-payment8006
+
+- POM
+
+  ```xml
+  <parent>
+      <artifactId>cloud2020</artifactId>
+      <groupId>com.huawei.springcloud</groupId>
+      <version>1.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  
+  <artifactId>cloud-providerconsul-payment8006</artifactId>
+  
+  <dependencies>
+      <!--SpringCloud consul-server-->
+      <dependency>
+          <groupId>org.springframework.cloud</groupId>
+          <artifactId>spring-cloud-starter-consul-discovery</artifactId>
+      </dependency>
+      <!--SpringBoot整合Web组件-->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-web</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-actuator</artifactId>
+      </dependency>
+      <!--日常通用jar包配置-->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-devtools</artifactId>
+          <scope>runtime</scope>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-test</artifactId>
+          <scope>test</scope>
+      </dependency>
+  </dependencies>
+  ```
+
+- YML
+
+  ```yaml
+  # consul服务端口号
+  server:
+    port: 8006
+  
+  spring:
+    application:
+      name: consul-provider-payment
+  
+    # consul注册中心地址
+    cloud:
+      consul:
+        host: localhost
+        port: 8500
+        discovery:
+          # hostname: 127.0.0.1
+          service-name: ${spring.application.name}
+  ```
+
+- 主启动类
+
+  ```java
+  @SpringBootApplication
+  @EnableDiscoveryClient//该注解用于使用consul或者zookeeper作为注册中心时注册服务
+  public class PaymentMain8006 {
+      public static void main(String[] args) {
+          SpringApplication.run(PaymentMain8006.class, args);
+      }
+  }
+  ```
+
+- 业务类Controller
+
+  ```java
+  @RestController
+  @Slf4j
+  public class PaymentController {
+      @Value("${server.port}")
+      private String serverPort;
+  
+      @RequestMapping(value = "/payment/consul")
+      public String paymentConsul() {
+          return "SpringCloud with Consul:" + serverPort + "\t" + UUID.randomUUID().toString();
+      }
+  
+  }
+  ```
+
+- 验证测试
+
+  启动服务提供者8006
+
+  ![image-20210808122817246](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808122817246.png)
+
+  ![image-20210808123114797](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808123114797.png)
+
+  ![image-20210808123149972](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808123149972.png)
+
+  ![image-20210808122925633](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808122925633.png)
+
 ## 服务消费者
+
+- 新建moduel消费服务order80
+
+  cloud-consumerconsul-order80
+
+- POM
+
+  和provider一样
+
+- YML
+
+  ```yaml
+  # consul服务端口号
+  server:
+    port: 80
+  
+  spring:
+    application:
+      name: consul-consumer-order
+  
+    # consul注册中心地址
+    cloud:
+      consul:
+        host: localhost
+        port: 8500
+        discovery:
+          # hostname: 127.0.0.1
+          service-name: ${spring.application.name}
+  ```
+
+- 主启动类
+
+  ```java
+  @SpringBootApplication
+  @EnableDiscoveryClient//该注解用于使用consul或者zookeeper作为注册中心时注册服务
+  public class OrderConsulMain80 {
+      public static void main(String[] args) {
+          SpringApplication.run(OrderConsulMain80.class, args);
+      }
+  }
+  ```
+
+- 配置Bean
+
+  和zookeeper时类似，没有ribbon或openfein先使用RestTemplate
+
+  ```java
+  @Configuration
+  public class ApplicationContextConfig {
+  
+      @Bean
+      @LoadBalanced
+      public RestTemplate getRestTemplate() {
+          return new RestTemplate();
+      }
+  }
+  ```
+
+- Controller
+
+  ```java
+  @RestController
+  @Slf4j
+  public class OrderConsulController {
+      public static final String INVOKE_URL = "http://consul-provider-payment";
+  
+      @Resource
+      private RestTemplate restTemplate;
+      @GetMapping("/consumer/payment/consul")
+      public String paymentInfo() {
+          String result = restTemplate.getForObject(INVOKE_URL + "/payment/consul", String.class);
+          return result;
+      }
+  }
+  ```
+
+- 验证测试
+
+  启动provider和consumer后
+
+  ![image-20210808125848318](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808125848318.png)
+
+- 访问测试地址
+
+  localhost/consumer/payment/consul
+
+  ![image-20210808125959376](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808125959376.png)
 
 ## 三个注册中心异同点
 
