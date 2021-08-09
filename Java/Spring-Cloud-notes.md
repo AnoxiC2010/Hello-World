@@ -1974,7 +1974,156 @@ ping一下win的ip，保证win和linux户型ping通
 
 ## 三个注册中心异同点
 
+![image-20210808180517034](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808180517034.png)
 
+
+
+CAP
+
+- C: Consistency (强一致性)
+- A: Availability (可用性)
+- P: Partition tolerance (分区容错性)
+
+> CAP理论关注力度是数据，而不是整体系统设计的策略
+
+
+
+经典CAP图
+
+> AP(Eureka), CP(Zookeeper/Consul)
+
+![image-20210808180726260](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808180726260.png)
+
+![image-20210808180458847](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808180458847.png)
+
+
+
+<img src="C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808181214597.png" alt="image-20210808181214597" style="zoom: 25%;" />
+
+<img src="C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808181507944.png" alt="image-20210808181507944" style="zoom:25%;" />
+
+# Ribbon负载均衡服务调用
+
+## 概述
+
+- 是什么
+
+  ![image-20210808182854840](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210808182854840.png)
+
+- 官网资料
+
+  [Getting Started · Netflix/ribbon Wiki (github.com)](https://github.com/Netflix/ribbon/wiki/Getting-Started)
+
+  Ribbon目前也进入维护模式 → 未来替换方案 Spring Cloud Loadbalancer
+
+- 作用
+
+  - 负载均衡
+
+    ![image-20210809195029678](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809195029678.png)
+
+    集中式LB
+
+    ![image-20210809195218304](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809195218304.png)
+
+    进程内LB
+
+    ![image-20210809195331542](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809195331542.png)
+
+  - 前面讲过80通过轮询负载访问8001/8002
+  - 一句话 ： 负载均衡 + RestTemplate调用
+
+## Ribbon负载均衡演示
+
+- 架构说明
+
+  总结：Ribbon其实就是一个软负载均衡的客户端组件，他可以和其他所需请求的客户端结合使用，和eureka结合使用只是其中的一个实例。
+
+  ![image-20210809195928532](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809195928532.png)
+
+  ![image-20210809200036612](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809200036612.png)
+
+- POM
+
+  ![image-20210809200620784](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809200620784.png)
+
+  ![image-20210809200941959](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809200941959.png)
+
+  ![image-20210809200341285](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809200341285.png)
+
+  版本太老可能不自带
+
+- 二说RestTemplate的使用
+
+  - 官网
+
+    ![image-20210809201339766](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809201339766.png)
+
+  - getForObject方法/getForEntity方法
+
+    ![image-20210809201514257](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809201514257.png)
+
+    ```java
+    //可以获取响应信息如：
+    log.info("statusCode : {}; headers : {}",result.getStatusCode(), result.getHeaders());
+    ```
+
+  - postForObject/postForEntity
+
+  - GET请求方法
+
+  - POST请求方法
+
+## Ribbon核心组件IRule
+
+IRule：根据特定算法中从服务列表中选取一个要访问的服务
+
+![image-20210809204133232](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809204133232.png)
+
+![image-20210809204319994](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809204319994.png)
+
+轮询是默认的
+
+
+
+如何替换
+
+- 修改cloud-consumer-order80
+
+- 注意配置细节
+
+  ![image-20210809212905472](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809212905472.png)
+
+- 新建package
+
+  com.huawei.myrule
+
+- 上面包新建MySelfRule规则类
+
+  ![image-20210809213730721](C:\Users\AnoxiC2010\Documents\GitHub\Hello-World\Java\Spring-Cloud-notes.assets\image-20210809213730721.png)
+
+- 主启动类添加@RibbonClient
+
+  ```java
+  @SpringBootApplication
+  @EnableEurekaClient
+  @RibbonClient(name = "CLOUD-PAYMENT-SERVICE", configuration = MySelfRule.class)
+  public class OrderMain80 {
+      public static void main(String[] args) {
+          SpringApplication.run(OrderMain80.class, args);
+      }
+  }
+  ```
+
+- 测试
+
+  http://localhost/consumer/payment/get/2
+
+  失去轮询效果，变为随机
+
+
+
+## Ribbon负载均衡算法
 
 # 热部署Devtools
 
