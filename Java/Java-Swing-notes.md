@@ -870,3 +870,31 @@ class SimpleLayout extends AbstractSimpleLayout {
 
 容器内添加了4个子控件，每个控件的宽度占多少？
 
+
+
+演示：
+
+水平布局器`AbstractXLayout`，水平方向上一次排列
+
+- 对子空间进行水平方向上的布局
+
+- 每个子空间可以单独指定宽度
+
+  “100px”固定栈100像素
+
+  “25%”固定栈总宽度的25%
+
+  “auto”固定使用他的 Preferred Size
+
+  “1w”按权重动态分配，参考《示例代码》文档
+
+  
+
+竖直布局
+
+将各个控件从上到下一次布局，每个控件的高度可以单独指定。可以使用`AbstractYLayout`
+
+
+
+<img src="Java-Swing-notes.assets/image-20210824082727257.png" alt="image-20210824082727257" style="zoom: 33%;" />
+
