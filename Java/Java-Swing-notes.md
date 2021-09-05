@@ -1421,3 +1421,144 @@ root.setBorder(border);
 
 
 ### 本地文件
+
+
+
+## 自定义控件
+
+### 自定义控件
+
+当需要自定义控件时，可以从JPanel派生
+
+继承于 JPanel 便可以得到自定义的控件
+
+重写 paintComponent() ，便可以定义控件的显示
+
+例如：
+
+```java
+class MyPanel extends JPanel {
+}
+```
+
+则MyPanel是一个自定义控件
+
+重写`paintComponent`方法，可以决定它的显示
+
+```java
+protected void paintComponent(Graphics g){
+}
+```
+
+例如可以显示为一个蓝色方块，也可以是任何图案
+
+```java
+public class MyPanel extends JPanel {
+    @Override
+    protected void paintComponent(Graphics g) {
+        int width = getWidth();
+        int height = getHeight();
+        g.clearRect(0, 0, width, height);
+        g.setColor(Color.BLUE);
+        g.fillRect(0, 0, width, height);
+    }
+}
+```
+
+
+
+自定义控件的所有行为，都可以定制
+
+- 显示成什么样子
+- 响应鼠标或键盘事件
+- 最小尺寸/最佳尺寸/最大尺寸
+- ...
+
+
+
+在 paintComponent() 可以绘制出任何形状或颜色
+
+- 直线、三角形、长方形、椭圆等几何图形
+- 直线、点划线、等各种线型
+
+- 纯色、渐变色等各种填充色
+
+- 绘制文本
+
+- 绘制图片
+- 还可以施加一些变形效果..
+
+### RGB颜色
+
+RGB , 是一种 颜色空间 Color Space
+指定红、绿、蓝三种颜色的值，即可构造各种颜色
+例如：
+黑色  (0,   0,    0)
+白色  (255,255,255)
+红色  (255,  0,   0)
+
+
+
+在 Swing 里，用Color 类来代表示颜色
+例如，
+Color color = Color.red;
+Color color = new Color (255, 0, 0);
+Color color = new Color(0xFF0000);
+
+
+
+那么，如何选择一个自己喜欢的颜色？
+
+1. 看到某个颜色，用拾色工具去取
+2. 查看颜色表，选一个自己喜欢的颜色
+
+
+
+RGBA 透明色
+
+RGBA, 最后一个A表示的透明度的值，也是0-255之间
+0 ：全透明
+255 ：完全不透明 
+
+![image-20210905154323417](Java-Swing-notes.assets/image-20210905154323417.png)
+
+### 绘制几何图形
+
+控件的绘制
+
+在控件里可以绘制什么内容？
+- 几何图形
+- 文本 
+- 图片
+
+绘制时，使用Graphics 和 Graphics2D 下的方法
+- Line 直线
+- Rect 矩形 ( 包含正方形 )
+- Oval 椭圆 ( 包含圆 )
+- Polygon 多边形 ( 含三角形 )
+- Arc 圆弧 / 扇形
+
+绘制方法分为两种：
+
+- drawXXX( ) : 表示只画线条
+
+- fillXXX( ): 表示只填充
+
+例如，
+
+- drawRect() : 画一个矩形 (仅线条)
+- fillRect() : 画一个矩形 ( 仅填充 )
+
+
+
+getWidth() : 控件的宽度
+
+getHeight(): 控件的高度
+
+坐标：左上角(0, 0) 右下角(width, height)
+
+示例：
+
+- g.setColor(Color.blue);
+- g.drawLine(0, 0, 200, 100);
+
