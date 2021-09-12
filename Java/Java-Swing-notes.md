@@ -1562,3 +1562,167 @@ getHeight(): 控件的高度
 - g.setColor(Color.blue);
 - g.drawLine(0, 0, 200, 100);
 
+```java
+public class MyFrame extends JFrame {
+    // SpinnerNumberModel: initialValue, min, max, step
+    JSpinner grainField = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+    JSpinner rangeField = new JSpinner(new SpinnerNumberModel(50, 20, 80, 5));
+    JSpinner periodField = new JSpinner(new SpinnerNumberModel(100, 50, 150, 10));
+    MyPanel root = new MyPanel();
+    public MyFrame(String text) {
+        super(text);
+        //根容器
+        setContentPane(root);
+        root.add(new JLabel("粒度"));
+        root.add(grainField);
+        root.add(new JLabel("振幅"));
+        root.add(rangeField);
+        root.add(new JLabel("周期"));
+        root.add(periodField);
+
+        ChangeListener changeListener = new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                UpdateUi();
+            }
+        };
+        grainField.addChangeListener(changeListener);
+        rangeField.addChangeListener(changeListener);
+        periodField.addChangeListener(changeListener);
+    }
+
+    private void UpdateUi() {
+        root.grain = (int) grainField.getValue();
+        root.range = (int) rangeField.getValue();
+        root.period = (int) periodField.getValue();
+        root.repaint();
+    }
+}
+public class MyPanel extends JPanel {
+    public int grain = 3;
+    public int range = 50;
+    public int period = 100;
+    @Override
+    protected void paintComponent(Graphics g) {
+        int width = getWidth();
+        int height = getHeight();
+        // 清除显示
+        g.clearRect(0, 0, width, height);
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, width, height);
+        //中线
+        int center_y = height / 2;
+        g.setColor(Color.RED);
+        g.drawLine(0, center_y, width, center_y);
+        // 正弦曲线 （由多个小段连接而成，近似为一条曲线 )
+        int x1 = 0, y1 = 0;
+        for (int i = 0; i < width; i += grain) {
+            int x2 = i;
+            double angle = (double)x2 / period * 2 * Math.PI;
+            int y2 = (int) (range * Math.sin(angle));
+            g.drawLine(x1, y1 + center_y, x2, y2 + center_y);
+            x1 = x2;
+            y1 = y2;
+        }
+    }
+}
+```
+
+
+
+## 图片的绘制
+
+### 绘制图片
+
+
+
+### 锁定长宽比
+
+
+
+## 鼠标事件
+
+鼠标事件 MouseEvent ，包括以下动作：
+
+鼠标点击 mouseClicked
+
+鼠标按下 mousePressed 鼠标抬起 mouseReleased
+
+鼠标移入 mouseEntered 鼠标移出 mouseExited
+
+鼠标移动 mouseMoved 鼠标拖动 mouseDragged
+
+鼠标滚轮 mouseWheelMoved
+
+
+
+将所有动作分为三类监听器：
+
+1 addMouseListener()
+
+ 点击、按下、抬起、移入、移出
+
+2 addMouseMotionListener()
+
+ 移动、拖动
+
+3 addMouseWheelListener()
+
+ 鼠标滚轮转动
+
+
+
+鼠标事件对象 MouseEvent:
+
+getX() / getY() : 点击中的坐标，相对于该控件
+
+getXOnScreen() / getOnScreen() ：相对于屏幕的坐标
+
+getSource() : 事件源，即点中的控件
+
+getButton() : 左键、中键、右键
+
+getClickCount() : 单击、双击、三击
+
+
+
+常见问题
+
+1 区分 mouseClicked 
+
+mousePressed / mouseReleased
+
+2 区分 mouseMoved 与 mouseDragged 
+
+mouseMoved: 鼠标移动
+
+mouseDragged: 鼠标按住时移动
+
+
+
+思考：如果我只关心 mouseClicked() 事件，还需要重写5个方法，是不是有点啰嗦？
+
+↓
+
+### 鼠标适配器
+
+鼠标适配器 MouseAdapter
+它已经把所有的鼠标回调方法都重写了
+我们只需要选择自己关心的方法重写一下
+
+
+
+## 菜单与工具栏
+
+### 菜单栏
+
+
+
+### 工具栏
+
+
+
+### 右键菜单
+
+
+
